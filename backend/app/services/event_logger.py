@@ -1,0 +1,1 @@
+#writes each tick message into a file like a diary.

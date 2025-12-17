@@ -1,0 +1,1 @@
+# holds ticks(number) and it increases by 1 we 'step' and must output a simple message .
