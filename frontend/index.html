@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SimuVerse — Social Simulation</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="image/logo.png" alt="SimuVerse Logo" class="logo-img" />
+        <div>
+          <div class="title">SimuVerse</div>
+          <div class="sub">Social Behavior Simulation</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="nav-links">
+          <button class="nav-link" id="navHome">Home</button>
+          <button class="nav-link" id="navAbout">About</button>
+          <button class="nav-link" id="navContact">Contact</button>
+        </div>
+        <button id="navGetStarted" class="btn btn-primary btn-small">
+          Get Started
+        </button>
+        <div class="pill subtle">v1.0</div>
+      </div>
+    </header>
+
+    <!-- EXIT WARNING MODAL -->
+    <div id="exitWarning" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h3>Exit Simulation?</h3>
+        <p>You have an active simulation running. If you exit, it will be saved but cannot be resumed.</p>
+        <div class="row" style="margin-top:20px;">
+          <button id="exitCancel" class="btn">Cancel</button>
+          <button id="exitConfirm" class="btn danger">Exit Anyway</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOME SCREEN -->
+    <section id="screen-home" class="screen active">
+      <div class="hero-section">
+        <div class="hero-content">
+          <h1>Turn "what if?" into a live simulation</h1>
+          <p class="hero-subtitle">
+            A multi-agent social simulation platform for studying emotion dynamics,
+            trust networks, and group behavior in small teams.
+          </p>
+          <button id="heroGetStarted" class="btn btn-hero">
+            Get Started
+          </button>
+        </div>
+      </div>
+
+      <div class="cards-section">
+        <div class="section-container">
+          <h2 class="section-title">How SimuVerse Works</h2>
+          <div class="glassmorphism-grid">
+            <!-- Card 1 -->
+            <div class="premium-glass-card">
+              <h3 class="glass-card-title">Create a Simulation</h3>
+              <div class="glass-icon">
+                <img src="image/create.png" alt="Create" style="width: 64px; height: 64px; object-fit: contain;">
+              </div>
+              <p class="glass-card-description">
+                Spin up a world in seconds—choose agents, mood, and rules.
+              </p>
+              <div class="glass-card-footer">
+                <div class="glass-tag">Fast Setup</div>
+              </div>
+              <div class="card-tail"></div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="premium-glass-card">
+              <h3 class="glass-card-title">Pick an Environment</h3>
+              <div class="glass-icon">
+                <img src="image/pick.png" alt="Pick" style="width: 64px; height: 64px; object-fit: contain;">
+              </div>
+              <p class="glass-card-description">
+                Office, cafe, interview room, crisis scene... set the context fast.
+              </p>
+              <div class="glass-card-footer">
+                <div class="glass-tag">Environments</div>
+              </div>
+              <div class="card-tail"></div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="premium-glass-card">
+              <h3 class="glass-card-title">Watch Dynamics Live</h3>
+              <div class="glass-icon">
+                <img src="image/watch.png" alt="Watch" style="width: 64px; height: 64px; object-fit: contain;">
+              </div>
+              <p class="glass-card-description">
+                See trust, emotions, and events update in real time.
+              </p>
+              <div class="glass-card-footer">
+                <div class="glass-tag">Live Insights</div>
+              </div>
+              <div class="card-tail"></div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="premium-glass-card">
+              <h3 class="glass-card-title">Insights & Export</h3>
+              <div class="glass-icon">
+                <img src="image/insights.png" alt="Insights" style="width: 64px; height: 64px; object-fit: contain;">
+              </div>
+              <p class="glass-card-description">
+                Track conflict, cohesion, and turning points—export replay logs.
+              </p>
+              <div class="glass-card-footer">
+                <div class="glass-tag">Analyze & Export</div>
+              </div>
+              <div class="card-tail"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONSENT SCREEN -->
+    <section id="screen-consent" class="screen">
+      <div class="consent-bg">
+        <div class="consent-wrap">
+          <header class="consent-hero">
+            <h1>Before you begin</h1>
+            <p>
+              SimuVerse simulates social dynamics to help you explore scenarios.
+              Please review the following information before creating a run.
+            </p>
+          </header>
+
+          <div class="consent-grid">
+            <div class="consent-panel consent-panel-left">
+              <div class="consent-tiles">
+                <div class="consent-tile">
+                  <div class="tile-title">Purpose</div>
+                  <div class="tile-text">Simulates agents, scenarios, and social interactions for research and education.</div>
+                </div>
+                <div class="consent-tile">
+                  <div class="tile-title">Limitations</div>
+                  <div class="tile-text">Not for real-world prediction, diagnosis, profiling, or legal decisions.</div>
+                </div>
+                <div class="consent-tile">
+                  <div class="tile-title">Applications</div>
+                  <div class="tile-text">Exploration, education, and research prototyping.</div>
+                </div>
+              </div>
+
+              <div class="consent-subtitle">Please confirm:</div>
+
+              <div class="consent-checks">
+                <label class="checkrow">
+                  <input type="checkbox" id="check1" class="consent-check" />
+                  <span><b>No personal data:</b> I will not input names, addresses, or identifiable information.</span>
+                </label>
+                <label class="checkrow">
+                  <input type="checkbox" id="check2" class="consent-check" />
+                  <span><b>Simulated outputs:</b> I understand results are simulated and may be inaccurate.</span>
+                </label>
+                <label class="checkrow">
+                  <input type="checkbox" id="check3" class="consent-check" />
+                  <span><b>Not professional advice:</b> I will not use outputs for clinical/legal decisions.</span>
+                </label>
+                <label class="checkrow">
+                  <input type="checkbox" id="check4" class="consent-check" />
+                  <span><b>Local storage:</b> Runs are stored locally on this device.</span>
+                </label>
+                <label class="checkrow">
+                  <input type="checkbox" id="check5" class="consent-check" />
+                  <span><b>Data control:</b> I can delete runs and replays at any time.</span>
+                </label>
+              </div>
+
+              <div class="consent-footerline">
+                <button id="consentExit" class="consent-link">Back</button>
+              </div>
+            </div>
+
+            <div class="consent-panel consent-panel-right">
+              <div class="right-head">
+                <div class="shield">✓</div>
+                <div>
+                  <div class="right-title">Data Handling</div>
+                  <div class="right-sub">Summary</div>
+                </div>
+              </div>
+
+              <div class="right-box">
+                <div class="right-row">
+                  <div class="right-bullet">✓</div>
+                  <div>
+                    <div class="right-k">Stored locally:</div>
+                    <div class="right-v">Seed, configuration, replay logs, metrics</div>
+                  </div>
+                </div>
+                <div class="right-row">
+                  <div class="right-bullet">✓</div>
+                  <div>
+                    <div class="right-k">Not stored:</div>
+                    <div class="right-v">Personal data, user identity, PII</div>
+                  </div>
+                </div>
+                <div class="right-divider"></div>
+                <div class="right-k">LLM Note:</div>
+                <div class="right-v">If enabled, prompts are filtered to remove sensitive information.</div>
+              </div>
+
+              <button id="consentContinue" class="consent-cta" disabled>
+                <span class="cta-ic">✓</span>
+                I Agree — Continue
+                <span class="cta-arrow">→</span>
+              </button>
+
+              <div class="progress">
+                <div class="pips">
+                  <span class="pip on"></span>
+                  <span class="pip on"></span>
+                  <span class="pip on"></span>
+                  <span class="pip on"></span>
+                  <span class="pip on"></span>
+                </div>
+                <div class="progress-txt">5 confirmations</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETUP SCREEN - SIMPLIFIED TWO-MODE DESIGN -->
+    <section id="screen-setup" class="screen">
+      <div class="setup-container">
+        <!-- Header -->
+        <div class="setup-header">
+          <h1 class="setup-title">Configure Simulation</h1>
+          <p class="setup-subtitle">Select how you want to start. Quick mode uses default settings for immediate results.</p>
+        </div>
+
+        <!-- Mode Selection - Two Cards -->
+        <div class="mode-grid">
+          <!-- Quick Mode Card -->
+          <div class="mode-card mode-card-quick" id="quickModeCard">
+            <div class="mode-badge">RECOMMENDED</div>
+            <h2 class="mode-title">Quick Mode</h2>
+            <div class="mode-description">
+              <ul class="mode-features">
+                <li>✓ Default agents (4)</li>
+                <li>✓ Balanced personalities</li>
+                <li>✓ LLM dialogue enabled</li>
+                <li>✓ Emotion input enabled</li>
+                <li>✓ Auto-generated Run ID</li>
+              </ul>
+            </div>
+            <button id="quickStartBtn" class="mode-btn mode-btn-quick">
+              <span class="btn-icon">▶</span>
+              Start Simulation
+            </button>
+            <p class="mode-note">For demonstrations and rapid testing</p>
+          </div>
+
+          <!-- Advanced Mode Card -->
+          <div class="mode-card mode-card-advanced" id="advancedModeCard">
+            <div class="mode-badge mode-badge-advanced">EXPERIMENTAL</div>
+            <h2 class="mode-title">Advanced Mode</h2>
+            <div class="mode-description">
+              <ul class="mode-features">
+                <li>✓ Custom personalities</li>
+                <li>✓ Modify relationships</li>
+                <li>✓ Toggle LLM & emotion</li>
+                <li>✓ Control reproducibility</li>
+              </ul>
+            </div>
+            <button id="advancedSetupBtn" class="mode-btn mode-btn-advanced">
+              <span class="btn-icon">⚙️</span>
+              Configure Settings
+            </button>
+            <p class="mode-note">For controlled experiments</p>
+          </div>
+        </div>
+
+        <!-- Scenario Selection -->
+        <div class="scenario-panel">
+          <label class="scenario-label">Scenario</label>
+          <select id="scenarioSelect" class="scenario-select">
+            <option value="classroom">Classroom Discussion</option>
+            <option value="group-project">Group Project</option>
+            <option value="interview">Interview Panel</option>
+            <option value="cafe">Café Conversation</option>
+          </select>
+          <p class="scenario-hint">Select the initial social context for the simulation.</p>
+        </div>
+
+        <!-- Run ID Panel -->
+        <div class="runid-panel">
+          <div class="runid-label">Run ID:</div>
+          <div class="runid-value" id="runIdDisplay">SV-4F82X</div>
+          <button class="runid-regenerate" id="regenerateRunId">↻</button>
+          <div class="runid-hint">Same Run ID + settings = identical replay</div>
+        </div>
+
+        <!-- Back button -->
+        <div class="setup-footer">
+          <button id="backToConsent" class="btn btn-secondary">← Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT SCREEN -->
+    <section id="screen-about" class="screen">
+      <div class="card" style="max-width: 800px; margin: 100px auto;">
+        <h1>About SimuVerse</h1>
+        <p>A multi-agent social simulation platform for studying emotion dynamics, trust networks, and group behavior in small teams.</p>
+        <p>Version 1.0 - Research Prototype</p>
+        <button id="backHomeFromAbout" class="btn" style="margin-top: 20px;">Back to Home</button>
+      </div>
+    </section>
+
+    <!-- CONTACT SCREEN -->
+    <section id="screen-contact" class="screen">
+      <div class="card" style="max-width: 800px; margin: 100px auto;">
+        <h1>Contact</h1>
+        <p>Email: support@simuverse.com</p>
+        <p>Documentation: docs.simuverse.com</p>
+        <button id="backHomeFromContact" class="btn" style="margin-top: 20px;">Back to Home</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
