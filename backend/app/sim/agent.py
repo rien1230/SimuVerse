@@ -3,8 +3,9 @@ from __future__ import annotations
 from collections import deque
 from typing import Any, Dict, List, Optional
 import mesa
+from .emotions_analyser import  EmotionAnalyser
 
-
+# trust (0-1), valence (-1 to 1), and arousal (0-1) within valid ranges
 def clamp(x: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, x))
 
@@ -74,7 +75,59 @@ class SimAgent(mesa.Agent):
         # Debugging/interpretability
         self.last_thought = ""
 
+        #emotion analyser
+        self.emotion_analyser = EmotionAnalyser()  # ← ADD THIS
+        self.emotion_memory = deque(maxlen=50)
 
+    #Where agents Processes emotional content of messages. It would skip if there is no text. It would do that by
+    # getting the strongest emotion and if the emotion is negative trust would decrease. If the emotions is positive
+    # trust will increase. Ensuring the emotion interaction is stored in their memory.
+
+    def process_emotional_message(self, text: str, speaker: str, tick: int) -> Dict[str, float]:
+
+        if not text:
+            return {}
+
+        # Analyse emotions in the message
+        emotions = self.emotion_analyser.analyse(text)
+
+        if emotions:
+            # Get the strongest emotion
+            primary = max(emotions.items(), key=lambda x: x[1])[0]
+            confidence = emotions[primary]
+
+            # React based on the emotion detected
+            if primary in ['anger', 'disgust', 'annoyance']:
+                # Negative emotions decrease trust
+                self.trust[speaker] = clamp(self.trust.get(speaker, 0.5) - 0.03, 0.0, 1.0)
+                self.valence = clamp(self.valence - 0.05, -1.0, 1.0)
+                self.last_thought = f"They seem {primary} with me."
+
+            elif primary in ['joy', 'gratitude', 'admiration']:
+                # Positive emotions increase trust
+                self.trust[speaker] = clamp(self.trust.get(speaker, 0.5) + 0.02, 0.0, 1.0)
+                self.valence = clamp(self.valence + 0.03, -1.0, 1.0)
+                self.last_thought = f"They're being {primary}!"
+
+            elif primary in ['sadness', 'grief', 'remorse']:
+                # Sadness triggers empathy (especially for agreeable agents)
+                if self.traits.get("A", 0.5) > 0.6:
+                    self.valence = clamp(self.valence - 0.02, -1.0, 1.0)
+                    self.last_thought = f"They seem sad. I feel for them."
+                else:
+                    self.last_thought = f"They're sad. Awkward."
+
+            # Remember this emotional interaction
+            self.emotion_memory.append({
+                'tick': tick,
+                'speaker': speaker,
+                'primary_emotion': primary,
+                'confidence': confidence,
+                'all_emotions': emotions,
+                'text': text
+            })
+
+        return emotions
     # ----------------------------
     # Decision: choose 0 or 1 action per tick
     # ----------------------------
@@ -181,6 +234,8 @@ class SimAgent(mesa.Agent):
 
             actor = e.get("actor", "")
             etype = e.get("type", "")
+            text= e.get("text", "")
+
 
             # trust update
             dt = TRUST_DELTA.get(etype, 0.0)
@@ -191,12 +246,16 @@ class SimAgent(mesa.Agent):
             self.valence = clamp(self.valence + dv, -1.0, 1.0)
             self.arousal = clamp(self.arousal + abs(dv) * 0.15, 0.0, 1.0)
 
+            # NEW: Process emotion from the message text
+            if text:
+                self.process_emotional_message(text, actor, tick)
+
             # memory
             mem = {
                 "tick": tick,
                 "kind": etype,
                 "from": actor,
-                "text": e.get("text", ""),
+                "text": text,
                 "importance": clamp(abs(dv) + abs(dt), 0.0, 1.0),
             }
             self.stm.append(mem)
@@ -240,7 +299,7 @@ class SimAgent(mesa.Agent):
     # Export to JSON
     # ----------------------------
     def to_state(self) -> Dict[str, Any]:
-        return {
+        state = {
             "id": self.public_id,
             "traits": {k: round(float(v), 2) for k, v in self.traits.items()},
             "mood": {"valence": round(self.valence, 3), "arousal": round(self.arousal, 3)},
@@ -250,6 +309,12 @@ class SimAgent(mesa.Agent):
                 "short": self.active_short_goal,
                 "progress": round(self.goal_progress, 3),
             },
-            "stm_tail": list(self.stm)[-3:],  # last 3 memories only (keeps logs readable)
+            "stm_tail": list(self.stm)[-3:],
             "last_thought": self.last_thought,
         }
+
+        # NEW: Add recent emotion if available
+        if self.emotion_memory:
+            state["last_emotion"] = self.emotion_memory[-1]['primary_emotion']
+
+        return state
