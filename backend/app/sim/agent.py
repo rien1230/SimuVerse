@@ -3,7 +3,9 @@ from __future__ import annotations
 from collections import deque
 from typing import Any, Dict, List, Optional
 import mesa
-from .emotions_analyser import  EmotionAnalyser
+from .emotions_analyser import EmotionAnalyser
+from .memory import EmotionalMemory  # ADDED: Memory system import
+
 
 # trust (0-1), valence (-1 to 1), and arousal (0-1) within valid ranges
 def clamp(x: float, lo: float, hi: float) -> float:
@@ -34,17 +36,17 @@ class SimAgent(mesa.Agent):
     - traits = personality sliders (mostly stable)
     - mood = how they feel right now (changes)
     - trust = how much they trust each other person (changes)
-    - memory = short-term + long-term
+    - memory = short-term + long-term with emotional importance
     - goal = what they are trying to achieve
     """
 
     def __init__(
-        self,
-        model: mesa.Model,
-        public_id: str,
-        traits: Dict[str, float],
-        speech_style: str,
-        long_goal: str,
+            self,
+            model: mesa.Model,
+            public_id: str,
+            traits: Dict[str, float],
+            speech_style: str,
+            long_goal: str,
     ) -> None:
         super().__init__(public_id, model)
         self.public_id = public_id
@@ -65,9 +67,13 @@ class SimAgent(mesa.Agent):
         # Energy (simple “battery” so behaviour changes over time)
         self.energy = 100
 
-        # Memory
-        self.stm = deque(maxlen=25)              # short-term memory (recent)
-        self.ltm: List[Dict[str, Any]] = []      # long-term memory (important)
+        # MEMORY SYSTEM - REPLACES individual stm/ltm/emotion_memory
+        self.memory = EmotionalMemory(self.public_id, max_stm_size=50)
+
+        # For backward compatibility, keep references if other code uses them
+        self.stm = self.memory.stm
+        self.ltm = self.memory.ltm
+        self.emotion_memory = self.memory.stm  # emotion_memory now points to STM
 
         # Trust: other_id -> 0..1 (filled in by model after all agents exist)
         self.trust: Dict[str, float] = {}
@@ -75,14 +81,12 @@ class SimAgent(mesa.Agent):
         # Debugging/interpretability
         self.last_thought = ""
 
-        #emotion analyser
-        self.emotion_analyser = EmotionAnalyser()  # ← ADD THIS
-        self.emotion_memory = deque(maxlen=50)
+        # Emotion analyser
+        self.emotion_analyser = EmotionAnalyser()
 
-    #Where agents Processes emotional content of messages. It would skip if there is no text. It would do that by
+    # Where agents processes emotional content of messages. It would skip if there is no text. It would do that by
     # getting the strongest emotion and if the emotion is negative trust would decrease. If the emotions is positive
     # trust will increase. Ensuring the emotion interaction is stored in their memory.
-
     def process_emotional_message(self, text: str, speaker: str, tick: int) -> Dict[str, float]:
 
         if not text:
@@ -117,17 +121,60 @@ class SimAgent(mesa.Agent):
                 else:
                     self.last_thought = f"They're sad. Awkward."
 
-            # Remember this emotional interaction
-            self.emotion_memory.append({
+            # Remember this emotional interaction using the memory system
+            memory_entry = {
                 'tick': tick,
                 'speaker': speaker,
                 'primary_emotion': primary,
                 'confidence': confidence,
                 'all_emotions': emotions,
                 'text': text
-            })
+            }
+            self.memory.add_memory(memory_entry)
+
+            # Periodically update impressions (every 10 ticks)
+            if tick % 10 == 0:
+                new_impressions = self.memory.update_impressions(tick)
+                if new_impressions:
+                    self.last_thought = f"I'm learning about {list(new_impressions.keys())}"
 
         return emotions
+
+    # Adjust interaction probability based on impressions of target
+    def consider_impressions_in_decision(self, target_id: str) -> float:
+        """
+        Returns a multiplier for action probabilities based on impressions.
+        >1.0 = more likely to interact positively
+        <1.0 = less likely to interact / more cautious
+        """
+        impression = self.memory.get_impression(target_id)
+        if not impression:
+            return 1.0
+
+        multiplier = 1.0
+        patterns = impression.get('patterns', {})
+
+        # Avoid people who are often angry
+        if 'anger_prone' in patterns:
+            multiplier *= 0.7
+            self.last_thought = f"I should be careful around {target_id}"
+
+        # More likely to interact with positive people
+        if 'positive' in patterns:
+            multiplier *= 1.3
+            self.last_thought = f"I enjoy talking to {target_id}"
+
+        # Avoid conflict-prone individuals
+        if 'conflict_prone' in patterns:
+            multiplier *= 0.6
+            self.last_thought = f"{target_id} always causes arguments"
+
+        # Emotional volatility makes interactions unpredictable
+        if 'volatile' in patterns:
+            multiplier *= 0.8
+
+        return multiplier
+
     # ----------------------------
     # Decision: choose 0 or 1 action per tick
     # ----------------------------
@@ -154,7 +201,7 @@ class SimAgent(mesa.Agent):
 
         # Decide if I act this tick (using boosted act_chance)
         if self.model.random.random() > act_chance:
-            self.last_thought = "I’m staying quiet."
+            self.last_thought = "I'm staying quiet."
             return None
 
         # Prefer replying to the person who spoke to me last tick
@@ -170,21 +217,24 @@ class SimAgent(mesa.Agent):
         else:
             target = self._pick_target(others)
 
-        # mood affects kindness vs rudeness
-        p_insult = clamp((1.0 - A) * max(0.0, -self.valence) * 0.7, 0.0, 0.6)
+        # Get impression multiplier based on memory of this target
+        impression_multiplier = self.consider_impressions_in_decision(target.public_id)
+
+        # mood affects kindness vs rudeness (adjusted by impressions)
+        p_insult = clamp((1.0 - A) * max(0.0, -self.valence) * 0.7 * (1 / impression_multiplier), 0.0, 0.6)
         p_ignore = clamp(max(0.0, -self.valence) * 0.4, 0.0, 0.5)
-        p_help = clamp((A * generosity) * max(0.0, self.valence + 0.2) * 0.6, 0.0, 0.7)
-        p_compliment = clamp(A * max(0.0, self.valence + 0.1) * 0.5, 0.0, 0.6)
+        p_help = clamp((A * generosity) * max(0.0, self.valence + 0.2) * 0.6 * impression_multiplier, 0.0, 0.7)
+        p_compliment = clamp(A * max(0.0, self.valence + 0.1) * 0.5 * impression_multiplier, 0.0, 0.6)
 
         r = self.model.random.random()
 
         if r < p_insult:
-            self.last_thought = f"I’m irritated with {target.public_id}."
+            self.last_thought = f"I'm irritated with {target.public_id}."
             return self._event("insult", target.public_id, self._say("insult", target.public_id))
         r -= p_insult
 
         if r < p_ignore:
-            self.last_thought = f"I’m going to ignore {target.public_id}."
+            self.last_thought = f"I'm going to ignore {target.public_id}."
             return self._event("ignore", target.public_id, "")
         r -= p_ignore
 
@@ -194,10 +244,10 @@ class SimAgent(mesa.Agent):
         r -= p_help
 
         if r < p_compliment:
-            self.last_thought = f"I’ll be nice to {target.public_id}."
+            self.last_thought = f"I'll be nice to {target.public_id}."
             return self._event("compliment", target.public_id, self._say("compliment", target.public_id))
 
-        self.last_thought = f"I’ll talk to {target.public_id}."
+        self.last_thought = f"I'll talk to {target.public_id}."
         return self._event("say", target.public_id, self._say("say", target.public_id))
 
     def _pick_target(self, others: List["SimAgent"]) -> "SimAgent":
@@ -223,7 +273,7 @@ class SimAgent(mesa.Agent):
     # Apply: update trust/mood/memory from events
     # ----------------------------
     def apply_events(self, events: List[Dict[str, Any]], tick: int) -> None:
-        # tick-by-tick drift so things don’t explode
+        # tick-by-tick drift so things don't explode
         self.energy = max(0, self.energy - 1)
         self.valence *= 0.97
         self.arousal = clamp(self.arousal * 0.98 + 0.01, 0.0, 1.0)
@@ -234,8 +284,7 @@ class SimAgent(mesa.Agent):
 
             actor = e.get("actor", "")
             etype = e.get("type", "")
-            text= e.get("text", "")
-
+            text = e.get("text", "")
 
             # trust update
             dt = TRUST_DELTA.get(etype, 0.0)
@@ -246,11 +295,11 @@ class SimAgent(mesa.Agent):
             self.valence = clamp(self.valence + dv, -1.0, 1.0)
             self.arousal = clamp(self.arousal + abs(dv) * 0.15, 0.0, 1.0)
 
-            # NEW: Process emotion from the message text
+            # Process emotion from the message text
             if text:
                 self.process_emotional_message(text, actor, tick)
 
-            # memory
+            # memory (using existing importance calculation - kept for backward compatibility)
             mem = {
                 "tick": tick,
                 "kind": etype,
@@ -270,7 +319,7 @@ class SimAgent(mesa.Agent):
         )
 
     # ----------------------------
-    # “Speech”
+    # "Speech"
     # ----------------------------
     def _say(self, kind: str, target_id: str) -> str:
         style = self.speech_style
@@ -283,10 +332,10 @@ class SimAgent(mesa.Agent):
             return (
                 f"That was unacceptable, {target_id}."
                 if style == "formal"
-                else f"{target_id}, that’s embarrassing."
+                else f"{target_id}, that's embarrassing."
             )
 
-        # normal “say”
+        # normal "say"
         if style == "bubbly":
             return f"Hey {target_id}!! 😊"
         if style == "dry":
@@ -313,8 +362,13 @@ class SimAgent(mesa.Agent):
             "last_thought": self.last_thought,
         }
 
-        # NEW: Add recent emotion if available
+        # Add recent emotion if available
         if self.emotion_memory:
             state["last_emotion"] = self.emotion_memory[-1]['primary_emotion']
+
+        # Add memory statistics and impressions
+        if hasattr(self, 'memory'):
+            state["memory_stats"] = self.memory.get_statistics()
+            state["impressions"] = { speaker: list(imp['patterns'].keys()) for speaker, imp in self.memory.impressions.items() }
 
         return state
