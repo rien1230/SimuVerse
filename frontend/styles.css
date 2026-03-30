@@ -12,6 +12,14 @@
     --bad: #ff4757;
 }
 
+#screen-setup {
+    background-image: url("image/background.png"); /* or background.png */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
 /* ===== BASE STYLES ===== */
 * {
     box-sizing: border-box;
@@ -221,7 +229,7 @@ body {
 }
 
 .section-container {
-    max-width: 1200px;
+    max-width: 1300px;
     margin: 0 auto;
     position: relative;
     z-index: 1;
@@ -378,7 +386,7 @@ body {
 .glass-card-description {
     color: rgba(20, 18, 14, 0.62);
     line-height: 1.6;
-    text-align: center;
+    text-align: left;
     margin-top: 60px;
     margin-bottom: 32px;
     flex-grow: 1;
@@ -906,12 +914,14 @@ body {
     filter: grayscale(0.3) !important;
 }
 /* ===== SETUP SCREEN - TWO MODE DESIGN ===== */
-.setup-container {
-  max-width: 1100px;
-  margin: 100px auto 40px;
-  padding: 0 24px;
-}
 
+.setup-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 100px 24px 40px;
+    flex: 1;  
+    width: 100%;
+}
 .setup-header {
   text-align: center;
   margin-bottom: 48px;

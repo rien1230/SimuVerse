@@ -1,0 +1,2339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SimuVerse — History & Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#faf9f6;--s:#f3f1ec;--w:#fff;
+  --ink:#18181b;--ink2:#3f3f46;--muted:#71717a;--rule:#e4e2dc;
+  --blue:#2563eb;--bl:#dbeafe;--bm:#bfdbfe;
+  --teal:#0d9488;--tl:#ccfbf1;
+  --amber:#b45309;--al:#fef3c7;
+  --red:#dc2626;--rl:#fee2e2;
+  --green:#16a34a;--gl:#dcfce7;
+  --purple:#7c3aed;--pl:#ede9fe;
+  --serif:'Lora',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Nav ── */
+nav {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  background: rgba(250, 249, 246, 0.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+  gap: 4px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.n-logo {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blue);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-right: 8px;
+}
+
+.n-link {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.15s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.n-link:hover {
+  color: var(--ink);
+  background: var(--s);
+}
+
+.n-link.cur {
+  color: var(--blue);
+  font-weight: 500;
+}
+
+.n-r {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.api-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--w);
+  border: 1px solid var(--rule);
+}
+
+.apid {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.apid.ok {
+  background: var(--green);
+  animation: blink 2s ease-in-out infinite;
+}
+
+.apid.err {
+  background: var(--red);
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.n-cta {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.n-cta:hover {
+  opacity: 0.88;
+}
+
+/* ── Shell: sidebar | main ── */
+.shell {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ── */
+.sb {
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--w);
+}
+
+.sb-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sb-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sb-ct {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--s);
+  border: 1px solid var(--rule);
+}
+
+.sb-search {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+
+.sb-search input {
+  width: 100%;
+  background: var(--s);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: var(--sans);
+  outline: none;
+  color: var(--ink);
+}
+
+.sb-search input:focus {
+  border-color: var(--bm);
+}
+
+.sb-filters {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.fb {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 3px 9px;
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.15s;
+}
+
+.fb:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.fb.on {
+  background: var(--bl);
+  border-color: var(--bm);
+  color: var(--blue);
+  font-weight: 500;
+}
+
+.sb-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ri {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ri:hover {
+  background: var(--s);
+}
+
+.ri.sel {
+  background: var(--bl);
+  border-left: 3px solid var(--blue);
+}
+
+.ri.ca {
+  background: #fffbeb;
+  border-left: 3px solid var(--amber);
+}
+
+.ri.cb {
+  background: #f0fdf4;
+  border-left: 3px solid var(--green);
+}
+
+.ri-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 3px;
+  flex-wrap: wrap;
+}
+
+.ri-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--blue);
+}
+
+.ri-oc {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.oc-success {
+  background: var(--gl);
+  color: var(--green);
+}
+
+.oc-partial {
+  background: var(--al);
+  color: var(--amber);
+}
+
+.oc-failure {
+  background: var(--rl);
+  color: var(--red);
+}
+
+.oc-deadlock {
+  background: var(--pl);
+  color: var(--purple);
+}
+
+.oc-meltdown {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.oc-max_ticks,
+.oc-unknown {
+  background: var(--s);
+  color: var(--muted);
+}
+
+.ri-cmp {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.ri-cmp.a {
+  background: var(--al);
+  color: var(--amber);
+}
+
+.ri-cmp.b {
+  background: var(--gl);
+  color: var(--green);
+}
+
+.ri-sc {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  text-transform: capitalize;
+}
+
+.ri-meta {
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  gap: 8px;
+}
+
+.ri-btns {
+  display: flex;
+  gap: 4px;
+  margin-top: 7px;
+  flex-wrap: wrap;
+}
+
+.rb {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.15s;
+}
+
+.rb:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--bl);
+}
+
+.rb.del:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--rl);
+}
+
+.rb.on {
+  background: var(--al);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.no-runs {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.no-runs-i {
+  font-size: 28px;
+  margin-bottom: 10px;
+  opacity: 0.3;
+}
+
+/* ── Main ── */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Compare banner */
+.cmp-banner {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: 12px 24px;
+  display: none;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  background: var(--w);
+}
+
+.cmp-banner.vis {
+  display: flex;
+}
+
+.cmp-slot {
+  flex: 1;
+  min-width: 110px;
+}
+
+.cmp-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.cmp-lbl.a {
+  color: var(--amber);
+}
+
+.cmp-lbl.b {
+  color: var(--green);
+}
+
+.cmp-val {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  background: var(--s);
+  border-radius: 6px;
+  border: 1px solid var(--rule);
+}
+
+.cmp-val.mt {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.cmp-go {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: opacity 0.15s;
+}
+
+.cmp-go:hover {
+  opacity: 0.88;
+}
+
+.cmp-go:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cmp-clr {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.cmp-clr:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* Tabs */
+.tab-bar {
+  flex-shrink: 0;
+  border-bottom: 2px solid var(--rule);
+  background: var(--w);
+  display: flex;
+  padding: 0 24px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--sans);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab.on {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+/* Body */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Placeholder */
+.ph {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--muted);
+}
+
+.ph-ic {
+  font-size: 44px;
+  margin-bottom: 16px;
+  opacity: 0.22;
+}
+
+.ph-t {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink2);
+  margin-bottom: 8px;
+}
+
+.ph-s {
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+/* Stat grids */
+.sg4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sg3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sc {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.sc-l {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.sc-v {
+  font-size: 20px;
+  font-weight: 600;
+  font-family: var(--mono);
+  margin-bottom: 2px;
+}
+
+.sc-s {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Section label */
+.slbl {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slbl::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* Agent grid */
+.ag2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.acard {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.acard-t {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.av {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.av1 {
+  background: var(--bl);
+  color: var(--blue);
+  border: 1px solid var(--bm);
+}
+
+.av2 {
+  background: var(--gl);
+  color: var(--green);
+  border: 1px solid #bbf7d0;
+}
+
+.av3 {
+  background: var(--rl);
+  color: var(--red);
+  border: 1px solid #fecaca;
+}
+
+.av4 {
+  background: var(--al);
+  color: var(--amber);
+  border: 1px solid #fde68a;
+}
+
+.av-nm {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.av-st {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.abar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.abar-l {
+  font-size: 10px;
+  color: var(--muted);
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.abar-t {
+  flex: 1;
+  height: 4px;
+  background: var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.abar-f {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.af-s {
+  background: var(--red);
+}
+
+.af-t {
+  background: var(--teal);
+}
+
+.af-v {
+  background: var(--blue);
+}
+
+.abar-n {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  width: 32px;
+  text-align: right;
+}
+
+/* Task pills */
+.tpills {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.tpill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+.tpill.done {
+  background: var(--gl);
+  color: var(--green);
+  border-color: #bbf7d0;
+}
+
+.tpill.pend {
+  background: var(--s);
+  color: var(--muted);
+  border-color: var(--rule);
+}
+
+/* Completion order */
+.cord {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.cord-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cord-n {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cord-nm {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.cord-arr {
+  color: var(--muted);
+}
+
+/* ── REPLAY ── */
+.rp-ctrl {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rp-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--rule);
+  background: var(--s);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.rp-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.rp-btn.pl {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+
+.rp-btn.pl:hover {
+  opacity: 0.88;
+}
+
+input.rp-rng {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--rule);
+  outline: none;
+  cursor: pointer;
+}
+
+input.rp-rng::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--blue);
+  cursor: pointer;
+}
+
+.rp-tick {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.spd-row {
+  display: flex;
+  gap: 4px;
+}
+
+.spd {
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.spd.on,
+.spd:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--bl);
+}
+
+/* Replay scene */
+.rp-scene {
+  background: #080c12;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.rp-scene-bar {
+  background: #0f1520;
+  border-bottom: 1px solid #1e2a35;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.rp-bar-lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #6b7f96;
+  margin-left: 8px;
+}
+
+svg.rp-svg {
+  width: 100%;
+  display: block;
+}
+
+/* Replay events list */
+.rp-evs {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.rev {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 12px;
+}
+
+.rev:last-child {
+  border-bottom: none;
+}
+
+.rev-t {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--s);
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.rev-b {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.rb-share {
+  background: var(--gl);
+  color: var(--green);
+}
+
+.rb-refuse {
+  background: var(--rl);
+  color: var(--red);
+}
+
+.rb-ask {
+  background: var(--bl);
+  color: var(--blue);
+}
+
+.rb-oth {
+  background: var(--s);
+  color: var(--muted);
+}
+
+.rev-body {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.rev-main {
+  color: var(--ink2);
+}
+
+.rev-msg {
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* ── CHARTS ── */
+.cg2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.ccrd {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.ccrd-t {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  margin-bottom: 12px;
+}
+
+.cwrap {
+  position: relative;
+  height: 200px;
+}
+
+/* ── COMPARE ── */
+.cmp-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.cmp-card {
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.cmp-card.a {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+.cmp-card.b {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.cmp-card-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.cmp-card-lbl.a {
+  color: var(--amber);
+}
+
+.cmp-card-lbl.b {
+  color: var(--green);
+}
+
+.cmp-card-info {
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.5;
+}
+
+.cmp-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.cmp-row {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  padding: 11px 14px;
+  display: grid;
+  grid-template-columns: 120px 1fr 56px 1fr 56px;
+  gap: 8px;
+  align-items: center;
+}
+
+.cmp-key {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.cmp-bwrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cmp-bar {
+  height: 6px;
+  border-radius: 3px;
+  min-width: 3px;
+  max-width: 130px;
+}
+
+.cmp-bar.a {
+  background: var(--amber);
+}
+
+.cmp-bar.b {
+  background: var(--green);
+}
+
+.cmp-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: right;
+}
+
+.win {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--gl);
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* ── EXPERIMENTS ── */
+.expf {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.expf-t {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.expf-d {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  line-height: 1.55;
+}
+
+.exprow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.expf-fld {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.expf-lbl {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.expf-hint {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.exps,
+.expi {
+  background: var(--s);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--sans);
+  color: var(--ink);
+  outline: none;
+}
+
+.exps:focus,
+.expi:focus {
+  border-color: var(--bm);
+}
+
+.exp-run {
+  padding: 9px 22px;
+  border-radius: 9px;
+  border: none;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: opacity 0.15s;
+}
+
+.exp-run:hover {
+  opacity: 0.88;
+}
+
+.exp-run:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.exp-res {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.exp-load {
+  text-align: center;
+  padding: 28px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.exp-spin {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--rule);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.oc-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.oc-cell {
+  background: var(--s);
+  border-radius: 9px;
+  padding: 11px 6px;
+  text-align: center;
+  border: 1px solid var(--rule);
+}
+
+.oc-pct {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.oc-lbl {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.met-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.mc {
+  background: var(--s);
+  border-radius: 8px;
+  padding: 11px;
+  border: 1px solid var(--rule);
+}
+
+.mc-l {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.mc-v {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.nlp-hdr {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.nlp-col {
+  padding: 14px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.nlp-col.on {
+  background: var(--gl);
+  border: 1px solid #bbf7d0;
+}
+
+.nlp-col.off {
+  background: var(--s);
+  border: 1px solid var(--rule);
+}
+
+.nlp-col-t {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.nlp-col.on .nlp-col-t {
+  color: var(--green);
+}
+
+.nlp-col.off .nlp-col-t {
+  color: var(--muted);
+}
+
+.nlp-sr {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.nlp-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.exp-note {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+  padding: 12px 14px;
+  background: var(--bl);
+  border-radius: 9px;
+  border-left: 3px solid var(--blue);
+  margin-top: 12px;
+}
+
+/* ── Scroll ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="n-logo">SimuVerse</a>
+  <a href="index.html" class="n-link">Home</a>
+  <a href="intro.html" class="n-link">Explainer</a>
+  <a href="setup.html" class="n-link">New Run</a>
+  <span class="n-link cur">History</span>
+  <div class="n-r">
+    <div class="api-pill"><div class="apid" id="apid"></div><span id="aptxt">Checking…</span></div>
+    <a href="setup.html" class="n-cta">+ New Experiment</a>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- Sidebar -->
+  <div class="sb">
+    <div class="sb-head"><span class="sb-title">Saved Runs</span><span class="sb-ct" id="rct">0</span></div>
+    <div class="sb-search"><input id="srch" placeholder="Search by ID or scenario…" oninput="renderList()"></div>
+    <div class="sb-filters">
+      <button class="fb on"  onclick="setF('all',this)">All</button>
+      <button class="fb" onclick="setF('success',this)">✓ Success</button>
+      <button class="fb" onclick="setF('failure',this)">✕ Failed</button>
+      <button class="fb" onclick="setF('deadlock',this)">⊗ Deadlock</button>
+      <button class="fb" onclick="setF('partial',this)">⬡ Partial</button>
+    </div>
+    <div class="sb-list" id="rlist"><div class="no-runs"><div class="no-runs-i">⏳</div>Loading…</div></div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Compare banner -->
+    <div class="cmp-banner" id="cmp-banner">
+      <div class="cmp-slot"><div class="cmp-lbl a">Run A</div><div class="cmp-val mt" id="cv-a">Not selected</div></div>
+      <div style="font-size:18px;color:var(--muted)">vs</div>
+      <div class="cmp-slot"><div class="cmp-lbl b">Run B</div><div class="cmp-val mt" id="cv-b">Not selected</div></div>
+      <button class="cmp-go" id="cmp-go" onclick="doCompare()" disabled>Compare →</button>
+      <button class="cmp-clr" onclick="clearCmp()">Clear</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab on" id="tb-overview"   onclick="goTab('overview',this)">Overview</button>
+      <button class="tab"    id="tb-replay"      onclick="goTab('replay',this)">▶ Replay Step-by-Step</button>
+      <button class="tab"    id="tb-charts"      onclick="goTab('charts',this)">📈 Graphs</button>
+      <button class="tab"    id="tb-compare"     onclick="goTab('compare',this)">⚖ Compare Two Runs</button>
+      <button class="tab"    id="tb-experiments" onclick="goTab('experiments',this)">🧪 Run Experiments</button>
+    </div>
+
+    <!-- Body panels -->
+    <div class="body">
+
+      <!-- Overview -->
+      <div id="p-overview">
+        <div class="ph"><div class="ph-ic">📊</div><div class="ph-t">Select a run to inspect it</div><div class="ph-s">Click any run in the left panel, or use the ▶ Replay Step-by-Step button to jump straight into replay.</div></div>
+      </div>
+
+      <!-- Replay -->
+      <div id="p-replay" style="display:none">
+        <div class="ph"><div class="ph-ic">▶</div><div class="ph-t">Select a run to replay it</div><div class="ph-s">Use the ▶ Replay Step-by-Step button next to any run, or select a run first and click the Replay tab.</div></div>
+      </div>
+
+      <!-- Charts -->
+      <div id="p-charts" style="display:none">
+        <div class="ph"><div class="ph-ic">📈</div><div class="ph-t">Select a run to see charts</div><div class="ph-s">Graphs show how trust, stress, and group tension changed across the run — and when each piece of information was shared.</div></div>
+      </div>
+
+      <!-- Compare -->
+      <div id="p-compare" style="display:none">
+        <div class="ph"><div class="ph-ic">⚖</div><div class="ph-t">Mark two runs as A and B, then compare them</div><div class="ph-s">Use the A and B buttons next to any run on the left, then click the Compare button that appears at the top.</div></div>
+      </div>
+
+      <!-- Experiments -->
+      <div id="p-experiments" style="display:none">
+
+        <!-- NLP compare -->
+        <div class="expf">
+          <div class="expf-t">🔬 Does Emotion Analysis Change Outcomes?</div>
+          <div class="expf-d">Run the same scenario twice with identical settings — once with emotion analysis active, once without. This reveals whether detecting and reacting to emotions actually changes how agents cooperate.</div>
+          <div class="exprow">
+            <div class="expf-fld">
+              <label class="expf-lbl">Scenario</label>
+              <select class="exps" id="nlp-sc">
+                <option value="office_proposal">Office — Project Proposal</option>
+                <option value="office_roles">Office — Assign Team Roles</option>
+                <option value="cafe_vacation">Café — Plan a Vacation</option>
+                <option value="cafe_restaurant">Café — Choose a Restaurant</option>
+                <option value="escape_code">Escape — Find Exit Code</option>
+                <option value="escape_puzzle">Escape — Solve Puzzle Chain</option>
+              </select>
+            </div>
+            <div class="expf-fld">
+              <label class="expf-lbl">How many times to run each version</label>
+              <span class="expf-hint">20 or more gives reliable, consistent results</span>
+              <input class="expi" type="number" id="nlp-n" value="20" min="1" max="100">
+            </div>
+          </div>
+          <button class="exp-run" onclick="runNLP()">Run Comparison →</button>
+        </div>
+        <div id="nlp-out"></div>
+
+        <!-- Multi-scenario -->
+        <div class="expf">
+          <div class="expf-t">🌍 Compare All Scenarios</div>
+          <div class="expf-d">Run all six scenarios and compare how well groups cooperate in each one — across different environments and task types.</div>
+          <div class="exprow">
+            <div class="expf-fld"><label class="expf-lbl">Runs per scenario</label><input class="expi" type="number" id="ms-n" value="10" min="1" max="50"></div>
+            <div class="expf-fld"><label class="expf-lbl">Max steps</label><input class="expi" type="number" id="ms-t" value="30" min="10" max="120"></div>
+          </div>
+          <button class="exp-run" style="background:var(--teal)" onclick="runMulti()">Run All Scenarios →</button>
+        </div>
+        <div id="ms-out"></div>
+
+        <!-- Single -->
+        <div class="expf">
+          <div class="expf-t">⚙️ Repeat a Scenario Multiple Times</div>
+          <div class="expf-d">Run the same scenario many times and see the average outcome — useful for understanding typical behaviour, not just one-off results.</div>
+          <div class="exprow">
+            <div class="expf-fld">
+              <label class="expf-lbl">Scenario</label>
+              <select class="exps" id="se-sc">
+                <option value="office_proposal">Office — Project Proposal</option>
+                <option value="office_roles">Office — Assign Team Roles</option>
+                <option value="cafe_vacation">Café — Plan a Vacation</option>
+                <option value="cafe_restaurant">Café — Choose a Restaurant</option>
+                <option value="escape_code">Escape — Find Exit Code</option>
+                <option value="escape_puzzle">Escape — Solve Puzzle Chain</option>
+              </select>
+            </div>
+            <div class="expf-fld"><label class="expf-lbl">Number of runs</label><input class="expi" type="number" id="se-n" value="20" min="1" max="100"></div>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:14px;cursor:pointer"><input type="checkbox" id="se-nlp" checked style="accent-color:var(--blue)"> Include emotion analysis</label>
+          <button class="exp-run" style="background:var(--purple)" onclick="runSingle()">Run →</button>
+        </div>
+        <div id="se-out"></div>
+
+      </div><!-- /experiments -->
+
+    </div><!-- /body -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+const API='http://127.0.0.1:8000/api';
+const AN={A1:'Project Lead',A2:'Developer',A3:'Designer',A4:'Analyst'};
+function setText(id,val){const e=document.getElementById(id);if(e)e.textContent=val;}
+
+// Human-readable task item names
+const TASK_LABELS = {
+  tech_specs:'Technical Specifications', budget:'Budget Information',
+  requirements:'Project Requirements', design:'Design Plans',
+  frontend:'Frontend Development', backend:'Backend Development',
+  testing:'Testing Plan', documentation:'Documentation',
+  flights:'Flight Details', hotel:'Hotel Details',
+  food:'Food Recommendations', attractions:'Attractions List',
+  decision:'Final Decision', digit_1:'First Code Digit',
+  digit_2:'Second Code Digit', digit_3:'Third Code Digit',
+  order:'Digit Order', map:'Room Map', key:'Key Location',
+  lock:'Lock Combination', door:'Door Code',
+};
+function taskLabel(k){ return TASK_LABELS[k] || k.replace(/_/g,' '); }
+
+const ENV_ROLES_H = {
+  office: { A1:'Project Manager', A2:'Developer',    A3:'Designer',     A4:'Data Analyst' },
+  cafe:   { A1:'Organiser',       A2:'Researcher',   A3:'Food Expert',   A4:'Navigator'   },
+  escape: { A1:'Team Leader',     A2:'Code Breaker', A3:'Puzzle Solver', A4:'Scout'       },
+};
+function getRolesForScenario(scenarioId) {
+  const sid = (scenarioId||'').toLowerCase();
+  if (sid.startsWith('cafe'))   return ENV_ROLES_H['cafe'];
+  if (sid.startsWith('escape')) return ENV_ROLES_H['escape'];
+  return ENV_ROLES_H['office'];
+}
+function cleanMessage(text, scenarioId) {
+  if (!text) return text;
+  let t = text;
+  const roles = getRolesForScenario(scenarioId);
+  const office = ENV_ROLES_H['office'];
+
+  // Replace raw agent IDs
+  ['A1','A2','A3','A4'].forEach(id => {
+    t = t.replace(new RegExp('\\b' + id + '\\b', 'g'), roles[id]);
+  });
+
+  // Replace office role names with current environment role names
+  Object.keys(office).forEach(id => {
+    const officeLabel = office[id];
+    const currentLabel = roles[id];
+    if (officeLabel !== currentLabel) {
+      t = t.replace(new RegExp('\\b' + officeLabel + '\\b', 'g'), currentLabel);
+    }
+  });
+
+  // Replace raw task item names
+  Object.entries(TASK_LABELS).forEach(([k,v]) => {
+    t = t.replace(new RegExp('\\b' + k + '\\b', 'g'), v);
+  });
+  return t;
+}
+
+const AC={A1:'#38bdf8',A2:'#34d399',A3:'#f87171',A4:'#a78bfa'};
+const AP={A1:{x:120,y:130},A2:{x:540,y:130},A3:{x:120,y:280},A4:{x:540,y:280}};
+
+let allRuns=[],filterMode='all',selRun=null,cmpA=null,cmpB=null;
+let rpHist=[],rpTick=0,rpPlaying=false,rpInt=null,rpSpeed=800;
+let chartObjs={};
+let curTab='overview';
+
+// ── Init ──────────────────────────────────────────────────────────
+async function init(){
+  try{
+    const r=await fetch(`${API}/health`,{signal:AbortSignal.timeout(3000)});
+    if(r.ok){document.getElementById('apid').className='apid ok';document.getElementById('aptxt').textContent='Connected';}
+  }catch{document.getElementById('apid').className='apid err';document.getElementById('aptxt').textContent='Offline';}
+  await loadRuns();
+  // Auto-select from URL
+  const rid=new URLSearchParams(location.search).get('run');
+  if(rid) selectRun(rid);
+}
+
+async function loadRuns(){
+  try{
+    const r=await fetch(`${API}/runs/`);
+    if(!r.ok)throw new Error();
+    const d=await r.json();
+    allRuns=d.runs||[];
+    renderList();
+  }catch{
+    document.getElementById('rlist').innerHTML='<div class="no-runs"><div class="no-runs-i">⚠</div>Backend not reachable</div>';
+  }
+}
+
+// ── Run list ──────────────────────────────────────────────────────
+function setF(mode,btn){
+  filterMode=mode;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderList();
+}
+
+function renderList(){
+  const q=(document.getElementById('srch').value||'').toLowerCase();
+  const list=allRuns.filter(r=>{
+    if(filterMode!=='all'&&r.outcome!==filterMode)return false;
+    if(q&&!(r.run_id.toLowerCase().includes(q)||(r.scenario_id||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  document.getElementById('rct').textContent=list.length;
+  if(!list.length){
+    document.getElementById('rlist').innerHTML=`<div class="no-runs"><div class="no-runs-i">📭</div><div>No runs found.<br><a href="setup.html" style="color:var(--blue)">Run an experiment first</a></div></div>`;
+    return;
+  }
+  document.getElementById('rlist').innerHTML=list.map(r=>{
+    const isSel=selRun?.run_id===r.run_id;
+    const isA=cmpA?.run_id===r.run_id;
+    const isB=cmpB?.run_id===r.run_id;
+    let cls=isSel?'sel':'';
+    if(isA)cls='ca';if(isB)cls='cb';
+    const oc=r.outcome||'unknown';
+    const sc=(r.scenario_id||'').replace(/_/g,' ');
+    const ts=r.timestamp?new Date(r.timestamp).toLocaleString('en-GB',{dateStyle:'short',timeStyle:'short'}):'';
+    return `<div class="ri ${cls}" onclick="selectRun('${r.run_id}')">
+      <div class="ri-top">
+        <span class="ri-id">${r.run_id}</span>
+        <span class="ri-oc oc-${oc}">${oc}</span>
+        ${isA?'<span class="ri-cmp a">A</span>':''}
+        ${isB?'<span class="ri-cmp b">B</span>':''}
+      </div>
+      <div class="ri-sc">${sc}</div>
+      <div class="ri-meta"><span>⏱ ${r.ticks||0} steps</span><span>🔁 run # ${r.seed||'?'}</span><span>${ts}</span></div>
+      <div class="ri-btns">
+        <button class="rb" onclick="e=event,e.stopPropagation(),selectRun('${r.run_id}')">View</button>
+        <button class="rb ${isA?'on':''}" onclick="e=event,e.stopPropagation(),setCmpA('${r.run_id}')">A</button>
+        <button class="rb ${isB?'on':''}" onclick="e=event,e.stopPropagation(),setCmpB('${r.run_id}')">B</button>
+        <button class="rb" onclick="e=event,e.stopPropagation(),replayThis('${r.run_id}')">▶ Replay Step-by-Step</button>
+        <button class="rb del" onclick="e=event,e.stopPropagation(),delRun('${r.run_id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Tab switching ─────────────────────────────────────────────────
+function goTab(name,btn){
+  curTab=name;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');
+  ['overview','replay','charts','compare','experiments'].forEach(n=>{
+    document.getElementById('p-'+n).style.display=(n===name?'block':'none');
+  });
+}
+
+// ── Select run ────────────────────────────────────────────────────
+async function selectRun(id){
+  const ovPanel=document.getElementById('p-overview');
+  ovPanel.innerHTML=`<div class="ph"><div class="exp-spin"></div><div style="font-size:13px;color:var(--muted)">Loading run ${id}…</div></div>`;
+  goTab('overview',document.getElementById('tb-overview'));
+
+  try{
+    // Use /replay which reliably works — extract summary from last tick + list data
+    const r=await fetch(`${API}/runs/${id}/replay`);
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const replayData=await r.json();
+    const hist=replayData.history||[];
+    const lastTick=hist[hist.length-1]||{};
+    const firstTick=hist[0]||{};
+
+    // Build a run summary from replay data + list metadata
+    const listRun=allRuns.find(r=>r.run_id===id)||{};
+    selRun={
+      run_id: id,
+      scenario_id: listRun.scenario_id||lastTick.scenario?.id||'',
+      scenario_name: listRun.scenario_name||lastTick.scenario?.name||'',
+      outcome: listRun.outcome||lastTick.scenario?.outcome||lastTick.end_reason||'unknown',
+      ticks: listRun.ticks||hist.length,
+      seed: listRun.seed||42,
+      timestamp: listRun.timestamp||'',
+      agents: lastTick.agents||[],
+      tasks: lastTick.scenario?.tasks||{},
+      metrics: lastTick.metrics||{},
+      group_state: lastTick.group_state||{},
+      completion_order: [],
+      peak_tension: Math.max(...hist.map(h=>h.group_state?.tension||0)),
+      time_to_first_share: (() => {
+        for(const h of hist){
+          if((h.events||[]).some(e=>e.type==='share_info')) return h.tick;
+        }
+        return null;
+      })(),
+      intervention_count: listRun.intervention_count||0,
+      // Extract completion order from share events
+      ...(() => {
+        const order=[];
+        hist.forEach(h=>(h.events||[]).forEach(e=>{
+          if(e.type==='share_info'&&e.item&&!order.includes(e.item))order.push(e.item);
+        }));
+        return {completion_order:order};
+      })(),
+    };
+
+    renderOverview(selRun);
+    renderList();
+    // Store replay data and build charts
+    rpHist=hist; rpTick=0;
+    loadChartsFromHist(selRun, hist);
+    if(curTab==='replay') buildReplayUI();
+  }catch(e){
+    ovPanel.innerHTML=`<div class="ph"><div class="ph-ic">⚠</div><div class="ph-t">Could not load run</div><div class="ph-s">${e.message}</div></div>`;
+  }
+}
+
+async function replayThis(id){
+  await selectRun(id);
+  goTab('replay',document.getElementById('tb-replay'));
+}
+
+// ── Overview ──────────────────────────────────────────────────────
+function renderOverview(run){
+  const m=run.metrics||{};
+  const gs=run.group_state||{};
+  const agents=run.agents||[];
+  const tasks=run.tasks||{};
+  const order=run.completion_order||[];
+  const oc=run.outcome||'unknown';
+  const ocCol={success:'var(--green)',partial:'var(--amber)',failure:'var(--red)',deadlock:'var(--purple)',meltdown:'#c2410c'}[oc]||'var(--muted)';
+
+  const aCards=agents.map((a,i)=>{
+    const tv=Object.values(a.trust||{});
+    const avgT=tv.length?tv.reduce((s,v)=>s+v,0)/tv.length:0.5;
+    return `<div class="acard">
+      <div class="acard-t"><div class="av av${i+1}">${a.id}</div>
+        <div><div class="av-nm">${AN[a.id]||a.id}</div><div class="av-st">${a.strategy||'neutral'} · ${a.last_detected_emotion||'neutral'}</div></div>
+      </div>
+      <div class="abar-row"><span class="abar-l">Stress</span><div class="abar-t"><div class="abar-f af-s" style="width:${Math.min(100,(a.stress||0)*100)}%"></div></div><span class="abar-n">${(a.stress||0).toFixed(2)}</span></div>
+      <div class="abar-row"><span class="abar-l">Average Trust</span><div class="abar-t"><div class="abar-f af-t" style="width:${Math.min(100,avgT*100)}%"></div></div><span class="abar-n">${avgT.toFixed(2)}</span></div>
+      <div class="abar-row"><span class="abar-l">Valence</span><div class="abar-t"><div class="abar-f af-v" style="width:${Math.min(100,((a.mood?.valence||0)+1)*50)}%"></div></div><span class="abar-n">${(a.mood?.valence||0).toFixed(2)}</span></div>
+    </div>`;
+  }).join('');
+
+  const tPills=Object.entries(tasks).map(([k,v])=>`<span class="tpill ${v?'done':'pend'}">${v?'✓':'○'} ${taskLabel(k)}</span>`).join('')||'<span style="font-size:12px;color:var(--muted)">No task data</span>';
+  const ordHtml=order.length?order.map((t,i)=>`<div class="cord-step">${i>0?'<span class="cord-arr">→</span>':''}<span class="cord-n">${i+1}</span><span class="cord-nm">${t}</span></div>`).join(''):'<span style="font-size:12px;color:var(--muted)">No tasks completed</span>';
+
+  document.getElementById('p-overview').innerHTML=`
+    <div class="sg4">
+      <div class="sc"><div class="sc-l">Outcome</div><div class="sc-v" style="font-size:15px;color:${ocCol}">${oc.charAt(0).toUpperCase()+oc.slice(1)}</div><div class="sc-s">${(run.scenario_id||'').replace(/_/g,' ')}</div></div>
+      <div class="sc"><div class="sc-l">Duration</div><div class="sc-v">${run.ticks||0}</div><div class="sc-s">steps</div></div>
+      <div class="sc"><div class="sc-l">Average Trust</div><div class="sc-v" style="color:var(--teal)">${(m.avg_trust||0).toFixed(3)}</div><div class="sc-s">final tick</div></div>
+      <div class="sc"><div class="sc-l">Average Stress</div><div class="sc-v" style="color:var(--red)">${(m.avg_stress||0).toFixed(3)}</div><div class="sc-s">final tick</div></div>
+    </div>
+    <div class="sg3">
+      <div class="sc"><div class="sc-l">Highest Tension</div><div class="sc-v" style="color:var(--red);font-size:16px">${(run.peak_tension||gs.tension||0).toFixed(3)}</div></div>
+      <div class="sc"><div class="sc-l">First Info Shared</div><div class="sc-v" style="color:var(--teal);font-size:16px">T${run.time_to_first_share||'—'}</div></div>
+      <div class="sc"><div class="sc-l">Reproducibility #</div><div class="sc-v" style="font-size:16px">${run.seed||'?'}</div></div>
+    </div>
+    <div class="slbl">How each agent ended up</div>
+    <div class="ag2">${aCards}</div>
+    <div class="slbl">Order information was shared</div>
+    <div class="cord" style="margin-bottom:16px">${ordHtml}</div>
+    <div class="slbl">Task checklist</div>
+    <div class="tpills">${tPills}</div>
+  `;
+}
+
+// ── Charts ────────────────────────────────────────────────────────
+function loadChartsFromHist(run, hist){
+  const el=document.getElementById('p-charts');
+  el.innerHTML=`<div class="ph"><div class="exp-spin"></div><div style="font-size:13px;color:var(--muted)">Loading charts…</div></div>`;
+  try{
+    if(!hist.length)throw new Error('No history data');
+
+    const steps=hist.map(h=>h.tick);
+    const trust=hist.map(h=>(h.metrics?.avg_trust||0));
+    const stress=hist.map(h=>(h.metrics?.avg_stress||0));
+    const tension=hist.map(h=>(h.group_state?.tension||0));
+    const cohesion=hist.map(h=>(h.group_state?.cohesion||0));
+
+    el.innerHTML=`<div class="cg2">
+      <div class="ccrd"><div class="ccrd-t">Trust and Stress over time</div><div class="cwrap"><canvas id="ch-ts"></canvas></div></div>
+      <div class="ccrd"><div class="ccrd-t">Group Tension and Cohesion</div><div class="cwrap"><canvas id="ch-gc"></canvas></div></div>
+      <div class="ccrd"><div class="ccrd-t">Each agent's stress at the end</div><div class="cwrap"><canvas id="ch-as"></canvas></div></div>
+      <div class="ccrd"><div class="ccrd-t">When each piece of information was shared</div><div class="cwrap"><canvas id="ch-tc"></canvas></div></div>
+    </div>`;
+
+    Object.values(chartObjs).forEach(c=>{try{c.destroy();}catch{}});
+    chartObjs={};
+
+    const base={responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#71717a',font:{size:11}}}},
+      scales:{x:{ticks:{color:'#71717a',font:{size:10}},grid:{color:'#e4e2dc'}},
+              y:{ticks:{color:'#71717a',font:{size:10}},grid:{color:'#e4e2dc'},min:0,max:1}}};
+
+    chartObjs.ts=new Chart(document.getElementById('ch-ts'),{type:'line',data:{labels:ticks,datasets:[
+      {label:'Average Trust',data:trust,borderColor:'#0d9488',backgroundColor:'rgba(13,148,136,.06)',tension:0.3,pointRadius:0,borderWidth:2},
+      {label:'Average Stress',data:stress,borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.06)',tension:0.3,pointRadius:0,borderWidth:2}
+    ]},options:structuredClone(base)});
+
+    chartObjs.gc=new Chart(document.getElementById('ch-gc'),{type:'line',data:{labels:ticks,datasets:[
+      {label:'Group Tension',data:tension,borderColor:'#f87171',backgroundColor:'rgba(248,113,113,.06)',tension:0.3,pointRadius:0,borderWidth:2},
+      {label:'Group Cohesion',data:cohesion,borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.06)',tension:0.3,pointRadius:0,borderWidth:2}
+    ]},options:structuredClone(base)});
+
+    const aLabels=(run.agents||[]).map(a=>AN[a.id]||a.id);
+    const aStress=(run.agents||[]).map(a=>+(a.stress||0).toFixed(3));
+    const barBase=structuredClone(base);
+    barBase.plugins.legend={display:false};
+    chartObjs.as=new Chart(document.getElementById('ch-as'),{type:'bar',data:{labels:aLabels,datasets:[{
+      label:'Final Stress',data:aStress,
+      backgroundColor:['rgba(56,189,248,.55)','rgba(52,211,153,.55)','rgba(248,113,113,.55)','rgba(167,139,250,.55)'],
+      borderColor:['#38bdf8','#34d399','#f87171','#a78bfa'],borderWidth:1.5
+    }]},options:barBase});
+
+    // Task timeline
+    const shEvs=[];
+    hist.forEach(h=>(h.events||[]).forEach(e=>{
+      if(e.type==='share_info'&&e.item&&!shEvs.find(x=>x.item===e.item))shEvs.push({item:e.item,tick:h.tick});
+    }));
+    const tcBase=structuredClone(base);
+    tcBase.indexAxis='y';
+    tcBase.scales.x={...tcBase.scales.x,min:0,max:run.ticks||30};
+    tcBase.scales.y={ticks:{color:'#71717a',font:{size:10}},grid:{color:'#e4e2dc'}};
+    chartObjs.tc=new Chart(document.getElementById('ch-tc'),{type:'bar',data:{
+      labels:shEvs.map(e=>taskLabel(e.item)),
+      datasets:[{label:'Tick shared',data:shEvs.map(e=>e.tick),backgroundColor:'rgba(37,99,235,.5)',borderColor:'#2563eb',borderWidth:1.5}]
+    },options:tcBase});
+  }catch(e){
+    el.innerHTML=`<div class="ph"><div class="ph-ic">📈</div><div class="ph-t">Could not load charts</div><div class="ph-s">${e.message}</div></div>`;
+  }
+}
+
+// ── Replay ────────────────────────────────────────────────────────
+async function loadRpData(id){
+  // If rpHist already loaded by selectRun, just build UI
+  if(rpHist.length && selRun?.run_id===id){
+    buildReplayUI(); return;
+  }
+  const el=document.getElementById('p-replay');
+  el.innerHTML=`<div class="ph"><div class="exp-spin"></div><div style="font-size:13px;color:var(--muted)">Loading replay data…</div></div>`;
+  try{
+    const r=await fetch(`${API}/runs/${id}/replay`);
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const d=await r.json();
+    rpHist=d.history||[];
+    rpTick=0;
+    if(!rpHist.length)throw new Error('No replay history returned');
+    buildReplayUI();
+  }catch(e){
+    document.getElementById('p-replay').innerHTML=`<div class="ph"><div class="ph-ic">⚠</div><div class="ph-t">Could not load replay</div><div class="ph-s">${e.message}</div></div>`;
+  }
+}
+
+function buildReplayUI(){
+  const el=document.getElementById('p-replay');
+  el.innerHTML=`
+    <div class="rp-ctrl">
+      <button class="rp-btn pl" id="rp-pl" onclick="toggleRp()">▶</button>
+      <button class="rp-btn" onclick="stepRp(-1)">◀</button>
+      <button class="rp-btn" onclick="stepRp(1)">▶▶</button>
+      <input type="range" class="rp-rng" id="rp-rng" min="0" max="${rpHist.length-1}" value="0" oninput="seekRp(this.value)">
+      <div class="rp-tick">T<span id="rp-t">0</span> / ${rpHist.length}</div>
+      <div class="spd-row">
+        <button class="spd" onclick="setRpSpd(1600,this)">0.5×</button>
+        <button class="spd on" onclick="setRpSpd(800,this)">1×</button>
+        <button class="spd" onclick="setRpSpd(400,this)">2×</button>
+        <button class="spd" onclick="setRpSpd(150,this)">4×</button>
+      </div>
+    </div>
+    <div class="rp-scene">
+      <div class="rp-scene-bar">
+        <div class="rp-dot" style="background:#ef4444"></div>
+        <div class="rp-dot" style="background:#f59e0b;margin-left:4px"></div>
+        <div class="rp-dot" style="background:#22c55e;margin-left:4px"></div>
+        <span class="rp-bar-lbl" id="rp-lbl">${(selRun?.scenario_id||'').replace(/_/g,' ')} — T0</span>
+      </div>
+      <svg class="rp-svg" id="rp-svg" viewBox="0 0 660 420" xmlns="http://www.w3.org/2000/svg">
+        <rect width="660" height="420" fill="#080c12"/>
+        <!-- Grid lines -->
+        <line x1="330" y1="0" x2="330" y2="420" stroke="#0f1520" stroke-width="1"/>
+        <line x1="0" y1="210" x2="660" y2="210" stroke="#0f1520" stroke-width="1"/>
+        <defs>
+          <marker id="m-p" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#34d399"/></marker>
+          <marker id="m-n" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#f87171"/></marker>
+          <marker id="m-u" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#6b7f96"/></marker>
+        </defs>
+        <!-- Agents -->
+        ${Object.entries(AP).map(([id,p])=>`
+          <g id="rpa-${id}">
+            <!-- Shadow -->
+            <ellipse cx="${p.x}" cy="${p.y+38}" rx="22" ry="6" fill="rgba(0,0,0,0.5)"/>
+            <!-- Body -->
+            <rect x="${p.x-12}" y="${p.y+2}" width="24" height="20" rx="6" fill="${AC[id]}44" stroke="${AC[id]}88" stroke-width="1"/>
+            <!-- Head ring -->
+            <circle id="rpr-${id}" r="28" cx="${p.x}" cy="${p.y}" fill="none" stroke="${AC[id]}" stroke-width="2" opacity="0"/>
+            <!-- Head -->
+            <circle r="18" cx="${p.x}" cy="${p.y}" fill="${AC[id]}22" stroke="${AC[id]}" stroke-width="1.5"/>
+            <circle r="14" cx="${p.x}" cy="${p.y}" fill="${AC[id]}18"/>
+            <text x="${p.x}" y="${p.y+5}" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="${AC[id]}">${id}</text>
+            <!-- Name plate -->
+            <rect x="${p.x-24}" y="${p.y+42}" width="48" height="16" rx="4" fill="#0c0f14dd" stroke="${AC[id]}55" stroke-width="1"/>
+            <text x="${p.x}" y="${p.y+53}" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="600" fill="#e2eaf4">${AN[id]}</text>
+            <text id="rps-${id}" x="${p.x}" y="${p.y+64}" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#6b7f96">neutral</text>
+          </g>`).join('')}
+      </svg>
+    </div>
+    <div class="slbl" style="margin-bottom:8px">Events at this tick</div>
+    <div class="rp-evs" id="rp-evs"></div>`;
+  renderRpTick(0);
+}
+
+function renderRpTick(idx){
+  rpTick=Math.max(0,Math.min(rpHist.length-1,idx));
+  const tick=rpHist[rpTick];
+  if(!tick)return;
+  // Update controls
+  const rtEl=document.getElementById('rp-t');
+  const rngEl=document.getElementById('rp-rng');
+  const lblEl=document.getElementById('rp-lbl');
+  if(rtEl) rtEl.textContent=tick.tick;
+  if(rngEl) rngEl.value=rpTick;
+  if(lblEl) lblEl.textContent=`${(selRun?.scenario_id||'').replace(/_/g,' ')} — T${tick.tick}`;
+
+  // Clear old overlays
+  const svg=document.getElementById('rp-svg');
+  if(!svg)return;
+  svg.querySelectorAll('.rpc').forEach(e=>e.remove());
+  document.querySelectorAll('[id^="rpr-"]').forEach(r=>r.setAttribute('opacity','0'));
+  // Reset strategies
+  (tick.agents||[]).forEach(a=>{
+    const s=document.getElementById(`rps-${a.id}`);
+    if(s) s.textContent=a.strategy||'neutral';
+  });
+
+  // Draw events
+  const evHtml=[];
+  (tick.events||[]).forEach((ev,i)=>{
+    const actor=ev.actor,target=ev.target,type=(ev.type||'').toLowerCase();
+    if(!actor||!target||!AP[actor]||!AP[target])return;
+    const tone=['share_info','agree'].includes(type)?'p':['refuse','challenge'].includes(type)?'n':'u';
+    const col=tone==='p'?'#34d399':tone==='n'?'#f87171':'#6b7f96';
+    const ap=AP[actor],tp=AP[target];
+
+    // Draw arrow
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.classList.add('rpc');
+    const cx=(ap.x+tp.x)/2,cy=(ap.y+tp.y)/2-25;
+    path.setAttribute('d',`M${ap.x} ${ap.y} Q${cx} ${cy} ${tp.x} ${tp.y}`);
+    path.setAttribute('fill','none');path.setAttribute('stroke',col);
+    path.setAttribute('stroke-width','2');path.setAttribute('stroke-opacity','0.85');
+    path.setAttribute('marker-end',`url(#m-${tone})`);
+    svg.appendChild(path);
+
+    // Glow ring on actor
+    const ring=document.getElementById(`rpr-${actor}`);
+    if(ring) ring.setAttribute('opacity','0.65');
+
+    // Speech bubble for first event with full text
+    if(i===0&&ev.text){
+      const txt=cleanMessage(ev.text.length>100?ev.text.substring(0,97)+'…':ev.text, selRun?.scenario_id||'');
+      const onLeft=ap.x<330;
+      const W=190,lines=Math.ceil(txt.length/26),H=Math.max(60,lines*14+28);
+      const bx=onLeft?ap.x+30:ap.x-W-30;
+      const by=ap.y-H-30;
+      const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+      g.classList.add('rpc');
+      // Shadow
+      const sh=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      sh.setAttribute('x',bx+3);sh.setAttribute('y',by+3);sh.setAttribute('width',W);sh.setAttribute('height',H);sh.setAttribute('rx','8');sh.setAttribute('fill','rgba(0,0,0,0.4)');
+      g.appendChild(sh);
+      // Box
+      const box=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      box.setAttribute('x',bx);box.setAttribute('y',by);box.setAttribute('width',W);box.setAttribute('height',H);box.setAttribute('rx','8');
+      box.setAttribute('fill','#111927');box.setAttribute('stroke',col);box.setAttribute('stroke-width','1.5');
+      g.appendChild(box);
+      // Tail pointing down toward character
+      const tx=onLeft?bx+20:bx+W-20;
+      const tail=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+      tail.setAttribute('points',`${tx-7} ${by+H} ${tx} ${by+H+10} ${tx+7} ${by+H}`);
+      tail.setAttribute('fill','#111927');tail.setAttribute('stroke',col);tail.setAttribute('stroke-width','1.5');
+      g.appendChild(tail);
+      const cov=document.createElementNS('http://www.w3.org/2000/svg','rect');
+      cov.setAttribute('x',tx-8);cov.setAttribute('y',by+H-1);cov.setAttribute('width','16');cov.setAttribute('height','3');cov.setAttribute('fill','#111927');
+      g.appendChild(cov);
+      // Name
+      const nm=document.createElementNS('http://www.w3.org/2000/svg','text');
+      nm.setAttribute('x',bx+10);nm.setAttribute('y',by+15);
+      nm.setAttribute('font-family','monospace');nm.setAttribute('font-size','9');nm.setAttribute('font-weight','700');nm.setAttribute('fill',col);
+      nm.textContent=AN[actor]||actor;
+      g.appendChild(nm);
+      // Divider
+      const dv=document.createElementNS('http://www.w3.org/2000/svg','line');
+      dv.setAttribute('x1',bx+8);dv.setAttribute('y1',by+19);dv.setAttribute('x2',bx+W-8);dv.setAttribute('y2',by+19);
+      dv.setAttribute('stroke',col+'44');dv.setAttribute('stroke-width','1');
+      g.appendChild(dv);
+      // Text (foreignObject)
+      const fo=document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
+      fo.setAttribute('x',bx+8);fo.setAttribute('y',by+22);fo.setAttribute('width',W-16);fo.setAttribute('height',H-26);
+      fo.innerHTML=`<div xmlns="http://www.w3.org/1999/xhtml" style="font-family:sans-serif;font-size:11px;color:#e2eaf4;line-height:1.45;word-break:break-word;white-space:normal">${txt}</div>`;
+      g.appendChild(fo);
+      svg.appendChild(g);
+    }
+
+    // Event log HTML
+    const lmap={share_info:'SHARE',refuse:'REFUSE',ask_info:'ASK',agree:'AGREE',challenge:'CHALLENGE'};
+    const lbl=lmap[type]||type.toUpperCase();
+    const bc=type==='share_info'?'rb-share':type==='refuse'?'rb-refuse':type==='ask_info'?'rb-ask':'rb-oth';
+    const item=ev.item?` · <em style="color:#f59e0b">${taskLabel(ev.item)}</em>`:'';
+    const msg=ev.text?`<div class="rev-msg">"${cleanMessage(ev.text.length>80?ev.text.substring(0,77)+'…':ev.text, selRun?.scenario_id||'')}"</div>`:'';
+    evHtml.push(`<div class="rev"><span class="rev-t">T${tick.tick}</span><span class="rev-b ${bc}">${lbl}</span><div class="rev-body"><div class="rev-main"><strong style="color:${AC[actor]||'#e2eaf4'}">${AN[actor]||actor}</strong> → <strong style="color:${AC[target]||'#e2eaf4'}">${AN[target]||target}</strong>${item}</div>${msg}</div></div>`);
+  });
+
+  const evEl=document.getElementById('rp-evs');
+  if(evEl) evEl.innerHTML=evHtml.join('')||`<div style="padding:10px;font-size:12px;color:var(--muted)">No events at tick ${tick.tick}</div>`;
+}
+
+function toggleRp(){
+  if(rpPlaying){stopRp();}
+  else{
+    rpPlaying=true;
+    const btn=document.getElementById('rp-pl');
+    if(btn){btn.textContent='⏸';btn.style.background='var(--amber)';}
+    rpInt=setInterval(()=>{
+      if(rpTick>=rpHist.length-1){stopRp();return;}
+      renderRpTick(rpTick+1);
+    },rpSpeed);
+  }
+}
+function stopRp(){
+  rpPlaying=false;clearInterval(rpInt);
+  const btn=document.getElementById('rp-pl');
+  if(btn){btn.textContent='▶';btn.style.background='var(--green)';}
+}
+function stepRp(d){stopRp();renderRpTick(rpTick+d);}
+function seekRp(v){stopRp();renderRpTick(parseInt(v));}
+function setRpSpd(ms,btn){
+  rpSpeed=ms;
+  document.querySelectorAll('.spd').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(rpPlaying){stopRp();toggleRp();}
+}
+
+// ── Compare ───────────────────────────────────────────────────────
+function setCmpA(id){
+  cmpA={run_id:id};
+  document.getElementById('cv-a').textContent=id;
+  document.getElementById('cv-a').classList.remove('mt');
+  updCmpBanner();renderList();
+}
+function setCmpB(id){
+  cmpB={run_id:id};
+  document.getElementById('cv-b').textContent=id;
+  document.getElementById('cv-b').classList.remove('mt');
+  updCmpBanner();renderList();
+}
+function updCmpBanner(){
+  document.getElementById('cmp-banner').classList.toggle('vis',!!(cmpA||cmpB));
+  document.getElementById('cmp-go').disabled=!(cmpA&&cmpB);
+}
+function clearCmp(){
+  cmpA=null;cmpB=null;
+  document.getElementById('cv-a').textContent='Not selected';document.getElementById('cv-a').classList.add('mt');
+  document.getElementById('cv-b').textContent='Not selected';document.getElementById('cv-b').classList.add('mt');
+  document.getElementById('cmp-banner').classList.remove('vis');
+  document.getElementById('p-compare').innerHTML=`<div class="ph"><div class="ph-ic">⚖</div><div class="ph-t">Mark two runs as A and B, then compare them</div><div class="ph-s">Use the A and B buttons on any run in the left panel.</div></div>`;
+  renderList();
+}
+
+async function doCompare(){
+  if(!cmpA||!cmpB)return;
+  const btn=document.getElementById('cmp-go');
+  btn.textContent='Comparing…';btn.disabled=true;
+  goTab('compare',document.getElementById('tb-compare'));
+  document.getElementById('p-compare').innerHTML=`<div class="ph"><div class="exp-spin"></div><div style="font-size:13px;color:var(--muted)">Running comparison…</div></div>`;
+  try{
+    const r=await fetch(`${API}/runs/compare/${cmpA.run_id}/${cmpB.run_id}`);
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const d=await r.json();
+    renderCompare(d);
+  }catch(e){
+    document.getElementById('p-compare').innerHTML=`<div class="ph"><div class="ph-ic">⚠</div><div class="ph-t">Compare failed</div><div class="ph-s">${e.message}<br>Make sure both runs exist and the backend is running.</div></div>`;
+  }
+  btn.textContent='Compare →';btn.disabled=false;
+}
+
+function renderCompare(d){
+  const ra=d.run_a||{}, rb=d.run_b||{};
+  const ma=ra.metrics||{}, mb=rb.metrics||{};
+
+  // Merge metrics from top-level and nested
+  const getVal=(obj,key)=>obj[key]??obj.metrics?.[key]??0;
+
+  const metrics=[
+    {k:'avg_trust',lbl:'Average Trust',hb:true},
+    {k:'avg_stress',lbl:'Average Stress',hb:false},
+    {k:'peak_tension',lbl:'Highest Tension',hb:false},
+    {k:'conflict_rate',lbl:'Conflict Rate',hb:false},
+  ];
+
+  const rows=metrics.map(m=>{
+    const va=+(getVal(ra,m.k)||0);
+    const vb=+(getVal(rb,m.k)||0);
+    const mx=Math.max(va,vb,0.001);
+    const aw=m.hb?va>vb:va<vb;
+    const bw=m.hb?vb>va:vb<va;
+    return `<div class="cmp-row">
+      <span class="cmp-key">${m.lbl}</span>
+      <div class="cmp-bwrap"><div class="cmp-bar a" style="width:${Math.round(va/mx*120)}px"></div>${aw?'<span class="win">better</span>':''}</div>
+      <span class="cmp-num" style="color:var(--amber)">${va.toFixed(3)}</span>
+      <div class="cmp-bwrap"><div class="cmp-bar b" style="width:${Math.round(vb/mx*120)}px"></div>${bw?'<span class="win">better</span>':''}</div>
+      <span class="cmp-num" style="color:var(--green)">${vb.toFixed(3)}</span>
+    </div>`;
+  }).join('');
+
+  const outcomeRows=['outcome','ticks','seed'].map(k=>`<div class="cmp-row">
+    <span class="cmp-key">${k}</span>
+    <span style="grid-column:2/4;color:var(--amber);font-family:var(--mono);font-size:12px">${ra[k]||'?'}</span>
+    <span style="grid-column:4/6;color:var(--green);font-family:var(--mono);font-size:12px">${rb[k]||'?'}</span>
+  </div>`).join('');
+
+  document.getElementById('p-compare').innerHTML=`
+    <div class="cmp-summary">
+      <div class="cmp-card a">
+        <div class="cmp-card-lbl a">Run A — ${cmpA.run_id}</div>
+        <div class="cmp-card-info">${(ra.scenario_id||'').replace(/_/g,' ')||'unknown'} · ${ra.outcome||'?'} in ${ra.ticks||0} steps · reproducibility # ${ra.seed||'?'}</div>
+      </div>
+      <div class="cmp-card b">
+        <div class="cmp-card-lbl b">Run B — ${cmpB.run_id}</div>
+        <div class="cmp-card-info">${(rb.scenario_id||'').replace(/_/g,' ')||'unknown'} · ${rb.outcome||'?'} in ${rb.ticks||0} steps · reproducibility # ${rb.seed||'?'}</div>
+      </div>
+    </div>
+    <div class="slbl">Run summary</div>
+    <div class="cmp-rows" style="margin-bottom:16px">${outcomeRows}</div>
+    <div class="slbl">
+      <span>Metrics</span>
+      <span style="font-size:11px;color:var(--amber);font-weight:700;margin-left:8px">Run A</span>
+      <span style="font-size:11px;color:var(--green);font-weight:700;margin-left:8px">Run B</span>
+    </div>
+    <div class="cmp-rows">${rows}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">
+      Same scenario: <strong>${d.same_scenario?'Yes':'No'}</strong> &nbsp;·&nbsp;
+      Same seed: <strong>${d.same_seed?'Yes':'No'}</strong>
+    </div>`;
+}
+
+// ── Delete ────────────────────────────────────────────────────────
+async function delRun(id){
+  if(!confirm(`Delete this run permanently? This cannot be undone.`))return;
+  try{
+    const r=await fetch(`${API}/runs/${id}`,{method:'DELETE'});
+    if(!r.ok)throw new Error();
+    allRuns=allRuns.filter(r=>r.run_id!==id);
+    if(selRun?.run_id===id){
+      selRun=null;
+      ['overview','replay','charts','compare'].forEach(n=>{
+        document.getElementById('p-'+n).innerHTML=`<div class="ph"><div class="ph-ic">🗑</div><div class="ph-t">Run deleted</div><div class="ph-s">Select another run from the list.</div></div>`;
+      });
+    }
+    renderList();
+  }catch{alert('Delete failed — check backend is running');}
+}
+
+// ── Experiments ───────────────────────────────────────────────────
+function expLoading(id){
+  document.getElementById(id).innerHTML=`<div class="exp-res"><div class="exp-load"><div class="exp-spin"></div>Running — this may take 30–60 seconds depending on run count</div></div>`;
+}
+
+async function runNLP(){
+  const sc=document.getElementById('nlp-sc').value;
+  const n=parseInt(document.getElementById('nlp-n').value)||20;
+  expLoading('nlp-out');
+  try{
+    const r=await fetch(`${API}/experiments/compare-nlp`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({scenario_id:sc,n_runs:n,episode_max_ticks:30})
+    });
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const d=await r.json();
+    renderNLP(d);
+  }catch(e){
+    document.getElementById('nlp-out').innerHTML=`<div class="exp-res"><div style="color:var(--red);font-size:13px;padding:20px">Error: ${e.message}</div></div>`;
+  }
+}
+
+function renderNLP(d){
+  const wn=d.full_with_nlp||d.with_nlp||{};
+  const wo=d.full_without_nlp||d.without_nlp||{};
+  const srN=+(wn.success_rate||0),srO=+(wo.success_rate||0);
+  const deltas=[['Average Trust',d.avg_trust],['Average Stress',d.avg_stress],['Conflict Rate',d.conflict_rate],['Total Shares',d.total_shares],['Total Refusals',d.total_refusals]];
+  const metHtml=deltas.filter(([,m])=>m!=null).map(([lbl,m])=>{
+    const delta=+(m.delta||m.with_nlp-m.without_nlp||0);
+    const sign=delta>=0?'+':'';
+    const col=delta>=0?'var(--green)':'var(--red)';
+    return `<div class="mc"><div class="mc-l">${lbl} delta</div><div class="mc-v" style="color:${col}">${sign}${delta.toFixed(3)}</div></div>`;
+  }).join('');
+  document.getElementById('nlp-out').innerHTML=`<div class="exp-res">
+    <div class="slbl">${(d.scenario_id||'').replace(/_/g,' ')} — ${d.n_runs_each||n} runs per version</div>
+    <div class="nlp-hdr">
+      <div class="nlp-col on"><div class="nlp-col-t">🔬 With Emotion Analysis</div><div class="nlp-sr" style="color:var(--green)">${Math.round(srN*100)}%</div><div class="nlp-sub">success rate</div></div>
+      <div class="nlp-col off"><div class="nlp-col-t">⊘ Without Emotion Analysis</div><div class="nlp-sr" style="color:var(--muted)">${Math.round(srO*100)}%</div><div class="nlp-sub">success rate</div></div>
+    </div>
+    ${metHtml?`<div class="met-grid">${metHtml}</div>`:''}
+    ${d.summary?`<div class="exp-note">${d.summary}</div>`:''}
+  </div>`;
+}
+
+async function runMulti(){
+  const n=parseInt(document.getElementById('ms-n').value)||10;
+  const tks=parseInt(document.getElementById('ms-t').value)||30;
+  expLoading('ms-out');
+  try{
+    const ids=['office_proposal','office_roles','cafe_vacation','cafe_restaurant','escape_code','escape_puzzle'];
+    const r=await fetch(`${API}/experiments/multi-scenario`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({scenario_ids:ids,n_runs:n,episode_max_ticks:tks})
+    });
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const d=await r.json();
+    renderMulti(d,n);
+  }catch(e){
+    document.getElementById('ms-out').innerHTML=`<div class="exp-res"><div style="color:var(--red);font-size:13px;padding:20px">Error: ${e.message}</div></div>`;
+  }
+}
+
+function renderMulti(d,n){
+  const rows=Object.entries(d).map(([sid,res])=>{
+    if(!res||res.error)return`<tr><td style="font-family:var(--mono);font-size:11px;padding:8px">${sid.replace(/_/g,' ')}</td><td colspan="5" style="color:var(--red);font-size:11px">${res?.error||'error'}</td></tr>`;
+    const sr=Math.round((res.success_rate||0)*100);
+    const dl=Math.round((res.outcome_rates?.deadlock||0)*100);
+    const tr=(res.avg_trust?.mean||res.avg_trust||0).toFixed(3);
+    const st=(res.avg_stress?.mean||res.avg_stress||0).toFixed(3);
+    const cf=(res.conflict_rate?.mean||res.conflict_rate||0).toFixed(3);
+    return `<tr style="border-bottom:1px solid var(--rule)">
+      <td style="font-size:12px;padding:8px;font-weight:500">${sid.replace(/_/g,' ')}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green);font-family:var(--mono);padding:8px">${sr}%</td>
+      <td style="text-align:center;color:var(--purple);font-family:var(--mono);padding:8px">${dl}%</td>
+      <td style="text-align:center;color:var(--teal);font-family:var(--mono);padding:8px">${tr}</td>
+      <td style="text-align:center;color:var(--red);font-family:var(--mono);padding:8px">${st}</td>
+      <td style="text-align:center;color:var(--muted);font-family:var(--mono);padding:8px">${cf}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('ms-out').innerHTML=`<div class="exp-res">
+    <div class="slbl">${n} runs per scenario</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:2px solid var(--rule)">
+        <th style="text-align:left;padding:8px;font-size:11px;color:var(--muted)">Scenario</th>
+        <th style="text-align:center;font-size:11px;color:var(--muted);padding:8px">Success</th>
+        <th style="text-align:center;font-size:11px;color:var(--muted);padding:8px">Deadlock</th>
+        <th style="text-align:center;font-size:11px;color:var(--muted);padding:8px">Average Trust</th>
+        <th style="text-align:center;font-size:11px;color:var(--muted);padding:8px">Average Stress</th>
+        <th style="text-align:center;font-size:11px;color:var(--muted);padding:8px">Conflict</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+async function runSingle(){
+  const sc=document.getElementById('se-sc').value;
+  const n=parseInt(document.getElementById('se-n').value)||20;
+  const nlp=document.getElementById('se-nlp').checked;
+  expLoading('se-out');
+  try{
+    const r=await fetch(`${API}/experiments/run`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({scenario_id:sc,n_runs:n,episode_max_ticks:30,skip_emotions:!nlp})
+    });
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const d=await r.json();
+    renderSingle(d);
+    loadRuns(); // Refresh run list
+  }catch(e){
+    document.getElementById('se-out').innerHTML=`<div class="exp-res"><div style="color:var(--red);font-size:13px;padding:20px">Error: ${e.message}</div></div>`;
+  }
+}
+
+function renderSingle(d){
+  const oc=d.outcome_rates||{};
+  const pills=['success','partial','failure','deadlock','meltdown'].map(o=>`
+    <div class="oc-cell">
+      <span class="oc-pct" style="color:${{success:'var(--green)',failure:'var(--red)',meltdown:'var(--red)',deadlock:'var(--purple)',partial:'var(--amber)'}[o]||'var(--muted)'}">${Math.round((oc[o]||0)*100)}%</span>
+      <span class="oc-lbl">${o}</span>
+    </div>`).join('');
+  const mets=[
+    ['Average Trust',(d.avg_trust?.mean??d.avg_trust??0),'var(--teal)'],
+    ['Average Stress',(d.avg_stress?.mean??d.avg_stress??0),'var(--red)'],
+    ['Conflict Rate',(d.conflict_rate?.mean??d.conflict_rate??0),'var(--muted)'],
+    ['Avg Shares',(d.total_shares?.mean??d.total_shares??0),'var(--green)'],
+    ['Avg Refusals',(d.total_refusals?.mean??d.total_refusals??0),'var(--red)'],
+    ['Stalled Ticks',(d.stalled_ticks?.mean??d.stalled_ticks??0),'var(--muted)'],
+  ].map(([l,v,c])=>`<div class="mc"><div class="mc-l">${l}</div><div class="mc-v" style="color:${c}">${typeof v==='number'?v.toFixed(3):v}</div></div>`).join('');
+  document.getElementById('se-out').innerHTML=`<div class="exp-res">
+    <div class="slbl">${(d.scenario_id||'').replace(/_/g,' ')} — ${d.n_runs||0} runs · Emotion analysis ${d.nlp_enabled?'ON':'OFF'}</div>
+    <div class="oc-grid">
+${pills}</div>
+    <div class="met-grid">${mets}</div>
+    ${d.avg_ticks_to_success?`<div style="font-size:12px;color:var(--muted);margin-top:10px">Avg steps to success: <strong style="color:var(--ink)">${(+d.avg_ticks_to_success).toFixed(1)}</strong></div>`:''}
+  </div>`;
+}
+
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

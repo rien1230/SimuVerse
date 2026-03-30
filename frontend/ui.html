@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimuVerse – Advanced Experiment Configuration</title>
+  <style>
+    /* ===== ROOT VARIABLES (from your existing design) ===== */
+    :root {
+      --bg: #0b0f14;
+      --card: #121826;
+      --muted: #95a3b8;
+      --text: #e6edf7;
+      --border: #1f2a3a;
+      --accent: #7c5cff;
+      --accent-light: #00d2ff;
+      --good: #2ecc71;
+      --bad: #ff4757;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== BACKGROUND IMAGE (as requested) ===== */
+    #screen-setup {
+      background-image: url("image/background.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Optional overlay for better text readability (same as your home screen) */
+    #screen-setup::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(80% 120% at 50% 0%, rgba(0,0,0,0.25), rgba(0,0,0,0.65));
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== TOP NAVIGATION (exact copy from your design) ===== */
+    .topbar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: transparent;
+      backdrop-filter: none;
+      border: none;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .logo-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .topbar-right {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-link {
+      background: none;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+    }
+
+    .nav-link.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      border: none;
+      color: var(--bg);
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 8px 20px rgba(124, 92, 255, 0.3);
+    }
+
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+
+    .pill {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .pill.subtle {
+      color: var(--muted);
+    }
+
+    /* ===== MAIN CONTENT (positioned below topbar) ===== */
+    .page-content {
+      position: relative;
+      z-index: 1;
+      padding-top: 84px; /* space for topbar */
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 2rem 3rem;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .hero h1 {
+      font-size: 3.2rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #ffffff, var(--text));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--muted);
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ===== CARD STYLES (matching your premium-glass-card aesthetic) ===== */
+    .card {
+      background: rgba(18, 24, 38, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      padding: 2.5rem;
+      box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      pointer-events: none;
+    }
+
+    .card-section {
+      padding: 2rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .card-section:first-of-type {
+      padding-top: 0;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .section-header h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-header h2 span {
+      background: rgba(124, 92, 255, 0.2);
+      color: var(--accent);
+      font-size: 0.8rem;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      font-weight: 500;
+    }
+
+    /* ===== ENVIRONMENT CARDS ===== */
+    .env-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .env-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .env-card:hover {
+      border-color: var(--accent);
+      background: rgba(124, 92, 255, 0.1);
+      transform: translateY(-4px);
+    }
+
+    .env-card.selected {
+      border-color: var(--accent);
+      background: rgba(124, 92, 255, 0.15);
+      box-shadow: 0 0 0 2px rgba(124, 92, 255, 0.4);
+    }
+
+    .env-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .env-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+      color: white;
+    }
+
+    .env-desc {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .env-stats {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .env-stats span {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.2rem 0.6rem;
+      border-radius: 40px;
+    }
+
+    /* ===== AGENT CARDS ===== */
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .agent-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 1.5rem;
+    }
+
+    .agent-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+    }
+
+    .agent-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .agent-role {
+      font-size: 0.8rem;
+      background: rgba(124, 92, 255, 0.2);
+      color: #b2a2ff;
+      padding: 0.3rem 0.8rem;
+      border-radius: 40px;
+    }
+
+    .trait {
+      margin-bottom: 1.2rem;
+    }
+
+    .trait-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .trait-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .slider {
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      border-radius: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      transition: transform 0.1s;
+    }
+
+    .slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .trait-value {
+      text-align: right;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .trait-desc {
+      font-size: 0.8rem;
+      color: var(--accent);
+      margin-top: 0.2rem;
+    }
+
+    .randomize-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.6rem 1.5rem;
+      border-radius: 40px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .randomize-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent);
+    }
+
+    /* ===== CONTROL ROWS ===== */
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .control-label {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 60px;
+      padding: 0.3rem 0.3rem 0.3rem 1rem;
+    }
+
+    .input-wrap input {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      width: 80px;
+      text-align: center;
+      outline: none;
+    }
+
+    .input-wrap button {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+    }
+
+    .input-wrap button:hover {
+      background: rgba(124, 92, 255, 0.5);
+    }
+
+    .hint-text {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    /* ===== RUN ID ===== */
+    .run-id-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 60px;
+      padding: 0.5rem 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .run-id-label {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .run-id-value {
+      font-family: monospace;
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      background: rgba(124, 92, 255, 0.2);
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      color: white;
+    }
+
+    .regenerate-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    .regenerate-btn:hover {
+      color: white;
+    }
+
+    /* ===== INTERACTION MODE ===== */
+    .mode-options {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .mode-option {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+    }
+
+    .mode-option input[type="radio"] {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .mode-option input[type="radio"]:checked {
+      border-color: var(--accent);
+    }
+
+    .mode-option input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    /* ===== INTERACTIVE MODE SETTINGS (shown only when interactive selected) ===== */
+    .interactive-settings {
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+    }
+
+    .interactive-settings h4 {
+      margin-bottom: 15px;
+      color: white;
+      font-size: 1.1rem;
+    }
+
+    .agent-selector-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .agent-selector-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .agent-selector-item:hover {
+      background: rgba(124, 92, 255, 0.1);
+      border-color: var(--accent);
+    }
+
+    .agent-selector-item input[type="radio"] {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .agent-selector-item input[type="radio"]:checked {
+      border-color: var(--accent);
+    }
+
+    .agent-selector-item input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .agent-selector-item strong {
+      color: white;
+      margin-right: 4px;
+    }
+
+    .interactive-note {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.9rem 2rem;
+      border-radius: 60px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      border: none;
+      padding: 1rem 3rem;
+      border-radius: 60px;
+      color: var(--bg);
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(124, 92, 255, 0.4);
+      transition: all 0.2s;
+      min-width: 250px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(124, 92, 255, 0.6);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .env-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .agent-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .agent-selector-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .btn-primary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="screen-setup">
+    <!-- TOP BAR (exact copy from your design) -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="image/logo.png" alt="SimuVerse Logo" class="logo-img" />
+        <div>
+          <div class="title">SimuVerse</div>
+          <div class="sub">Social Behavior Simulation</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="nav-links">
+          <button class="nav-link" id="navHome" onclick="window.location.href='index.html'">Home</button>
+          <button class="nav-link" id="navAbout" onclick="window.location.href='#about'">About</button>
+          <button class="nav-link" id="navContact" onclick="window.location.href='#contact'">Contact</button>
+        </div>
+        <button id="navGetStarted" class="btn btn-primary btn-small" onclick="window.location.href='setup.html'">
+          Get Started
+        </button>
+        <div class="pill subtle">v1.0</div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="page-content">
+      <div class="container">
+        <!-- HERO -->
+        <section class="hero">
+          <h1>Advanced Experiment Configuration</h1>
+          <p>Fine-tune all parameters for controlled research studies</p>
+        </section>
+
+        <!-- MAIN CARD -->
+        <div class="card">
+          <!-- ENVIRONMENT SECTION -->
+          <section class="card-section">
+            <div class="section-header">
+              <h2>🌍 1. Choose Environment <span>context affects behavior</span></h2>
+            </div>
+
+            <div class="env-grid">
+              <!-- Office -->
+              <div class="env-card selected" id="env-office">
+                <div class="env-icon">💼</div>
+                <h3>Office</h3>
+                <div class="env-desc">Professional hierarchy, formal communication</div>
+                <div class="env-stats">
+                  <span>Trust: 0.8x</span>
+                  <span>Conflict: 30%</span>
+                  <span>Formality: High</span>
+                </div>
+              </div>
+
+              <!-- Cafe -->
+              <div class="env-card" id="env-cafe">
+                <div class="env-icon">☕</div>
+                <h3>Cafe</h3>
+                <div class="env-desc">Casual atmosphere, open conversation</div>
+                <div class="env-stats">
+                  <span>Trust: 1.2x</span>
+                  <span>Conflict: 10%</span>
+                  <span>Formality: Low</span>
+                </div>
+              </div>
+
+              <!-- Home -->
+              <div class="env-card" id="env-home">
+                <div class="env-icon">🏠</div>
+                <h3>Home</h3>
+                <div class="env-desc">Private, intimate, emotionally vulnerable</div>
+                <div class="env-stats">
+                  <span>Trust: 1.5x</span>
+                  <span>Conflict: 20%</span>
+                  <span>Privacy: High</span>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="environment" value="office">
+          </section>
+
+          <!-- AGENT PERSONALITIES SECTION -->
+          <section class="card-section">
+            <div class="section-header">
+              <h2>🧠 2. Agent Personalities <span>how each agent behaves</span></h2>
+              <button class="randomize-btn" id="randomizeAll">🎲 Randomize All</button>
+            </div>
+
+            <div class="agent-grid" id="agentGrid">
+              <!-- Will be populated by JavaScript -->
+            </div>
+          </section>
+
+          <!-- SIMULATION PARAMETERS SECTION -->
+          <section class="card-section">
+            <div class="section-header">
+              <h2>⚙️ 3. Simulation Parameters</h2>
+            </div>
+
+            <!-- Length -->
+            <div style="margin-bottom: 1.5rem;">
+              <div class="control-row">
+                <div class="control-group">
+                  <span class="control-label">⏱️ How long should it run?</span>
+                  <div class="input-wrap">
+                    <input type="number" id="simLength" min="30" max="500" value="120">
+                    <span>ticks</span>
+                    <button id="lengthHelp" class="tooltip" data-tooltip="30 = quick demo, 120 = full study">?</button>
+                  </div>
+                </div>
+                <span class="hint-text">(about 2-4 minutes)</span>
+              </div>
+            </div>
+
+            <!-- Random Seed -->
+            <div style="margin-bottom: 1.5rem;">
+              <div class="control-row">
+                <div class="control-group">
+                  <span class="control-label">🎲 Random seed</span>
+                  <div class="input-wrap">
+                    <input type="text" id="seed" value="42">
+                    <button id="randomSeed">🎲</button>
+                  </div>
+                </div>
+                <span class="hint-text">Same seed = same results</span>
+              </div>
+            </div>
+
+            <!-- Run ID -->
+            <div>
+              <div class="run-id-row">
+                <span class="run-id-label">Experiment ID:</span>
+                <span class="run-id-value" id="runId">SV-4F82X</span>
+                <button class="regenerate-btn" id="regenerateRunId">↻</button>
+                <span class="hint-text">(for reproducing this experiment)</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- INTERACTION MODE SECTION -->
+          <section class="card-section">
+            <div class="section-header">
+              <h2>🎮 4. How do you want to participate?</h2>
+            </div>
+
+            <div class="mode-options">
+              <label class="mode-option">
+                <input type="radio" name="mode" value="watch" checked>
+                <span>👁️ <strong>Watch only</strong> – Observe agents interact autonomously</span>
+              </label>
+              <label class="mode-option">
+                <input type="radio" name="mode" value="interactive">
+                <span>🎤 <strong>Interactive</strong> – I want to speak as an agent</span>
+              </label>
+            </div>
+
+            <!-- Interactive Mode Settings (hidden by default) -->
+            <div id="interactive-settings" class="interactive-settings" style="display: none;">
+              <h4>🎤 When you speak, which agent will you be?</h4>
+
+              <div class="agent-selector-grid">
+                <label class="agent-selector-item">
+                  <input type="radio" name="userAgent" value="1" checked>
+                  <span><strong>Agent 1</strong> – <span id="agent1-role-label">Project Manager</span></span>
+                </label>
+                <label class="agent-selector-item">
+                  <input type="radio" name="userAgent" value="2">
+                  <span><strong>Agent 2</strong> – <span id="agent2-role-label">Lead Developer</span></span>
+                </label>
+                <label class="agent-selector-item">
+                  <input type="radio" name="userAgent" value="3">
+                  <span><strong>Agent 3</strong> – <span id="agent3-role-label">Designer</span></span>
+                </label>
+                <label class="agent-selector-item">
+                  <input type="radio" name="userAgent" value="4">
+                  <span><strong>Agent 4</strong> – <span id="agent4-role-label">Intern</span></span>
+                </label>
+              </div>
+
+              <p class="interactive-note">
+                ⓘ You can change which agent you control during the simulation using a dropdown.
+              </p>
+            </div>
+          </section>
+
+          <!-- ACTION BUTTONS -->
+          <div class="action-buttons">
+            <button class="btn-secondary" onclick="history.back()">← Back</button>
+            <button class="btn-primary" id="startSimulation">▶ Start Experiment</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== AGENT DATA =====
+    const agentNames = {
+      office: ['Project Manager', 'Lead Developer', 'Designer', 'Intern'],
+      cafe: ['You', 'Your Best Friend', 'Old Friend', 'Their Partner'],
+      home: ['Parent/Guardian', 'Partner', 'Teenager', 'Young Child']
+    };
+
+    const agentRoles = {
+      office: ['Leader', 'Executor', 'Creative', 'Learner'],
+      cafe: ['Main', 'Close Friend', 'Distant Friend', 'Acquaintance'],
+      home: ['Head', 'Partner', 'Child', 'Child']
+    };
+
+    // Default personality values
+    const defaultPersonalities = [
+      { e: 0.70, a: 0.45, n: 0.30 }, // Manager
+      { e: 0.35, a: 0.60, n: 0.25 }, // Developer
+      { e: 0.55, a: 0.75, n: 0.50 }, // Designer
+      { e: 0.40, a: 0.80, n: 0.60 }  // Intern
+    ];
+
+    // Current environment
+    let currentEnv = 'office';
+
+    // ===== RENDER AGENT CARDS =====
+    function renderAgents(env) {
+      const names = agentNames[env];
+      const roles = agentRoles[env];
+      const grid = document.getElementById('agentGrid');
+
+      // Update agent role labels in interactive selector
+      for (let i = 1; i <= 4; i++) {
+        const labelEl = document.getElementById(`agent${i}-role-label`);
+        if (labelEl) labelEl.textContent = names[i-1];
+      }
+
+      let html = '';
+      for (let i = 0; i < 4; i++) {
+        const agentNum = i + 1;
+        const personality = defaultPersonalities[i];
+
+        html += `
+          <div class="agent-card" data-agent="${agentNum}">
+            <div class="agent-header">
+              <span class="agent-name" id="agent${agentNum}-name">${names[i]}</span>
+              <span class="agent-role" id="agent${agentNum}-role">${roles[i]}</span>
+            </div>
+
+            <!-- Talkativeness (E) -->
+            <div class="trait">
+              <div class="trait-header">
+                <span>How often do they speak?</span>
+                <span class="trait-value" id="a${agentNum}-e-val">${personality.e.toFixed(2)}</span>
+              </div>
+              <div class="trait-labels">
+                <span>Reserved</span>
+                <span>Balanced</span>
+                <span>Talkative</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.01" value="${personality.e}"
+                     class="slider" id="a${agentNum}-e">
+              <div class="trait-desc" id="a${agentNum}-e-desc">${getEDesc(personality.e)}</div>
+            </div>
+
+            <!-- Trust (A) -->
+            <div class="trait">
+              <div class="trait-header">
+                <span>How trusting are they?</span>
+                <span class="trait-value" id="a${agentNum}-a-val">${personality.a.toFixed(2)}</span>
+              </div>
+              <div class="trait-labels">
+                <span>Skeptical</span>
+                <span>Cautious</span>
+                <span>Trusting</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.01" value="${personality.a}"
+                     class="slider" id="a${agentNum}-a">
+              <div class="trait-desc" id="a${agentNum}-a-desc">${getADesc(personality.a)}</div>
+            </div>
+
+            <!-- Reactivity (N) -->
+            <div class="trait">
+              <div class="trait-header">
+                <span>How emotionally reactive?</span>
+                <span class="trait-value" id="a${agentNum}-n-val">${personality.n.toFixed(2)}</span>
+              </div>
+              <div class="trait-labels">
+                <span>Calm</span>
+                <span>Balanced</span>
+                <span>Sensitive</span>
+              </div>
+              <input type="range" min="0" max="1" step="0.01" value="${personality.n}"
+                     class="slider" id="a${agentNum}-n">
+              <div class="trait-desc" id="a${agentNum}-n-desc">${getNDesc(personality.n)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+      attachSliderListeners();
+    }
+
+    // Description helpers
+    function getEDesc(val) {
+      if (val < 0.25) return 'Very reserved, rarely speaks';
+      if (val < 0.4) return 'Quiet, prefers listening';
+      if (val < 0.6) return 'Balanced - speaks when needed';
+      if (val < 0.8) return 'Talkative, initiates conversation';
+      return 'Very outgoing, leads discussions';
+    }
+
+    function getADesc(val) {
+      if (val < 0.25) return 'Very skeptical, questions everything';
+      if (val < 0.4) return 'Slightly competitive, cautious';
+      if (val < 0.6) return 'Balanced - trusts with reason';
+      if (val < 0.8) return 'Cooperative, trusts easily';
+      return 'Very trusting, gives benefit of doubt';
+    }
+
+    function getNDesc(val) {
+      if (val < 0.25) return 'Very calm, unshakeable';
+      if (val < 0.4) return 'Emotionally stable';
+      if (val < 0.6) return 'Moderately sensitive';
+      if (val < 0.8) return 'Reacts emotionally to events';
+      return 'Very sensitive, easily stressed';
+    }
+
+    // Update slider values and descriptions
+    function attachSliderListeners() {
+      document.querySelectorAll('.slider').forEach(slider => {
+        slider.addEventListener('input', function() {
+          const id = this.id;
+          const val = this.value;
+          const valDisplay = document.getElementById(id + '-val');
+          if (valDisplay) valDisplay.textContent = parseFloat(val).toFixed(2);
+
+          const descElement = document.getElementById(id + '-desc');
+          if (!descElement) return;
+
+          const trait = id.split('-')[1];
+          if (trait === 'e') descElement.textContent = getEDesc(parseFloat(val));
+          else if (trait === 'a') descElement.textContent = getADesc(parseFloat(val));
+          else if (trait === 'n') descElement.textContent = getNDesc(parseFloat(val));
+        });
+      });
+    }
+
+    // ===== ENVIRONMENT SELECTION =====
+    document.querySelectorAll('.env-card').forEach(card => {
+      card.addEventListener('click', function() {
+        document.querySelectorAll('.env-card').forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+
+        const env = this.id.replace('env-', '');
+        currentEnv = env;
+        document.getElementById('environment').value = env;
+        renderAgents(env);
+      });
+    });
+
+    // ===== INTERACTIVE MODE TOGGLE =====
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const interactiveSettings = document.getElementById('interactive-settings');
+        if (this.value === 'interactive') {
+          interactiveSettings.style.display = 'block';
+        } else {
+          interactiveSettings.style.display = 'none';
+        }
+      });
+    });
+
+    // ===== RANDOMIZE ALL =====
+    document.getElementById('randomizeAll').addEventListener('click', function() {
+      document.querySelectorAll('.slider').forEach(slider => {
+        const randomVal = (Math.random() * 0.7 + 0.15).toFixed(2);
+        slider.value = randomVal;
+        slider.dispatchEvent(new Event('input'));
+      });
+    });
+
+    // ===== RANDOM SEED =====
+    document.getElementById('randomSeed').addEventListener('click', function() {
+      const randomSeed = Math.floor(Math.random() * 9000 + 1000);
+      document.getElementById('seed').value = randomSeed;
+    });
+
+    // ===== REGENERATE RUN ID =====
+    document.getElementById('regenerateRunId').addEventListener('click', function() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+      let id = 'SV-';
+      for (let i = 0; i < 5; i++) {
+        id += chars[Math.floor(Math.random() * chars.length)];
+      }
+      document.getElementById('runId').textContent = id;
+    });
+
+    // ===== START SIMULATION =====
+    document.getElementById('startSimulation').addEventListener('click', function() {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const env = currentEnv;
+      const seed = document.getElementById('seed').value;
+      const runId = document.getElementById('runId').textContent;
+      const length = document.getElementById('simLength').value;
+
+      // Get selected user agent if interactive mode
+      let userAgent = 'none';
+      if (mode === 'interactive') {
+        const selected = document.querySelector('input[name="userAgent"]:checked');
+        userAgent = selected ? selected.value : '1';
+      }
+
+      // Collect personality data
+      const agents = [];
+      for (let i = 1; i <= 4; i++) {
+        agents.push({
+          name: document.getElementById(`agent${i}-name`).textContent,
+          e: document.getElementById(`a${i}-e`).value,
+          a: document.getElementById(`a${i}-a`).value,
+          n: document.getElementById(`a${i}-n`).value
+        });
+      }
+
+      // Build URL
+      const params = new URLSearchParams({
+        mode: mode,
+        env: env,
+        seed: seed,
+        runId: runId,
+        length: length,
+        userAgent: userAgent,
+        a1e: agents[0].e, a1a: agents[0].a, a1n: agents[0].n,
+        a2e: agents[1].e, a2a: agents[1].a, a2n: agents[1].n,
+        a3e: agents[2].e, a3a: agents[2].a, a3n: agents[2].n,
+        a4e: agents[3].e, a4a: agents[3].a, a4n: agents[3].n
+      });
+
+      window.location.href = `simulation-run.html?${params.toString()}`;
+    });
+
+    // Initial render
+    renderAgents('office');
+  </script>
+</body>
+</html>

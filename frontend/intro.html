@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SimuVerse — How It Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf9f6;--s:#f3f1ec;--w:#fff;
+  --ink:#18181b;--ink2:#3f3f46;--muted:#71717a;--rule:#e4e2dc;
+  --blue:#2563eb;--bl:#dbeafe;--bm:#bfdbfe;
+  --teal:#0d9488;--tl:#ccfbf1;
+  --amber:#b45309;--al:#fef3c7;
+  --red:#dc2626;--rl:#fee2e2;
+  --green:#16a34a;--gl:#dcfce7;
+  --purple:#7c3aed;--pl:#ede9fe;
+  --serif:'Lora',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 56px;
+  background: rgba(250, 249, 246, 0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+  gap: 6px;
+}
+
+.n-logo {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blue);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-right: 10px;
+}
+
+.n-link {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.15s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.n-link:hover {
+  color: var(--ink);
+  background: var(--s);
+}
+
+.n-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.n-ghost {
+  background: none;
+  border: 1px solid var(--rule);
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.15s;
+}
+
+.n-ghost:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.n-cta {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: opacity 0.15s;
+}
+
+.n-cta:hover {
+  opacity: 0.88;
+}
+
+/* Hero */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - 56px);
+  align-items: center;
+}
+
+.hero-l {
+  padding: 80px 56px 80px 80px;
+  position: relative;
+}
+
+.hero-l::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 8%;
+  bottom: 8%;
+  width: 1px;
+  background: var(--rule);
+}
+
+.hero-r {
+  padding: 80px 80px 80px 56px;
+  background: var(--s);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--blue);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--bl);
+  border: 1px solid var(--bm);
+  padding: 4px 12px 4px 10px;
+  border-radius: 100px;
+  margin-bottom: 20px;
+}
+
+.pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--blue);
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+h1 {
+  font-family: var(--serif);
+  font-size: clamp(36px, 3.8vw, 54px);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin-bottom: 16px;
+}
+
+h1 em {
+  font-style: italic;
+  color: var(--blue);
+}
+
+.lead {
+  font-size: 17px;
+  color: var(--ink2);
+  line-height: 1.6;
+  margin-bottom: 28px;
+  max-width: 420px;
+  font-weight: 400;
+}
+
+.skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--muted);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--sans);
+  margin-top: 14px;
+  transition: color 0.15s;
+  padding: 0;
+}
+
+.skip:hover {
+  color: var(--blue);
+}
+
+.btn-p {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 12px 26px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.btn-p:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+
+/* Tick card */
+.tick-card {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07);
+}
+
+.tc-hd {
+  background: var(--s);
+  border-bottom: 1px solid var(--rule);
+  padding: 13px 18px;
+}
+
+.tc-lbl {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tc-body {
+  padding: 22px 20px 22px 52px;
+  position: relative;
+}
+
+.tc-body::before {
+  content: '';
+  position: absolute;
+  left: 31px;
+  top: 22px;
+  bottom: 22px;
+  width: 1px;
+  background: var(--rule);
+}
+
+.tc-step {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.tc-step:last-child {
+  padding-bottom: 0;
+}
+
+.tc-dot {
+  position: absolute;
+  left: -36px;
+  top: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  background: var(--w);
+  border: 1px solid var(--rule);
+  z-index: 1;
+}
+
+.tc-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.tc-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.tc-sub strong {
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+.tc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 5px;
+  margin-top: 5px;
+  background: var(--al);
+  color: var(--amber);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+}
+
+.sec {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 96px 80px;
+}
+
+.sec-ey {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.sec-h {
+  font-family: var(--serif);
+  font-size: clamp(26px, 2.8vw, 38px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.018em;
+  margin-bottom: 12px;
+}
+
+.sec-l {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-weight: 300;
+  max-width: 520px;
+  margin-bottom: 40px;
+}
+
+/* Concepts grid */
+.c-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.c-card {
+  background: var(--w);
+  padding: 34px 28px;
+  transition: all 0.2s;
+}
+
+.c-card:hover {
+  background: var(--s);
+  transform: translateY(-3px);
+}
+
+.c-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 18px;
+}
+
+.ci-bl {
+  background: var(--bl);
+}
+
+.ci-rd {
+  background: var(--rl);
+}
+
+.ci-tl {
+  background: var(--tl);
+}
+
+.ci-am {
+  background: var(--al);
+}
+
+.ci-gr {
+  background: var(--gl);
+}
+
+.ci-pu {
+  background: var(--pl);
+}
+
+.c-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.c-text {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.c-text strong {
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+.opills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.op {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+}
+
+.op-s {
+  background: var(--gl);
+  color: var(--green);
+  border-color: #bbf7d0;
+}
+
+.op-p {
+  background: var(--al);
+  color: var(--amber);
+  border-color: #fde68a;
+}
+
+.op-f {
+  background: var(--rl);
+  color: var(--red);
+  border-color: #fecaca;
+}
+
+.op-d {
+  background: var(--pl);
+  color: var(--purple);
+  border-color: #ddd6fe;
+}
+
+.op-m {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fed7aa;
+}
+
+/* Environments */
+.env-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.env-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.env-card {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 22px 20px;
+  transition: all 0.2s;
+}
+
+.env-card:hover {
+  border-color: #c4c2bc;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  transform: translateY(-2px);
+}
+
+.ec-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ec-icon {
+  font-size: 24px;
+}
+
+.ec-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.ec-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.ec-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eb-l {
+  font-size: 11px;
+  color: var(--muted);
+  width: 76px;
+  flex-shrink: 0;
+}
+
+.eb-tr {
+  flex: 1;
+  height: 4px;
+  background: var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.eb-f {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.ef-t {
+  background: var(--teal);
+}
+
+.ef-c {
+  background: var(--blue);
+}
+
+.ef-u {
+  background: var(--amber);
+}
+
+.eb-v {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  width: 30px;
+  text-align: right;
+}
+
+/* Traits */
+.t-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.t-card {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 28px 22px;
+  transition: all 0.2s;
+}
+
+.t-card:hover {
+  border-color: #c4c2bc;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+  transform: translateY(-3px);
+}
+
+.t-letter {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.t-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.t-body {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+.t-body strong {
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+.t-spec {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ts-l {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.ts-bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--rl), var(--bl));
+}
+
+/* Setup preview */
+.steps-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-top: 48px;
+}
+
+.sp {
+  text-align: center;
+  padding: 22px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: var(--w);
+  transition: all 0.15s;
+  cursor: default;
+}
+
+.sp:hover {
+  border-color: var(--blue);
+  background: var(--bl);
+  transform: translateY(-3px);
+}
+
+.sp-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--blue);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.sp-icon {
+  font-size: 22px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.sp-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sp-desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* CTA band */
+.cta-band {
+  background: var(--ink);
+  padding: 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.cta-h {
+  font-family: var(--serif);
+  font-size: clamp(26px, 2.8vw, 38px);
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.cta-p {
+  font-size: 14px;
+  color: #a1a1aa;
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.cta-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cta-m {
+  background: #fff;
+  color: var(--ink);
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.cta-m:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.cta-g {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 13px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  color: #fff;
+  transition: border-color 0.15s;
+  text-align: center;
+}
+
+.cta-g:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.reveal.in {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="n-logo">SimuVerse</a>
+  <a href="index.html" class="n-link">← Home</a>
+  <a href="history.html" class="n-link">History</a>
+  <div class="n-right">
+    <button class="n-ghost" onclick="location.href='index.html'">Back to Home</button>
+    <button class="n-cta" onclick="location.href='setup.html'">Configure Experiment →</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-l">
+    <div class="pill"><span class="pill-dot"></span>Before you begin</div>
+    <h1>So — what are you<br>actually <em>watching?</em></h1>
+    <p class="lead">Four AI agents. One shared goal. No agent has the full picture. This page explains how it all works — in plain English, no jargon.</p>
+    <button class="btn-p" onclick="document.getElementById('concepts').scrollIntoView({behavior:'smooth'})">Read the explainer ↓</button>
+    <br>
+    <button class="skip" onclick="location.href='setup.html'">Already understand it — skip to setup →</button>
+  </div>
+
+  <div class="hero-r">
+    <div class="tick-card">
+      <div class="tc-hd"><div class="tc-lbl">What happens inside each tick</div></div>
+      <div class="tc-body">
+        <div class="tc-step"><div class="tc-dot">🧠</div><div class="tc-title">Agent makes a decision</div><div class="tc-sub">Weighs <strong>trust, stress, and strategy</strong> — then decides to ask, share, or refuse</div></div>
+        <div class="tc-step"><div class="tc-dot">💬</div><div class="tc-title">Message sent in natural language</div><div class="tc-sub">Reflects <strong>how the agent feels right now</strong> — curious, guarded, grateful, defensive</div></div>
+        <div class="tc-step"><div class="tc-dot">🔬</div><div class="tc-title">AI detects the emotion</div><div class="tc-sub">An AI model reads the actual message text and detects the emotional tone — <strong>28 emotions</strong> including curiosity, frustration, and gratitude</div><div class="tc-badge">AI emotion detection · 28 emotion types</div></div>
+        <div class="tc-step"><div class="tc-dot">💡</div><div class="tc-title">Everyone's state updates</div><div class="tc-sub">Trust shifts. Stress changes. Strategy may switch. <strong>Next tick begins differently.</strong></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- Concepts -->
+<div class="sec reveal" id="concepts">
+  <div class="sec-ey">The six things that drive everything</div>
+  <div class="sec-h" style="margin-bottom:40px">Every outcome emerges from these</div>
+  <div class="c-grid">
+    <div class="c-card"><div class="c-icon ci-bl">🤝</div><div class="c-name">Trust</div><div class="c-text">Trust (0–1): High = shares freely. Low = guarded. <strong>High trust = shares freely.</strong> Low trust = refusals and silence. Updates every single tick.</div></div>
+    <div class="c-card"><div class="c-icon ci-rd">😰</div><div class="c-name">Stress</div><div class="c-text">Rises when refused, challenged, or ignored. Falls when cooperation happens. <strong>High stress triggers a strategy switch.</strong> Stay stressed long enough and the group can melt down.</div></div>
+    <div class="c-card"><div class="c-icon ci-tl">🧩</div><div class="c-name">Strategy</div><div class="c-text">Agents switch between <strong>cooperative</strong>, <strong>defensive</strong>, <strong>avoidant</strong>, and <strong>confrontational</strong> based on their current emotional state. You can watch it change live on the dashboard.</div></div>
+    <div class="c-card"><div class="c-icon ci-am">💬</div><div class="c-name">Emotion Detection</div><div class="c-text">Every message is read by an AI emotion model. The detected emotion — <em>disapproval, gratitude, nervousness</em> — directly changes how the receiving agent responds next. <strong>Turn emotion analysis off to run a baseline comparison.</strong></div></div>
+    <div class="c-card"><div class="c-icon ci-gr">🎯</div><div class="c-name">Tasks</div><div class="c-text"><strong>Each agent starts with exactly one item.</strong> The group can only succeed if all four share. Every piece has to come through real conversation — there's no shortcut.</div></div>
+    <div class="c-card"><div class="c-icon ci-pu">🏁</div><div class="c-name">Outcomes</div><div class="c-text">Five ways a run can end — none predetermined. Which one depends entirely on what the agents do.<div class="opills"><span class="op op-s">✓ Success</span><span class="op op-p">⬡ Partial</span><span class="op op-f">✕ Failure</span><span class="op op-d">⊗ Deadlock</span><span class="op op-m">⚡ Meltdown</span></div></div></div>
+  </div>
+</div>
+
+<hr>
+
+<!-- Environments -->
+<div class="sec reveal">
+  <div class="env-layout">
+    <div>
+      <div class="sec-ey">Environments</div>
+      <div class="sec-h">Same agents.<br>Different context.<br>Different outcomes.</div>
+      <p style="font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:10px">What changes:</p>
+      <div style="font-size:13px;color:var(--muted);line-height:1.9;padding:12px 16px;background:var(--w);border-radius:10px;border:1px solid var(--rule)">
+        💼 Office → lower trust, more guarded<br>
+        ☕ Café → higher trust, easier sharing<br>
+        🚪 Escape Room → urgency forces cooperation
+      </div>
+    </div>
+    <div class="env-cards">
+      <div class="env-card">
+        <div class="ec-top"><span class="ec-icon">💼</span><div class="ec-name">Office</div></div>
+        <div class="ec-desc">Professional hierarchy. Agents guard information. Trust has to be earned through cooperation.</div>
+        <div class="ec-bars">
+          <div class="eb-row"><span class="eb-l">Trust start</span><div class="eb-tr"><div class="eb-f ef-t" style="width:36%"></div></div><span class="eb-v">−0.05</span></div>
+          <div class="eb-row"><span class="eb-l">Cooperation</span><div class="eb-tr"><div class="eb-f ef-c" style="width:44%"></div></div><span class="eb-v">0.9×</span></div>
+          <div class="eb-row"><span class="eb-l">Urgency</span><div class="eb-tr"><div class="eb-f ef-u" style="width:50%"></div></div><span class="eb-v">1.0×</span></div>
+        </div>
+      </div>
+      <div class="env-card">
+        <div class="ec-top"><span class="ec-icon">☕</span><div class="ec-name">Café</div></div>
+        <div class="ec-desc">Relaxed and informal. Agents trust each other more from the start. Sharing comes more naturally.</div>
+        <div class="ec-bars">
+          <div class="eb-row"><span class="eb-l">Trust start</span><div class="eb-tr"><div class="eb-f ef-t" style="width:62%"></div></div><span class="eb-v">+0.08</span></div>
+          <div class="eb-row"><span class="eb-l">Cooperation</span><div class="eb-tr"><div class="eb-f ef-c" style="width:65%"></div></div><span class="eb-v">1.3×</span></div>
+          <div class="eb-row"><span class="eb-l">Urgency</span><div class="eb-tr"><div class="eb-f ef-u" style="width:40%"></div></div><span class="eb-v">0.8×</span></div>
+        </div>
+      </div>
+      <div class="env-card">
+        <div class="ec-top"><span class="ec-icon">🚪</span><div class="ec-name">Escape Room</div></div>
+        <div class="ec-desc">Time pressure. Urgency rises every tick. Even defensive agents eventually cooperate when the clock steps down.</div>
+        <div class="ec-bars">
+          <div class="eb-row"><span class="eb-l">Trust start</span><div class="eb-tr"><div class="eb-f ef-t" style="width:50%"></div></div><span class="eb-v">±0.00</span></div>
+          <div class="eb-row"><span class="eb-l">Cooperation</span><div class="eb-tr"><div class="eb-f ef-c" style="width:54%"></div></div><span class="eb-v">1.1×</span></div>
+          <div class="eb-row"><span class="eb-l">Urgency</span><div class="eb-tr"><div class="eb-f ef-u" style="width:75%"></div></div><span class="eb-v">1.5×</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- Traits -->
+<div class="sec reveal">
+  <div class="sec-ey">Agent personalities</div>
+  <div class="sec-h" style="margin-bottom:12px">Three sliders. Infinite variation.</div>
+  <p style="font-size:15px;color:var(--muted);line-height:1.65;font-weight:300;max-width:540px;margin-bottom:40px">These traits shape how agents behave under pressure.</p>
+  <div class="t-grid">
+    <div class="t-card"><span class="t-letter" style="color:var(--blue)">E</span><div class="t-name">Extraversion</div><div class="t-body">How often they <strong>start conversations</strong> and ask questions. High E = leads and reaches out. Low E = waits to be approached, responds cautiously.</div><div class="t-spec"><span class="ts-l">Reserved</span><div class="ts-bar"></div><span class="ts-l">Talkative</span></div></div>
+    <div class="t-card"><span class="t-letter" style="color:var(--teal)">A</span><div class="t-name">Agreeableness</div><div class="t-body">How willing they are to <strong>share and cooperate</strong>. High A = trusts easily, shares freely. Low A = competitive, guarded, refuses more often.</div><div class="t-spec"><span class="ts-l">Skeptical</span><div class="ts-bar"></div><span class="ts-l">Cooperative</span></div></div>
+    <div class="t-card"><span class="t-letter" style="color:var(--red)">N</span><div class="t-name">Neuroticism</div><div class="t-body">How strongly they <strong>react to conflict</strong>. High N = switches to defensive fast when refused. Low N = stays calm even under sustained pressure.</div><div class="t-spec"><span class="ts-l">Stable</span><div class="ts-bar"></div><span class="ts-l">Sensitive</span></div></div>
+  </div>
+</div>
+
+<hr>
+
+<!-- What's next -->
+<div class="sec reveal">
+  <div class="sec-ey">On the next page</div>
+  <div class="sec-h" style="margin-bottom:12px">Five decisions. All explained.</div>
+  <p style="font-size:15px;color:var(--muted);line-height:1.65;font-weight:300;max-width:520px;margin-bottom:0">Every setting shows you what it does and why it matters. No guessing required.</p>
+  <div class="steps-row">
+    <div class="sp"><span class="sp-num">01</span><span class="sp-icon">🌍</span><div class="sp-name">Environment</div><div class="sp-desc">Office, Café, or Escape Room</div></div>
+    <div class="sp"><span class="sp-num">02</span><span class="sp-icon">🎯</span><div class="sp-name">Scenario</div><div class="sp-desc">What task must they complete?</div></div>
+    <div class="sp"><span class="sp-num">03</span><span class="sp-icon">🧠</span><div class="sp-name">Personalities</div><div class="sp-desc">Personality sliders for all four agents</div></div>
+    <div class="sp"><span class="sp-num">04</span><span class="sp-icon">⚙️</span><div class="sp-name">Parameters</div><div class="sp-desc">Run length, emotion analysis on or off</div></div>
+    <div class="sp"><span class="sp-num">05</span><span class="sp-icon">👁</span><div class="sp-name">Your Role</div><div class="sp-desc">Watch or intervene in real time</div></div>
+  </div>
+</div>
+
+<div class="cta-band reveal">
+  <div><div class="cta-h">Ready to configure?</div><p class="cta-p">Takes under 2 minutes.</p></div>
+  <div class="cta-btns">
+    <button class="cta-m" onclick="location.href='setup.html'">Configure Experiment →</button>
+    <button class="cta-g" onclick="location.href='index.html'">← Back to home</button>
+  </div>
+</div>
+
+<script>
+const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('in');}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

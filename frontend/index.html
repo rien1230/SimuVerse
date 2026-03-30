@@ -1,339 +1,1533 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SimuVerse — Social Simulation</title>
-  <link rel="stylesheet" href="./styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SimuVerse — Multi-Agent Social Simulation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf9f6;--s:#f3f1ec;--w:#fff;
+  --ink:#18181b;--ink2:#3f3f46;--muted:#71717a;--rule:#e4e2dc;
+  --blue:#2563eb;--bl:#dbeafe;--bm:#bfdbfe;
+  --teal:#0d9488;--tl:#ccfbf1;
+  --amber:#b45309;--al:#fef3c7;
+  --red:#dc2626;--rl:#fee2e2;
+  --green:#16a34a;--gl:#dcfce7;
+  --serif:'Lora',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── Nav ── */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  padding: 0 56px;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+nav.scrolled {
+  background: rgba(250, 249, 246, 0.96);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--rule);
+  box-shadow: 0 1px 16px rgba(0, 0, 0, 0.05);
+}
+
+.n-logo {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blue);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.n-links {
+  display: flex;
+  gap: 2px;
+  margin: 0 auto;
+}
+
+.n-link {
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.15s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.n-link:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.n-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.n-ghost {
+  background: none;
+  border: 1px solid var(--rule);
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink2);
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all 0.15s;
+}
+
+.n-ghost:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.n-cta {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.n-cta:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+/* ── Hero ── */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.hero-l {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 120px 60px 80px 80px;
+  position: relative;
+}
+
+.hero-l::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 8%;
+  bottom: 8%;
+  width: 1px;
+  background: var(--rule);
+}
+
+.hero-r {
+  background: var(--s);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 120px 80px 80px 60px;
+}
+
+.eyebrow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--blue);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--bl);
+  border: 1px solid var(--bm);
+  padding: 4px 12px 4px 10px;
+  border-radius: 100px;
+  margin-bottom: 22px;
+}
+
+.ep-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--blue);
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+h1.hero-h {
+  font-family: var(--serif);
+  font-size: clamp(40px, 4vw, 62px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.028em;
+  margin-bottom: 16px;
+}
+
+h1.hero-h em {
+  font-style: italic;
+  color: var(--blue);
+}
+
+.hero-sub {
+  font-size: 18px;
+  color: var(--ink2);
+  line-height: 1.55;
+  margin-bottom: 12px;
+  font-weight: 400;
+}
+
+.hero-why {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+  margin-bottom: 32px;
+  padding: 12px 16px;
+  background: var(--w);
+  border-radius: 10px;
+  border-left: 3px solid var(--blue);
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-p {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.28);
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+.btn-p:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+
+.btn-g {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  padding: 13px 22px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  color: var(--ink2);
+  transition: all 0.15s;
+}
+
+.btn-g:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* Micro scene */
+.micro {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
+  margin-bottom: 20px;
+}
+
+.micro-top {
+  background: var(--s);
+  border-bottom: 1px solid var(--rule);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.m-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.micro-lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  margin-left: 8px;
+  letter-spacing: 0.04em;
+}
+
+.micro-body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.m-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.m-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 5px;
+}
+
+.mt-a1 {
+  background: var(--bl);
+  color: var(--blue);
+}
+
+.mt-a3 {
+  background: var(--rl);
+  color: var(--red);
+}
+
+.m-txt {
+  font-size: 13px;
+  color: var(--ink2);
+}
+
+.m-arr {
+  color: var(--muted);
+}
+
+.m-effects {
+  display: flex;
+  gap: 7px;
+  padding-top: 6px;
+  border-top: 1px solid var(--rule);
+}
+
+.m-eff {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.me-trust {
+  background: var(--rl);
+  color: var(--red);
+}
+
+.me-stress {
+  background: var(--al);
+  color: var(--amber);
+}
+
+.me-ten {
+  background: #fdf4ff;
+  color: #7c3aed;
+  border: 1px solid #ede9fe;
+}
+
+/* Tick steps */
+.tick-card {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.07);
+}
+
+.tc-head {
+  background: var(--s);
+  border-bottom: 1px solid var(--rule);
+  padding: 13px 18px;
+}
+
+.tc-lbl {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tc-body {
+  padding: 22px 20px 22px 52px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.tc-body::before {
+  content: '';
+  position: absolute;
+  left: 31px;
+  top: 22px;
+  bottom: 22px;
+  width: 1px;
+  background: var(--rule);
+}
+
+.tc-step {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.tc-step:last-child {
+  padding-bottom: 0;
+}
+
+.tc-dot {
+  position: absolute;
+  left: -36px;
+  top: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  background: var(--w);
+  border: 1px solid var(--rule);
+  z-index: 1;
+}
+
+.tc-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.tc-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.tc-sub strong {
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+/* ── Sections ── */
+hr.div {
+  border: none;
+  border-top: 1px solid var(--rule);
+}
+
+.sec {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 100px 80px;
+}
+
+.sec-ey {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.sec-h {
+  font-family: var(--serif);
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+
+.sec-l {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.65;
+  font-weight: 300;
+  max-width: 520px;
+  margin-bottom: 48px;
+}
+
+/* ── How it works ── */
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.hw {
+  background: var(--w);
+  padding: 32px 26px;
+  transition: all 0.2s;
+}
+
+.hw:hover {
+  background: var(--s);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.hw-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--blue);
+  margin-bottom: 12px;
+  display: block;
+  letter-spacing: 0.06em;
+}
+
+.hw-icon {
+  font-size: 24px;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.hw-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.hw-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.hw-item {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  align-items: flex-start;
+}
+
+.hw-item::before {
+  content: '→';
+  color: var(--rule);
+  flex-shrink: 0;
+}
+
+.hw-item strong {
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+.hw-punch {
+  font-size: 12px;
+  color: var(--blue);
+  font-style: italic;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ── Why banner ── */
+.why-band {
+  background: var(--ink);
+  padding: 48px 80px;
+  display: flex;
+  align-items: center;
+}
+
+.wb-q {
+  font-family: var(--serif);
+  font-size: 22px;
+  color: #e4e4e7;
+  line-height: 1.5;
+  font-style: italic;
+  max-width: 760px;
+}
+
+.wb-q em {
+  color: #93c5fd;
+}
+
+.wb-n {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #52525b;
+  margin-top: 10px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Observe ── */
+.obs-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.obs-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 28px;
+}
+
+.obs-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.obs-item:last-child {
+  border-bottom: none;
+}
+
+.obs-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.obs-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.obs-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* Dashboard preview */
+.dash-prev {
+  background: #0c0f14;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.dp-top {
+  background: #141920;
+  border-bottom: 1px solid #1e2a35;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dp-lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #6b7f96;
+  margin-left: 8px;
+}
+
+.dp-body {
+  padding: 16px;
+}
+
+.dp-sec {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7f96;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dp-sec::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #1e2a35;
+}
+
+.dp-agents {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.dpa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #141920;
+  border-radius: 8px;
+  border: 1px solid #1e2a35;
+}
+
+.dpa-av {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dpa1 {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.dpa2 {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.dpa3 {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.dpa-n {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2eaf4;
+  width: 42px;
+}
+
+.dpa-s {
+  font-size: 10px;
+  color: #6b7f96;
+  flex: 1;
+}
+
+.dpa-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dpa-br {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dpa-bl {
+  font-size: 8px;
+  color: #6b7f96;
+  width: 22px;
+  text-align: right;
+}
+
+.dpa-bt {
+  width: 42px;
+  height: 3px;
+  background: #1e2a35;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.dpa-bf {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.bf-s {
+  background: #f87171;
+}
+
+.bf-t {
+  background: #0d9488;
+}
+
+.dp-evs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dpev {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 7px 9px;
+  background: #0f1520;
+  border-radius: 7px;
+}
+
+.dpev-t {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: #6b7f96;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #141920;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.dpev-b {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  text-transform: uppercase;
+}
+
+.db-s {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+.db-r {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+}
+
+.db-a {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+.dpev-body {
+  flex: 1;
+}
+
+.dpev-main {
+  font-size: 11px;
+  color: #e2eaf4;
+  line-height: 1.35;
+}
+
+.dpev-eff {
+  font-size: 10px;
+  color: #0d9488;
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* ── Scenarios ── */
+.sc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.sc-card {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 24px 20px;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.sc-card:hover {
+  border-color: #c4c2bc;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  transform: translateY(-4px);
+}
+
+.sc-etag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.et-o {
+  background: var(--bl);
+  color: var(--blue);
+}
+
+.et-c {
+  background: var(--al);
+  color: var(--amber);
+}
+
+.et-e {
+  background: var(--rl);
+  color: var(--red);
+}
+
+.sc-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.sc-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 7px;
+}
+
+.sc-q {
+  font-size: 12px;
+  color: var(--teal);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+/* ── Interventions ── */
+.int-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+.int-card {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 22px 16px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.int-card:hover {
+  border-color: #c4c2bc;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+  transform: translateY(-3px);
+}
+
+.int-ic {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 14px;
+}
+
+.ic-bl {
+  background: var(--bl);
+}
+
+.ic-am {
+  background: var(--al);
+}
+
+.ic-rd {
+  background: var(--rl);
+}
+
+.ic-pu {
+  background: #ede9fe;
+}
+
+.ic-gr {
+  background: var(--gl);
+}
+
+.int-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.int-1l {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.int-q {
+  font-size: 11px;
+  color: var(--blue);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* ── CTA ── */
+.cta-sec {
+  background: var(--ink);
+  padding: 100px 80px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.cta-h {
+  font-family: var(--serif);
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+
+.cta-p {
+  font-size: 14px;
+  color: #a1a1aa;
+  line-height: 1.65;
+  font-weight: 300;
+}
+
+.cta-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cta-m {
+  background: #fff;
+  color: var(--ink);
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.cta-m:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.cta-g {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 13px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  color: #fff;
+  transition: border-color 0.15s;
+  text-align: center;
+}
+
+.cta-g:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.cta-n {
+  font-size: 12px;
+  color: #52525b;
+  text-align: center;
+}
+
+/* ── Footer ── */
+footer {
+  background: var(--s);
+  border-top: 1px solid var(--rule);
+  padding: 28px 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.f-logo {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.f-links {
+  display: flex;
+  gap: 20px;
+}
+
+.f-link {
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.f-link:hover {
+  color: var(--ink);
+}
+
+.f-v {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── Consent ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.48);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+}
+
+.overlay.open {
+  display: flex;
+}
+
+.modal {
+  background: var(--w);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  padding: 40px;
+  width: min(540px, 92vw);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.m-x {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.m-x:hover {
+  background: var(--s);
+}
+
+.m-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  letter-spacing: -0.015em;
+}
+
+.m-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 22px;
+}
+
+.m-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.m-tile {
+  background: var(--s);
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  padding: 12px;
+}
+
+.mt-t {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.mt-b {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.m-sub2 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.m-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 22px;
+}
+
+.checkrow {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--s);
+  border: 1px solid var(--rule);
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.45;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.checkrow:hover {
+  border-color: #d4d2ca;
+}
+
+.checkrow input {
+  margin-top: 2px;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--blue);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.checkrow b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.m-cta {
+  width: 100%;
+  padding: 12px;
+  border-radius: 9px;
+  border: none;
+  background: var(--blue);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.m-cta:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.m-cta:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Reveal ── */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
+.reveal.in{opacity:1;transform:translateY(0)}
+</style>
 </head>
 <body>
-  <div id="app">
-    <!-- TOP BAR -->
-    <header class="topbar">
-      <div class="brand">
-        <img src="image/logo.png" alt="SimuVerse Logo" class="logo-img" />
-        <div>
-          <div class="title">SimuVerse</div>
-          <div class="sub">Social Behavior Simulation</div>
-        </div>
-      </div>
-      <div class="topbar-right">
-        <div class="nav-links">
-          <button class="nav-link" id="navHome">Home</button>
-          <button class="nav-link" id="navAbout">About</button>
-          <button class="nav-link" id="navContact">Contact</button>
-        </div>
-        <button id="navGetStarted" class="btn btn-primary btn-small">
-          Get Started
-        </button>
-        <div class="pill subtle">v1.0</div>
-      </div>
-    </header>
 
-    <!-- EXIT WARNING MODAL -->
-    <div id="exitWarning" class="modal" style="display:none;">
-      <div class="modal-content">
-        <h3>Exit Simulation?</h3>
-        <p>You have an active simulation running. If you exit, it will be saved but cannot be resumed.</p>
-        <div class="row" style="margin-top:20px;">
-          <button id="exitCancel" class="btn">Cancel</button>
-          <button id="exitConfirm" class="btn danger">Exit Anyway</button>
+<nav id="nav">
+  <a href="index.html" class="n-logo">SimuVerse</a>
+  <div class="n-links">
+    <a href="intro.html" class="n-link">How It Works</a>
+    <button class="n-link" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">Scenarios</button>
+    <a href="history.html" class="n-link">History</a>
+  </div>
+  <div class="n-right">
+    <button class="n-ghost" onclick="location.href='intro.html'">Read the explainer</button>
+    <button class="n-cta" onclick="openConsent()">Get Started →</button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-l">
+    <div class="eyebrow-pill"><span class="ep-dot"></span>Live multi-agent simulation</div>
+    <h1 class="hero-h">Four agents.<br>One goal. Trust<br>or <em>refuse to share.</em></h1>
+    <p class="hero-sub">Nobody has the full picture. What happens next isn't scripted.</p>
+    <p class="hero-why">Most agent models ignore emotion. SimuVerse runs AI emotion detection on every message — and lets you measure how that changes group outcomes.</p>
+
+    <!-- Instant mental model -->
+    <div class="micro">
+      <div class="micro-top">
+        <div class="m-dot" style="background:#ef4444"></div>
+        <div class="m-dot" style="background:#f59e0b;margin-left:4px"></div>
+        <div class="m-dot" style="background:#22c55e;margin-left:4px"></div>
+        <span class="micro-lbl">What happens every tick</span>
+      </div>
+      <div class="micro-body">
+        <div class="m-step"><span class="m-tag mt-a1">Maya A1</span><span class="m-arr">→</span><span class="m-txt">asks Jordan for <em>technical specifications</em></span></div>
+        <div class="m-step"><span class="m-tag mt-a3">Jordan A3</span><span class="m-arr">→</span><span class="m-txt">refuses — stress 0.68, trust 0.29</span></div>
+        <div class="m-effects">
+          <span class="m-eff me-trust">Trust ↓</span>
+          <span class="m-eff me-stress">Stress ↑</span>
+          <span class="m-eff me-ten">Group tension ↑</span>
         </div>
       </div>
     </div>
 
-    <!-- HOME SCREEN -->
-    <section id="screen-home" class="screen active">
-      <div class="hero-section">
-        <div class="hero-content">
-          <h1>Turn "what if?" into a live simulation</h1>
-          <p class="hero-subtitle">
-            A multi-agent social simulation platform for studying emotion dynamics,
-            trust networks, and group behavior in small teams.
-          </p>
-          <button id="heroGetStarted" class="btn btn-hero">
-            Get Started
-          </button>
-        </div>
-      </div>
-
-      <div class="cards-section">
-        <div class="section-container">
-          <h2 class="section-title">How SimuVerse Works</h2>
-          <div class="glassmorphism-grid">
-            <!-- Card 1 -->
-            <div class="premium-glass-card">
-              <h3 class="glass-card-title">Create a Simulation</h3>
-              <div class="glass-icon">
-                <img src="image/create.png" alt="Create" style="width: 64px; height: 64px; object-fit: contain;">
-              </div>
-              <p class="glass-card-description">
-                Spin up a world in seconds—choose agents, mood, and rules.
-              </p>
-              <div class="glass-card-footer">
-                <div class="glass-tag">Fast Setup</div>
-              </div>
-              <div class="card-tail"></div>
-            </div>
-
-            <!-- Card 2 -->
-            <div class="premium-glass-card">
-              <h3 class="glass-card-title">Pick an Environment</h3>
-              <div class="glass-icon">
-                <img src="image/pick.png" alt="Pick" style="width: 64px; height: 64px; object-fit: contain;">
-              </div>
-              <p class="glass-card-description">
-                Office, cafe, interview room, crisis scene... set the context fast.
-              </p>
-              <div class="glass-card-footer">
-                <div class="glass-tag">Environments</div>
-              </div>
-              <div class="card-tail"></div>
-            </div>
-
-            <!-- Card 3 -->
-            <div class="premium-glass-card">
-              <h3 class="glass-card-title">Watch Dynamics Live</h3>
-              <div class="glass-icon">
-                <img src="image/watch.png" alt="Watch" style="width: 64px; height: 64px; object-fit: contain;">
-              </div>
-              <p class="glass-card-description">
-                See trust, emotions, and events update in real time.
-              </p>
-              <div class="glass-card-footer">
-                <div class="glass-tag">Live Insights</div>
-              </div>
-              <div class="card-tail"></div>
-            </div>
-
-            <!-- Card 4 -->
-            <div class="premium-glass-card">
-              <h3 class="glass-card-title">Insights & Export</h3>
-              <div class="glass-icon">
-                <img src="image/insights.png" alt="Insights" style="width: 64px; height: 64px; object-fit: contain;">
-              </div>
-              <p class="glass-card-description">
-                Track conflict, cohesion, and turning points—export replay logs.
-              </p>
-              <div class="glass-card-footer">
-                <div class="glass-tag">Analyze & Export</div>
-              </div>
-              <div class="card-tail"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CONSENT SCREEN -->
-    <section id="screen-consent" class="screen">
-      <div class="consent-bg">
-        <div class="consent-wrap">
-          <header class="consent-hero">
-            <h1>Before you begin</h1>
-            <p>
-              SimuVerse simulates social dynamics to help you explore scenarios.
-              Please review the following information before creating a run.
-            </p>
-          </header>
-
-          <div class="consent-grid">
-            <div class="consent-panel consent-panel-left">
-              <div class="consent-tiles">
-                <div class="consent-tile">
-                  <div class="tile-title">Purpose</div>
-                  <div class="tile-text">Simulates agents, scenarios, and social interactions for research and education.</div>
-                </div>
-                <div class="consent-tile">
-                  <div class="tile-title">Limitations</div>
-                  <div class="tile-text">Not for real-world prediction, diagnosis, profiling, or legal decisions.</div>
-                </div>
-                <div class="consent-tile">
-                  <div class="tile-title">Applications</div>
-                  <div class="tile-text">Exploration, education, and research prototyping.</div>
-                </div>
-              </div>
-
-              <div class="consent-subtitle">Please confirm:</div>
-
-              <div class="consent-checks">
-                <label class="checkrow">
-                  <input type="checkbox" id="check1" class="consent-check" />
-                  <span><b>No personal data:</b> I will not input names, addresses, or identifiable information.</span>
-                </label>
-                <label class="checkrow">
-                  <input type="checkbox" id="check2" class="consent-check" />
-                  <span><b>Simulated outputs:</b> I understand results are simulated and may be inaccurate.</span>
-                </label>
-                <label class="checkrow">
-                  <input type="checkbox" id="check3" class="consent-check" />
-                  <span><b>Not professional advice:</b> I will not use outputs for clinical/legal decisions.</span>
-                </label>
-                <label class="checkrow">
-                  <input type="checkbox" id="check4" class="consent-check" />
-                  <span><b>Local storage:</b> Runs are stored locally on this device.</span>
-                </label>
-                <label class="checkrow">
-                  <input type="checkbox" id="check5" class="consent-check" />
-                  <span><b>Data control:</b> I can delete runs and replays at any time.</span>
-                </label>
-              </div>
-
-              <div class="consent-footerline">
-                <button id="consentExit" class="consent-link">Back</button>
-              </div>
-            </div>
-
-            <div class="consent-panel consent-panel-right">
-              <div class="right-head">
-                <div class="shield">✓</div>
-                <div>
-                  <div class="right-title">Data Handling</div>
-                  <div class="right-sub">Summary</div>
-                </div>
-              </div>
-
-              <div class="right-box">
-                <div class="right-row">
-                  <div class="right-bullet">✓</div>
-                  <div>
-                    <div class="right-k">Stored locally:</div>
-                    <div class="right-v">Seed, configuration, replay logs, metrics</div>
-                  </div>
-                </div>
-                <div class="right-row">
-                  <div class="right-bullet">✓</div>
-                  <div>
-                    <div class="right-k">Not stored:</div>
-                    <div class="right-v">Personal data, user identity, PII</div>
-                  </div>
-                </div>
-                <div class="right-divider"></div>
-                <div class="right-k">LLM Note:</div>
-                <div class="right-v">If enabled, prompts are filtered to remove sensitive information.</div>
-              </div>
-
-              <button id="consentContinue" class="consent-cta" disabled>
-                <span class="cta-ic">✓</span>
-                I Agree — Continue
-                <span class="cta-arrow">→</span>
-              </button>
-
-              <div class="progress">
-                <div class="pips">
-                  <span class="pip on"></span>
-                  <span class="pip on"></span>
-                  <span class="pip on"></span>
-                  <span class="pip on"></span>
-                  <span class="pip on"></span>
-                </div>
-                <div class="progress-txt">5 confirmations</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SETUP SCREEN - SIMPLIFIED TWO-MODE DESIGN -->
-    <section id="screen-setup" class="screen">
-      <div class="setup-container">
-        <!-- Header -->
-        <div class="setup-header">
-          <h1 class="setup-title">Configure Simulation</h1>
-          <p class="setup-subtitle">Select how you want to start. Quick mode uses default settings for immediate results.</p>
-        </div>
-
-        <!-- Mode Selection - Two Cards -->
-        <div class="mode-grid">
-          <!-- Quick Mode Card -->
-          <div class="mode-card mode-card-quick" id="quickModeCard">
-            <div class="mode-badge">RECOMMENDED</div>
-            <h2 class="mode-title">Quick Mode</h2>
-            <div class="mode-description">
-              <ul class="mode-features">
-                <li>✓ Default agents (4)</li>
-                <li>✓ Balanced personalities</li>
-                <li>✓ LLM dialogue enabled</li>
-                <li>✓ Emotion input enabled</li>
-                <li>✓ Auto-generated Run ID</li>
-              </ul>
-            </div>
-            <button id="quickStartBtn" class="mode-btn mode-btn-quick">
-              <span class="btn-icon">▶</span>
-              Start Simulation
-            </button>
-            <p class="mode-note">For demonstrations and rapid testing</p>
-          </div>
-
-          <!-- Advanced Mode Card -->
-          <div class="mode-card mode-card-advanced" id="advancedModeCard">
-            <div class="mode-badge mode-badge-advanced">EXPERIMENTAL</div>
-            <h2 class="mode-title">Advanced Mode</h2>
-            <div class="mode-description">
-              <ul class="mode-features">
-                <li>✓ Custom personalities</li>
-                <li>✓ Modify relationships</li>
-                <li>✓ Toggle LLM & emotion</li>
-                <li>✓ Control reproducibility</li>
-              </ul>
-            </div>
-            <button id="advancedSetupBtn" class="mode-btn mode-btn-advanced">
-              <span class="btn-icon">⚙️</span>
-              Configure Settings
-            </button>
-            <p class="mode-note">For controlled experiments</p>
-          </div>
-        </div>
-
-        <!-- Scenario Selection -->
-        <div class="scenario-panel">
-          <label class="scenario-label">Scenario</label>
-          <select id="scenarioSelect" class="scenario-select">
-            <option value="classroom">Classroom Discussion</option>
-            <option value="group-project">Group Project</option>
-            <option value="interview">Interview Panel</option>
-            <option value="cafe">Café Conversation</option>
-          </select>
-          <p class="scenario-hint">Select the initial social context for the simulation.</p>
-        </div>
-
-        <!-- Run ID Panel -->
-        <div class="runid-panel">
-          <div class="runid-label">Run ID:</div>
-          <div class="runid-value" id="runIdDisplay">SV-4F82X</div>
-          <button class="runid-regenerate" id="regenerateRunId">↻</button>
-          <div class="runid-hint">Same Run ID + settings = identical replay</div>
-        </div>
-
-        <!-- Back button -->
-        <div class="setup-footer">
-          <button id="backToConsent" class="btn btn-secondary">← Back</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABOUT SCREEN -->
-    <section id="screen-about" class="screen">
-      <div class="card" style="max-width: 800px; margin: 100px auto;">
-        <h1>About SimuVerse</h1>
-        <p>A multi-agent social simulation platform for studying emotion dynamics, trust networks, and group behavior in small teams.</p>
-        <p>Version 1.0 - Research Prototype</p>
-        <button id="backHomeFromAbout" class="btn" style="margin-top: 20px;">Back to Home</button>
-      </div>
-    </section>
-
-    <!-- CONTACT SCREEN -->
-    <section id="screen-contact" class="screen">
-      <div class="card" style="max-width: 800px; margin: 100px auto;">
-        <h1>Contact</h1>
-        <p>Email: support@simuverse.com</p>
-        <p>Documentation: docs.simuverse.com</p>
-        <button id="backHomeFromContact" class="btn" style="margin-top: 20px;">Back to Home</button>
-      </div>
-    </section>
+    <div class="hero-ctas">
+      <button class="btn-p" onclick="openConsent()">Get Started →</button>
+      <button class="btn-g" onclick="location.href='intro.html'">How it works ↓</button>
+    </div>
   </div>
 
-  <script src="./app.js"></script>
+  <div class="hero-r">
+    <div class="tick-card">
+      <div class="tc-head"><div class="tc-lbl">Inside every tick</div></div>
+      <div class="tc-body">
+        <div class="tc-step"><div class="tc-dot">🧠</div><div class="tc-title">Agent decides</div><div class="tc-sub">Weighs <strong>trust, stress</strong> and strategy — ask, share, or refuse</div></div>
+        <div class="tc-step"><div class="tc-dot">💬</div><div class="tc-title">Natural language message</div><div class="tc-sub">Reflects <strong>how they feel right now</strong> — guarded, curious, grateful</div></div>
+        <div class="tc-step"><div class="tc-dot">🔬</div><div class="tc-title">AI reads the emotion</div><div class="tc-sub">Classifies the tone — <strong>28 emotion labels</strong>, real model, real text</div></div>
+        <div class="tc-step"><div class="tc-dot">💡</div><div class="tc-title">States update</div><div class="tc-sub">Trust shifts. Stress changes. Strategy may flip. <strong>Next tick is different.</strong></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- Why banner -->
+<div class="why-band reveal">
+  <div>
+    <div class="wb-q">"SimuVerse studies how <em>trust, emotion, and communication</em> shape group decisions — something traditional agent models often ignore."</div>
+    <div class="wb-n">Core research claim · Emotion analysis on/off comparison built in · Same seed = identical run every time</div>
+  </div>
+</div>
+
+<!-- How it works -->
+<div class="sec reveal" id="how">
+  <div class="sec-ey">How it works</div>
+  <div class="sec-h">You watch a group navigate uncertainty</div>
+  <div class="sec-l">Four agents. Each holds one piece of the puzzle. What you observe is entirely emergent — not scripted.</div>
+  <div class="how-grid">
+    <div class="hw"><span class="hw-num">01</span><span class="hw-icon">🧩</span><div class="hw-title">Agents hold information</div><div class="hw-list"><div class="hw-item">Each starts with <strong>one task item</strong></div><div class="hw-item">No agent has the full solution</div><div class="hw-item">All four must share to succeed</div></div><div class="hw-punch">Cooperation is necessary — not guaranteed</div></div>
+    <div class="hw"><span class="hw-num">02</span><span class="hw-icon">💬</span><div class="hw-title">You watch them talk</div><div class="hw-list"><div class="hw-item">Ask, share, <strong>refuse</strong>, challenge</div><div class="hw-item">Messages reflect trust and stress</div><div class="hw-item">Each interaction changes the next</div></div><div class="hw-punch">Every refusal has a reason you can read</div></div>
+    <div class="hw"><span class="hw-num">03</span><span class="hw-icon">🔬</span><div class="hw-title">AI reads the emotion</div><div class="hw-list"><div class="hw-item">A machine learning model reads every message</div><div class="hw-item">28 emotions — curiosity, remorse, fear…</div><div class="hw-item">Emotion updates the receiver's state</div></div><div class="hw-punch">Turn emotion analysis off → instant comparison without emotion analysis</div></div>
+    <div class="hw"><span class="hw-num">04</span><span class="hw-icon">📈</span><div class="hw-title">Outcomes emerge</div><div class="hw-list"><div class="hw-item">Success, failure, deadlock, meltdown</div><div class="hw-item">Nothing predetermined or scripted</div><div class="hw-item">Same reproducibility number = <strong>identical run</strong> every time</div></div><div class="hw-punch">Reproducible experiments — compare fairly</div></div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- What you observe -->
+<div class="sec reveal">
+  <div class="obs-layout">
+    <div>
+      <div class="sec-ey">What you observe</div>
+      <div class="sec-h">Everything visible.<br>Nothing hidden.</div>
+      <p style="font-size:15px;color:var(--muted);line-height:1.65;font-weight:300;margin-bottom:8px">You're watching a social system evolve in real time — every number means something.</p>
+      <div class="obs-items">
+        <div class="obs-item"><div class="obs-icon" style="background:var(--bl)">📊</div><div><div class="obs-title">Live agent state</div><div class="obs-desc">Stress, trust, emotion, strategy — all four agents, updating every tick.</div></div></div>
+        <div class="obs-item"><div class="obs-icon" style="background:var(--gl)">🗂</div><div><div class="obs-title">Event log + "Why?" explanations</div><div class="obs-desc">Every event logged with the actual message. A plain-English tab explains each one.</div></div></div>
+        <div class="obs-item"><div class="obs-icon" style="background:var(--rl)">⚡</div><div><div class="obs-title">Turning points</div><div class="obs-desc">See the exact tick when trust collapses or cooperation suddenly emerges.</div></div></div>
+        <div class="obs-item"><div class="obs-icon" style="background:var(--al)">🎮</div><div><div class="obs-title">Interventions mid-run</div><div class="obs-desc">Reveal info, nudge strategy, boost urgency — watch the immediate downstream effect.</div></div></div>
+      </div>
+    </div>
+
+    <!-- Live dashboard preview -->
+    <div class="dash-prev">
+      <div class="dp-top">
+        <div class="dp-dot" style="background:#ef4444"></div>
+        <div class="dp-dot" style="background:#f59e0b;margin-left:4px"></div>
+        <div class="dp-dot" style="background:#22c55e;margin-left:4px"></div>
+        <span class="dp-lbl">SimuVerse Dashboard — Project Proposal · T14/30</span>
+      </div>
+      <div class="dp-body">
+        <div class="dp-sec">Agent states</div>
+        <div class="dp-agents">
+          <div class="dpa"><div class="dpa-av dpa1">A1</div><div class="dpa-n">Maya</div><div class="dpa-s">cooperative · grateful</div><div class="dpa-bars"><div class="dpa-br"><span class="dpa-bl">stress</span><div class="dpa-bt"><div class="dpa-bf bf-s" style="width:20%"></div></div></div><div class="dpa-br"><span class="dpa-bl">trust</span><div class="dpa-bt"><div class="dpa-bf bf-t" style="width:74%"></div></div></div></div></div>
+          <div class="dpa"><div class="dpa-av dpa2">A2</div><div class="dpa-n">Alex</div><div class="dpa-s">cooperative · approval</div><div class="dpa-bars"><div class="dpa-br"><span class="dpa-bl">stress</span><div class="dpa-bt"><div class="dpa-bf bf-s" style="width:14%"></div></div></div><div class="dpa-br"><span class="dpa-bl">trust</span><div class="dpa-bt"><div class="dpa-bf bf-t" style="width:81%"></div></div></div></div></div>
+          <div class="dpa"><div class="dpa-av dpa3">A3</div><div class="dpa-n">Jordan</div><div class="dpa-s">defensive · disapproval</div><div class="dpa-bars"><div class="dpa-br"><span class="dpa-bl">stress</span><div class="dpa-bt"><div class="dpa-bf bf-s" style="width:68%"></div></div></div><div class="dpa-br"><span class="dpa-bl">trust</span><div class="dpa-bt"><div class="dpa-bf bf-t" style="width:29%"></div></div></div></div></div>
+        </div>
+        <div class="dp-sec">Live events</div>
+        <div class="dp-evs">
+          <div class="dpev"><span class="dpev-t">T14</span><span class="dpev-b db-s">SHARE</span><div class="dpev-body"><div class="dpev-main">Maya → Alex: shared <em>budget info</em></div><div class="dpev-eff">→ Trust ↑ 0.74→0.81 · emotion: gratitude</div></div></div>
+          <div class="dpev"><span class="dpev-t">T14</span><span class="dpev-b db-r">REFUSE</span><div class="dpev-body"><div class="dpev-main">Jordan refused Sam — 3rd request</div><div class="dpev-eff">→ Stress ↑ 0.68 · group tension rising</div></div></div>
+          <div class="dpev"><span class="dpev-t">T13</span><span class="dpev-b db-a">ASK</span><div class="dpev-body"><div class="dpev-main">Sam asked Jordan for <em>technical specifications</em></div><div class="dpev-eff">→ Force-share threshold approaching</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- Scenarios -->
+<div class="sec reveal">
+  <div class="sec-ey">Scenarios</div>
+  <div class="sec-h">Six situations to run experiments on</div>
+  <div class="sec-l">Each distributes different information across agents. The environment sets social starting conditions.</div>
+  <div class="sc-grid">
+    <div class="sc-card"><span class="sc-etag et-o">Office</span><div class="sc-name">Project Proposal</div><div class="sc-desc">Agents share budget, requirements, design, and tech specs.</div><div class="sc-q">Does professional guardedness slow coordination?</div></div>
+    <div class="sc-card"><span class="sc-etag et-o">Office</span><div class="sc-name">Assign Team Roles</div><div class="sc-desc">Agents must agree on frontend, backend, testing, and documentation.</div><div class="sc-q">Does negotiation resolve — or deadlock?</div></div>
+    <div class="sc-card"><span class="sc-etag et-c">Café</span><div class="sc-name">Plan a Vacation</div><div class="sc-desc">Agents share flights, hotel, food, and attractions.</div><div class="sc-q">Does a relaxed setting change how quickly agents share?</div></div>
+    <div class="sc-card"><span class="sc-etag et-c">Café</span><div class="sc-name">Choose a Restaurant</div><div class="sc-desc">Agents must reach a collective agreement together.</div><div class="sc-q">Does consensus emerge — or does friction take over?</div></div>
+    <div class="sc-card"><span class="sc-etag et-e">Escape Room</span><div class="sc-name">Find the Exit Code</div><div class="sc-desc">Agents share digit clues under rising time pressure.</div><div class="sc-q">Does urgency override hesitation in defensive agents?</div></div>
+    <div class="sc-card"><span class="sc-etag et-e">Escape Room</span><div class="sc-name">Solve the Puzzle Chain</div><div class="sc-desc">Agents combine map, key, lock, and door clues in sequence.</div><div class="sc-q">Does trust or urgency drive sharing under pressure?.</div></div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- Interventions -->
+<div class="sec reveal">
+  <div class="sec-ey">Interventions</div>
+  <div class="sec-h">Change the simulation while it runs</div>
+  <div class="sec-l">Available from the dashboard at any point. Apply one — watch what changes next.</div>
+  <div class="int-grid">
+    <div class="int-card"><div class="int-ic ic-bl">💡</div><div class="int-name">Reveal Info</div><div class="int-1l">Give an agent knowledge of a task item instantly.</div><div class="int-q">Does removing the information gap break a deadlock?</div></div>
+    <div class="int-card"><div class="int-ic ic-am">🧠</div><div class="int-name">Nudge Strategy</div><div class="int-1l">Push an agent toward cooperative or defensive mode.</div><div class="int-q">Does one strategy shift cascade through the group?</div></div>
+    <div class="int-card"><div class="int-ic ic-rd">🔥</div><div class="int-name">Boost Urgency</div><div class="int-1l">Raise task urgency — agents share more under pressure.</div><div class="int-q">Is urgency or trust the stronger driver?</div></div>
+    <div class="int-card"><div class="int-ic ic-pu">⚡</div><div class="int-name">Inject Tension</div><div class="int-1l">Raise group tension — agents become more guarded.</div><div class="int-q">How much tension flips a cooperative agent defensive?</div></div>
+    <div class="int-card"><div class="int-ic ic-gr">🤝</div><div class="int-name">Force Meeting</div><div class="int-1l">Force two agents to interact next tick.</div><div class="int-q">Does forced contact between distrustful agents help or hurt?</div></div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-sec reveal">
+  <div><div class="cta-h">Run your first experiment.
+See what emerges.</div><p class="cta-p">Takes under 2 minutes. Every run is saved automatically with full replay.</p></div>
+  <div class="cta-btns">
+    <button class="cta-m" onclick="openConsent()">Get Started →</button>
+    <button class="cta-g" onclick="location.href='intro.html'">Read the explainer first</button>
+    <div class="cta-n">No account needed · Runs saved locally · Free</div>
+  </div>
+</div>
+
+<footer>
+  <div class="f-logo">SimuVerse v1.0</div>
+  <div class="f-links">
+    <a class="f-link" href="intro.html">How It Works</a>
+    <a class="f-link" href="setup.html">Configure</a>
+    <a class="f-link" href="history.html">History</a>
+  </div>
+  <div class="f-v">Research Prototype · 2025</div>
+</footer>
+
+<!-- Consent -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="m-x" onclick="closeConsent()">✕</button>
+    <div class="m-title">Before you begin</div>
+    <div class="m-sub">SimuVerse simulates social dynamics for research and education. Please confirm before continuing.</div>
+    <div class="m-tiles">
+      <div class="m-tile"><div class="mt-t">Purpose</div><div class="mt-b">Research and education — not real-world prediction.</div></div>
+      <div class="m-tile"><div class="mt-t">Privacy</div><div class="mt-b">No personal data collected. Runs stored locally only.</div></div>
+      <div class="m-tile"><div class="mt-t">Limits</div><div class="mt-b">Outputs are simulated. Not clinical or legal advice.</div></div>
+    </div>
+    <div class="m-sub2">Confirm all five to continue:</div>
+    <div class="m-checks">
+      <label class="checkrow"><input type="checkbox" class="cc" onchange="updC()"><span><b>No personal data:</b> I won't input names or identifiable information.</span></label>
+      <label class="checkrow"><input type="checkbox" class="cc" onchange="updC()"><span><b>Simulated outputs:</b> Results are simulated and may be inaccurate.</span></label>
+      <label class="checkrow"><input type="checkbox" class="cc" onchange="updC()"><span><b>Not professional advice:</b> I won't use outputs for clinical or legal decisions.</span></label>
+      <label class="checkrow"><input type="checkbox" class="cc" onchange="updC()"><span><b>Local storage:</b> Runs stored locally and I can delete them anytime.</span></label>
+      <label class="checkrow"><input type="checkbox" class="cc" onchange="updC()"><span><b>Research use:</b> Using this for exploration, education, or research.</span></label>
+    </div>
+    <button class="m-cta" id="m-cta" onclick="goSetup()" disabled>I Agree — Configure Experiment →</button>
+  </div>
+</div>
+
+<script>
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('scrolled',scrollY>20));
+const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('in');}),{threshold:.08});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+function openConsent(){document.getElementById('overlay').classList.add('open')}
+function closeConsent(){document.getElementById('overlay').classList.remove('open');document.querySelectorAll('.cc').forEach(c=>c.checked=false);document.getElementById('m-cta').disabled=true}
+function updC(){document.getElementById('m-cta').disabled=![...document.querySelectorAll('.cc')].every(c=>c.checked)}
+function goSetup(){closeConsent();location.href='intro.html'}
+document.getElementById('overlay').addEventListener('click',function(e){if(e.target===this)closeConsent()})
+</script>
 </body>
 </html>
