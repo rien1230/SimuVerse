@@ -1,0 +1,3568 @@
+{
+  "run_id": "bce5daad",
+  "scenario_id": "office_roles",
+  "scenario_name": "Assign Team Responsibilities",
+  "seed": 4975,
+  "timestamp": "2026-03-28T14:08:26.924219+00:00",
+  "outcome": "deadlock",
+  "ticks": 19,
+  "final_progress": 0.25,
+  "metrics": {
+    "avg_trust": 0.423,
+    "avg_stress": 0.029,
+    "conflict_rate": 0.0,
+    "total_refusals": 1,
+    "total_shares": 1,
+    "stalled_ticks": 18,
+    "group_tension": 0.14,
+    "group_cohesion": 0.54
+  },
+  "group_state": {
+    "tension": 0.14,
+    "cohesion": 0.54,
+    "stall_ticks": 15,
+    "bottleneck_item": "frontend",
+    "bottleneck_holder": "A2"
+  },
+  "tasks": {
+    "frontend": false,
+    "backend": false,
+    "testing": false,
+    "documentation": true
+  },
+  "completion_order": [
+    "documentation"
+  ],
+  "peak_tension": 0.26,
+  "time_to_first_share": 4,
+  "intervention_count": 0,
+  "interventions": [],
+  "agents": [
+    {
+      "id": "A1",
+      "strategy": "avoidant",
+      "final_stress": 0.048,
+      "final_valence": -0.061,
+      "known_items": [
+        "documentation",
+        "backend"
+      ],
+      "trust": {
+        "A2": 0.482,
+        "A3": 0.372,
+        "A4": 0.329
+      }
+    },
+    {
+      "id": "A2",
+      "strategy": "neutral",
+      "final_stress": 0.014,
+      "final_valence": 0.012,
+      "known_items": [
+        "frontend"
+      ],
+      "trust": {
+        "A1": 0.512,
+        "A3": 0.467,
+        "A4": 0.567
+      }
+    },
+    {
+      "id": "A3",
+      "strategy": "defensive",
+      "final_stress": 0.024,
+      "final_valence": -0.028,
+      "known_items": [
+        "testing"
+      ],
+      "trust": {
+        "A1": 0.345,
+        "A2": 0.385,
+        "A4": 0.369
+      }
+    },
+    {
+      "id": "A4",
+      "strategy": "neutral",
+      "final_stress": 0.03,
+      "final_valence": 0.0,
+      "known_items": [
+        "documentation"
+      ],
+      "trust": {
+        "A1": 0.382,
+        "A2": 0.467,
+        "A3": 0.397
+      }
+    }
+  ],
+  "history": [
+    {
+      "tick": 1,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.44,
+            "A3": 0.37,
+            "A4": 0.41
+          },
+          "known_items": [
+            "backend"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": "A2",
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.51,
+            "A3": 0.465,
+            "A4": 0.505
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.00)"
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.42,
+            "A2": 0.465,
+            "A3": 0.395
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.475
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.415
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.485
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A2",
+          "text": "I'm missing Frontend Development \u2014 do you have what I need, Developer?",
+          "item": "frontend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.418,
+        "mean_valence": 0.0,
+        "mean_arousal": 0.309,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.0,
+        "stress_variance": 0.0,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 1,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "avoidant": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 1,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5
+      },
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 2,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.44,
+            "A3": 0.37,
+            "A4": 0.41
+          },
+          "known_items": [
+            "backend"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": "A4",
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.51,
+            "A3": 0.465,
+            "A4": 0.505
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.00)"
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.44,
+            "A2": 0.465,
+            "A3": 0.395
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.475
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.425
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.485
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A4",
+          "text": "I can't move forward without Documentation, Data Analyst. Do you know anything?",
+          "item": "documentation",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.42,
+        "mean_valence": 0.0,
+        "mean_arousal": 0.318,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.0,
+        "stress_variance": 0.0,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 2,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 2,
+          "avoidant": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 2,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5
+      },
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 3,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.44,
+            "A3": 0.37,
+            "A4": 0.163
+          },
+          "known_items": [
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.141,
+            "arousal": 0.351
+          },
+          "stress": 0.12,
+          "last_detected_emotion": "disapproval",
+          "goal_progress": 0.013,
+          "in_conversation_with": "A4",
+          "last_thought": "A4 came across as disapproval; I feel okay."
+        },
+        {
+          "id": "A2",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.51,
+            "A3": 0.466,
+            "A4": 0.505
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.326
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.00)"
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.326
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.38,
+            "A2": 0.465,
+            "A3": 0.395
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.326
+          },
+          "stress": 0.049,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A1",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.475
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.272
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.485
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A4",
+          "text": "I can't move forward without Documentation, Data Analyst. Do you know anything?",
+          "item": "documentation",
+          "reason": "need information"
+        },
+        {
+          "type": "refuse",
+          "actor": "A4",
+          "target": "A1",
+          "text": "I don't think it's the right time to share documentation, Project Manager.",
+          "item": "documentation",
+          "reason": "low trust"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.394,
+        "mean_valence": -0.035,
+        "mean_arousal": 0.333,
+        "conflict_rate": 0.5,
+        "avg_stress": 0.042,
+        "stress_variance": 0.0024,
+        "refusal_count": 1,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1,
+          "refuse": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 3,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "neutral": 2,
+          "avoidant": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 3,
+        "group_tension": 0.26,
+        "group_cohesion": 0.46
+      },
+      "group_state": {
+        "tension": 0.26,
+        "cohesion": 0.46,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 4,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.44,
+            "A3": 0.37,
+            "A4": 0.267
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.105,
+            "arousal": 0.362
+          },
+          "stress": 0.076,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A4",
+          "last_thought": "Strategy \u2192 avoidant (trust:0.36, stress:0.08)"
+        },
+        {
+          "id": "A2",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.506
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.335
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.00)"
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.335
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.38,
+            "A2": 0.465,
+            "A3": 0.395
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.335
+          },
+          "stress": 0.047,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A1",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.475
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.324
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.485
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Here's what I know about Documentation, Project Manager: the documentation role handles both internal technical docs and anything user-facing.",
+          "item": "documentation",
+          "reason": "decided to share"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.403,
+        "mean_valence": -0.026,
+        "mean_arousal": 0.342,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.031,
+        "stress_variance": 0.0011,
+        "refusal_count": 0,
+        "share_count": 1,
+        "event_counts": {
+          "share_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 4,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 3,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 4
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 5,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.44,
+            "A3": 0.37,
+            "A4": 0.268
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.101,
+            "arousal": 0.37
+          },
+          "stress": 0.074,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.36, stress:0.08)"
+        },
+        {
+          "id": "A2",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.506
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.343
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.00)"
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.343
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.38,
+            "A2": 0.465,
+            "A3": 0.395
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.343
+          },
+          "stress": 0.046,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.324
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.486
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.403,
+        "mean_valence": -0.025,
+        "mean_arousal": 0.35,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.03,
+        "stress_variance": 0.001,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {},
+        "progress_delta": 0.0,
+        "stalled_ticks": 1,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 5,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 4,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 5
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 6,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.268
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.097,
+            "arousal": 0.377
+          },
+          "stress": 0.072,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A3",
+          "last_thought": "Strategy \u2192 avoidant (trust:0.36, stress:0.08)"
+        },
+        {
+          "id": "A2",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.506
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.351
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.00)"
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.351
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.351
+          },
+          "stress": 0.044,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.324
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.486
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A3",
+          "text": "Um, Designer \u2014 do you maybe know anything about testing?",
+          "item": "testing",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.405,
+        "mean_valence": -0.024,
+        "mean_arousal": 0.358,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.029,
+        "stress_variance": 0.0009,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 2,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 6,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 5,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 6
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 7,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.268
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.094,
+            "arousal": 0.385
+          },
+          "stress": 0.07,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.36, stress:0.08)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.526
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.018,
+            "arousal": 0.419
+          },
+          "stress": 0.02,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.02)"
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.359
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.359
+          },
+          "stress": 0.043,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A2",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.324
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.496
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A2",
+          "text": "Developer, I need Frontend Development to make progress. Can you share anything?",
+          "item": "frontend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.407,
+        "mean_valence": -0.019,
+        "mean_arousal": 0.381,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.033,
+        "stress_variance": 0.0007,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 3,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 7,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 6,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 7
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 8,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.268
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.091,
+            "arousal": 0.392
+          },
+          "stress": 0.068,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.36, stress:0.08)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.526
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.017,
+            "arousal": 0.426
+          },
+          "stress": 0.019,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.02)"
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.355
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.012,
+            "arousal": 0.37
+          },
+          "stress": 0.01,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.367
+          },
+          "stress": 0.042,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A3",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.324
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.496
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.375
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A3",
+          "text": "Designer, I'm stuck on Testing Plan and could really use your help.",
+          "item": "testing",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.408,
+        "mean_valence": -0.021,
+        "mean_arousal": 0.389,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.035,
+        "stress_variance": 0.0005,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 4,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 8,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 7,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 4,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 8
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 9,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.268
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.088,
+            "arousal": 0.399
+          },
+          "stress": 0.066,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.36, stress:0.08)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.546
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.017,
+            "arousal": 0.432
+          },
+          "stress": 0.019,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.355
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.012,
+            "arousal": 0.378
+          },
+          "stress": 0.01,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.375
+          },
+          "stress": 0.04,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A2",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.324
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.506
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.375
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A2",
+          "text": "I can't move forward without Frontend Development, Developer. Do you know anything?",
+          "item": "frontend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.409,
+        "mean_valence": -0.021,
+        "mean_arousal": 0.396,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.034,
+        "stress_variance": 0.0005,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 5,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 9,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 8,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 5,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 9
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 10,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.268
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.084,
+            "arousal": 0.406
+          },
+          "stress": 0.064,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.36, stress:0.08)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.566
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.016,
+            "arousal": 0.439
+          },
+          "stress": 0.018,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.355
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.011,
+            "arousal": 0.386
+          },
+          "stress": 0.009,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.382
+          },
+          "stress": 0.039,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A2",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.325
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.516
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.375
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A2",
+          "text": "I can't move forward without Frontend Development, Developer. Do you know anything?",
+          "item": "frontend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.411,
+        "mean_valence": -0.02,
+        "mean_arousal": 0.403,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.033,
+        "stress_variance": 0.0004,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 6,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 10,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 9,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 6,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 10
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 11,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.268
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.081,
+            "arousal": 0.413
+          },
+          "stress": 0.062,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.36, stress:0.08)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.566
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.016,
+            "arousal": 0.445
+          },
+          "stress": 0.018,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.023,
+            "arousal": 0.396
+          },
+          "stress": 0.019,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.39
+          },
+          "stress": 0.038,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A3",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.325
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.516
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A3",
+          "text": "Designer, I'm stuck on Testing Plan and could really use your help.",
+          "item": "testing",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.413,
+        "mean_valence": -0.022,
+        "mean_arousal": 0.411,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.034,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 7,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 11,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 10,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 7,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 11
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 12,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.288
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.079,
+            "arousal": 0.42
+          },
+          "stress": 0.06,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.06)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.566
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.015,
+            "arousal": 0.451
+          },
+          "stress": 0.017,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.022,
+            "arousal": 0.403
+          },
+          "stress": 0.018,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.397
+          },
+          "stress": 0.037,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A1",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.335
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.516
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Project Manager, I'm stuck on Backend Development and could really use your help.",
+          "item": "backend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.414,
+        "mean_valence": -0.021,
+        "mean_arousal": 0.418,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.033,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 8,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 12,
+        "strategy_distribution": {
+          "neutral": 3,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 11,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 8,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 12
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 13,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.308
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.076,
+            "arousal": 0.427
+          },
+          "stress": 0.058,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.052,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.37, stress:0.06)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.511,
+            "A3": 0.466,
+            "A4": 0.566
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.015,
+            "arousal": 0.457
+          },
+          "stress": 0.017,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.021,
+            "arousal": 0.41
+          },
+          "stress": 0.018,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.404
+          },
+          "stress": 0.036,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A1",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.345
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.516
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Do you have anything on backend, Project Manager? I'm a bit stuck.",
+          "item": "backend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.416,
+        "mean_valence": -0.021,
+        "mean_arousal": 0.424,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.032,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 9,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 13,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 12,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 9,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 13
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 14,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.441,
+            "A3": 0.371,
+            "A4": 0.308
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.073,
+            "arousal": 0.433
+          },
+          "stress": 0.056,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.052,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.37, stress:0.06)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.512,
+            "A3": 0.467,
+            "A4": 0.567
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.014,
+            "arousal": 0.463
+          },
+          "stress": 0.016,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.02,
+            "arousal": 0.417
+          },
+          "stress": 0.017,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.411
+          },
+          "stress": 0.035,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.476
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.345
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.516
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.416,
+        "mean_valence": -0.02,
+        "mean_arousal": 0.431,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.031,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {},
+        "progress_delta": 0.0,
+        "stalled_ticks": 10,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 14,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 13,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 10,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 14
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 15,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.461,
+            "A3": 0.371,
+            "A4": 0.309
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.071,
+            "arousal": 0.439
+          },
+          "stress": 0.055,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.065,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.05)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.512,
+            "A3": 0.467,
+            "A4": 0.567
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.014,
+            "arousal": 0.469
+          },
+          "stress": 0.016,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": "A1",
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.02,
+            "arousal": 0.424
+          },
+          "stress": 0.017,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.381,
+            "A2": 0.466,
+            "A3": 0.396
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.418
+          },
+          "stress": 0.034,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.487
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.345
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.517
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A1",
+          "text": "Project Manager, any chance you know about backend?",
+          "item": "backend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.418,
+        "mean_valence": -0.019,
+        "mean_arousal": 0.437,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.03,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 11,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 15,
+        "strategy_distribution": {
+          "neutral": 3,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 14,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 11,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 15
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 16,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.482,
+            "A3": 0.372,
+            "A4": 0.309
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.068,
+            "arousal": 0.446
+          },
+          "stress": 0.053,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.078,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.39, stress:0.05)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.512,
+            "A3": 0.467,
+            "A4": 0.567
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.013,
+            "arousal": 0.474
+          },
+          "stress": 0.015,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": "A1",
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.37,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.019,
+            "arousal": 0.43
+          },
+          "stress": 0.016,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.382,
+            "A2": 0.467,
+            "A3": 0.397
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.424
+          },
+          "stress": 0.033,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.497
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.345
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.517
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A1",
+          "text": "I can't move forward without Backend Development, Project Manager. Do you know anything?",
+          "item": "backend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.42,
+        "mean_valence": -0.019,
+        "mean_arousal": 0.444,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.029,
+        "stress_variance": 0.0002,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 12,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 16,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 15,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 12,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 16
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 17,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.482,
+            "A3": 0.372,
+            "A4": 0.309
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.066,
+            "arousal": 0.452
+          },
+          "stress": 0.051,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.078,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.39, stress:0.05)"
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.512,
+            "A3": 0.467,
+            "A4": 0.567
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.013,
+            "arousal": 0.48
+          },
+          "stress": 0.015,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": "A3",
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.385,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.03,
+            "arousal": 0.44
+          },
+          "stress": 0.026,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.052,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.382,
+            "A2": 0.467,
+            "A3": 0.397
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.431
+          },
+          "stress": 0.032,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.497
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.345
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.426
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.517
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A3",
+          "text": "Designer, I'm stuck on Testing Plan and could really use your help.",
+          "item": "testing",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.421,
+        "mean_valence": -0.021,
+        "mean_arousal": 0.451,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.031,
+        "stress_variance": 0.0002,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 13,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 17,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 16,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 13,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 17
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 18,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.482,
+            "A3": 0.372,
+            "A4": 0.329
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.063,
+            "arousal": 0.458
+          },
+          "stress": 0.05,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.091,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.512,
+            "A3": 0.467,
+            "A4": 0.567
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.012,
+            "arousal": 0.485
+          },
+          "stress": 0.014,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.385,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.029,
+            "arousal": 0.446
+          },
+          "stress": 0.025,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.052,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.382,
+            "A2": 0.467,
+            "A3": 0.397
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.437
+          },
+          "stress": 0.031,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A1",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.497
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.355
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.426
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.517
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Project Manager, I need Backend Development to make progress. Can you share anything?",
+          "item": "backend",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.423,
+        "mean_valence": -0.02,
+        "mean_arousal": 0.457,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.03,
+        "stress_variance": 0.0002,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 14,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 18,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 17,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 14,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 18
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 19,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.482,
+            "A3": 0.372,
+            "A4": 0.329
+          },
+          "known_items": [
+            "documentation",
+            "backend"
+          ],
+          "mood": {
+            "valence": -0.061,
+            "arousal": 0.464
+          },
+          "stress": 0.048,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.091,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A2",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.512,
+            "A3": 0.467,
+            "A4": 0.567
+          },
+          "known_items": [
+            "frontend"
+          ],
+          "mood": {
+            "valence": 0.012,
+            "arousal": 0.49
+          },
+          "stress": 0.014,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.345,
+            "A2": 0.385,
+            "A4": 0.369
+          },
+          "known_items": [
+            "testing"
+          ],
+          "mood": {
+            "valence": -0.028,
+            "arousal": 0.452
+          },
+          "stress": 0.024,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.052,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.382,
+            "A2": 0.467,
+            "A3": 0.397
+          },
+          "known_items": [
+            "documentation"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.443
+          },
+          "stress": 0.03,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.497
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.358
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.355
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.426
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.517
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.383
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.423,
+        "mean_valence": -0.019,
+        "mean_arousal": 0.462,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.029,
+        "stress_variance": 0.0002,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {},
+        "progress_delta": 0.0,
+        "stalled_ticks": 15,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 19,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "neutral": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 18,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 15,
+        "success_streak": 0,
+        "bottleneck_item": "frontend",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 19
+      },
+      "scenario": {
+        "id": "office_roles",
+        "name": "Assign Team Responsibilities",
+        "description": "Agents must agree who takes each role.",
+        "tasks": {
+          "frontend": false,
+          "backend": false,
+          "testing": false,
+          "documentation": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": true,
+      "end_reason": "deadlock"
+    }
+  ]
+}

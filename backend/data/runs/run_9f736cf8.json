@@ -1,0 +1,2535 @@
+{
+  "run_id": "9f736cf8",
+  "scenario_id": "cafe_vacation",
+  "scenario_name": "Plan Group Vacation",
+  "seed": 42,
+  "timestamp": "2026-03-26T16:20:33.534680+00:00",
+  "outcome": "success",
+  "ticks": 13,
+  "final_progress": 1.0,
+  "metrics": {
+    "avg_trust": 0.567,
+    "avg_stress": 0.02,
+    "conflict_rate": 0.0,
+    "total_refusals": 2,
+    "total_shares": 4,
+    "stalled_ticks": 9,
+    "group_tension": 0.02,
+    "group_cohesion": 0.62
+  },
+  "group_state": {
+    "tension": 0.02,
+    "cohesion": 0.62,
+    "stall_ticks": 0,
+    "bottleneck_item": null,
+    "bottleneck_holder": null
+  },
+  "tasks": {
+    "flights": true,
+    "hotel": true,
+    "food": true,
+    "attractions": true
+  },
+  "completion_order": [
+    "hotel",
+    "flights",
+    "food",
+    "attractions"
+  ],
+  "peak_tension": 0.26,
+  "time_to_first_share": 4,
+  "intervention_count": 0,
+  "interventions": [],
+  "agents": [
+    {
+      "id": "A1",
+      "strategy": "cooperative",
+      "final_stress": 0.0,
+      "final_valence": -0.009,
+      "known_items": [
+        "food",
+        "flights"
+      ],
+      "trust": {
+        "A2": 0.592,
+        "A3": 0.399,
+        "A4": 0.542
+      }
+    },
+    {
+      "id": "A2",
+      "strategy": "cooperative",
+      "final_stress": 0.0,
+      "final_valence": 0.219,
+      "known_items": [
+        "attractions",
+        "hotel",
+        "flights"
+      ],
+      "trust": {
+        "A1": 0.787,
+        "A3": 0.599,
+        "A4": 0.604
+      }
+    },
+    {
+      "id": "A3",
+      "strategy": "defensive",
+      "final_stress": 0.076,
+      "final_valence": 0.029,
+      "known_items": [
+        "food"
+      ],
+      "trust": {
+        "A1": 0.415,
+        "A2": 0.52,
+        "A4": 0.49
+      }
+    },
+    {
+      "id": "A4",
+      "strategy": "cooperative",
+      "final_stress": 0.006,
+      "final_valence": 0.127,
+      "known_items": [
+        "attractions",
+        "hotel"
+      ],
+      "trust": {
+        "A1": 0.622,
+        "A2": 0.709,
+        "A3": 0.527
+      }
+    }
+  ],
+  "history": [
+    {
+      "tick": 1,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.62,
+            "A3": 0.595,
+            "A4": 0.635
+          },
+          "known_items": [
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": "A4",
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.615,
+            "A3": 0.525
+          },
+          "known_items": [
+            "attractions"
+          ],
+          "mood": {
+            "valence": 0.018,
+            "arousal": 0.369
+          },
+          "stress": 0.02,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as curiosity; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.595
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.625
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A4",
+          "text": "Data Analyst, I'm trying to make progress on Attractions List. Could you share what you know?",
+          "item": "attractions",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.548,
+        "mean_valence": 0.004,
+        "mean_arousal": 0.324,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.005,
+        "stress_variance": 0.0001,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 1,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 1,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5
+      },
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 2,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.621,
+            "A3": 0.596,
+            "A4": 0.438
+          },
+          "known_items": [
+            "hotel"
+          ],
+          "mood": {
+            "valence": -0.045,
+            "arousal": 0.322
+          },
+          "stress": 0.028,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": "A4",
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.555,
+            "A3": 0.525
+          },
+          "known_items": [
+            "attractions"
+          ],
+          "mood": {
+            "valence": 0.035,
+            "arousal": 0.437
+          },
+          "stress": 0.088,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.027,
+          "in_conversation_with": "A2",
+          "last_thought": "A2 came across as curiosity; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.595
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.496
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A4",
+          "text": "Data Analyst, I'm trying to make progress on Attractions List. Could you share what you know?",
+          "item": "attractions",
+          "reason": "need information"
+        },
+        {
+          "type": "refuse",
+          "actor": "A4",
+          "target": "A2",
+          "text": "Not yet, Developer \u2014 I want to wait a bit longer on attractions.",
+          "item": "attractions",
+          "reason": "low trust"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.527,
+        "mean_valence": -0.002,
+        "mean_arousal": 0.349,
+        "conflict_rate": 0.5,
+        "avg_stress": 0.029,
+        "stress_variance": 0.0013,
+        "refusal_count": 1,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1,
+          "refuse": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 2,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 2,
+        "group_tension": 0.26,
+        "group_cohesion": 0.46
+      },
+      "group_state": {
+        "tension": 0.26,
+        "cohesion": 0.46,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 3,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.326
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.621,
+            "A3": 0.596,
+            "A4": 0.438
+          },
+          "known_items": [
+            "hotel"
+          ],
+          "mood": {
+            "valence": -0.043,
+            "arousal": 0.331
+          },
+          "stress": 0.027,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": "A4",
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.326
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.555,
+            "A3": 0.525
+          },
+          "known_items": [
+            "attractions"
+          ],
+          "mood": {
+            "valence": 0.034,
+            "arousal": 0.443
+          },
+          "stress": 0.085,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.027,
+          "in_conversation_with": "A2",
+          "last_thought": "A2 came across as curiosity; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.596
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.497
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.527,
+        "mean_valence": -0.002,
+        "mean_arousal": 0.357,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.028,
+        "stress_variance": 0.0012,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {},
+        "progress_delta": 0.0,
+        "stalled_ticks": 3,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 3,
+        "group_tension": 0.26,
+        "group_cohesion": 0.46
+      },
+      "group_state": {
+        "tension": 0.26,
+        "cohesion": 0.46,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 4,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.335
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.621,
+            "A3": 0.596,
+            "A4": 0.438
+          },
+          "known_items": [
+            "hotel"
+          ],
+          "mood": {
+            "valence": -0.042,
+            "arousal": 0.339
+          },
+          "stress": 0.026,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.335
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.667,
+            "A3": 0.525
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.064,
+            "arousal": 0.452
+          },
+          "stress": 0.043,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.041,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.596
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.553
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A2",
+          "target": "A4",
+          "text": "While we're talking \u2014 I know about hotel: it's important context for the next step \u2014 worth knowing.",
+          "item": "hotel"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.536,
+        "mean_valence": 0.006,
+        "mean_arousal": 0.365,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.017,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 1,
+        "event_counts": {
+          "share_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 0,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 4,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 3,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 4
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 5,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.59,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.343
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.54, stress:0.00)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.621,
+            "A3": 0.596,
+            "A4": 0.439
+          },
+          "known_items": [
+            "hotel"
+          ],
+          "mood": {
+            "valence": -0.04,
+            "arousal": 0.347
+          },
+          "stress": 0.026,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.343
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.667,
+            "A3": 0.525
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.062,
+            "arousal": 0.458
+          },
+          "stress": 0.041,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.041,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.606
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.553
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A1",
+          "text": "Hey Project Manager, I'm working through flights \u2014 any chance you can fill me in?",
+          "item": "flights",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.538,
+        "mean_valence": 0.005,
+        "mean_arousal": 0.373,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.017,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 1,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 5,
+        "strategy_distribution": {
+          "cooperative": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 4,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "bottleneck_item": "flights",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 5
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.25,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 6,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.591,
+            "A3": 0.501,
+            "A4": 0.541
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.351
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": "A2",
+          "last_thought": "Strategy \u2192 cooperative (trust:0.54, stress:0.00)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.785,
+            "A3": 0.597,
+            "A4": 0.439
+          },
+          "known_items": [
+            "hotel",
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.101,
+            "arousal": 0.374
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "approval",
+          "goal_progress": 0.027,
+          "in_conversation_with": "A3",
+          "last_thought": "A1 came across as approval; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.52,
+            "A4": 0.47
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.018,
+            "arousal": 0.411
+          },
+          "stress": 0.02,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as curiosity; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.551,
+            "A2": 0.668,
+            "A3": 0.526
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.06,
+            "arousal": 0.464
+          },
+          "stress": 0.04,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.041,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.688
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.546
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.558
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.553
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A1",
+          "target": "A2",
+          "text": "Of course \u2014 let me share this with you, Developer: it's important context for the next step \u2014 worth knowing.",
+          "item": "flights",
+          "reason": "decided to share"
+        },
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A3",
+          "text": "Designer, do you have any info on Flight Details? It would really help us move forward.",
+          "item": "flights",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.553,
+        "mean_valence": 0.045,
+        "mean_arousal": 0.4,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.015,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 1,
+        "event_counts": {
+          "share_info": 1,
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 0,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "cooperative": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 4,
+        "group_tension": 0.08,
+        "group_cohesion": 0.58
+      },
+      "group_state": {
+        "tension": 0.08,
+        "cohesion": 0.58,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.5,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 7,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.591,
+            "A3": 0.501,
+            "A4": 0.541
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.359
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": "A4",
+          "last_thought": "Strategy \u2192 cooperative (trust:0.54, stress:0.00)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.786,
+            "A3": 0.597,
+            "A4": 0.439
+          },
+          "known_items": [
+            "hotel",
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.097,
+            "arousal": 0.381
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "approval",
+          "goal_progress": 0.027,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as approval; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.52,
+            "A4": 0.49
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.017,
+            "arousal": 0.418
+          },
+          "stress": 0.019,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.571,
+            "A2": 0.668,
+            "A3": 0.526
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.058,
+            "arousal": 0.47
+          },
+          "stress": 0.039,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.054,
+          "in_conversation_with": "A3",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.688
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.556
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.553
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.508
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A4",
+          "text": "Hey Data Analyst, I'm working through attractions \u2014 any chance you can fill me in?",
+          "item": "attractions",
+          "reason": "need information"
+        },
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A3",
+          "text": "I can't move forward without Food Recommendations, Designer. Do you know anything?",
+          "item": "food",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.557,
+        "mean_valence": 0.043,
+        "mean_arousal": 0.407,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.015,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 2
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 1,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "cooperative": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 5,
+        "group_tension": 0.08,
+        "group_cohesion": 0.58
+      },
+      "group_state": {
+        "tension": 0.08,
+        "cohesion": 0.58,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.5,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 8,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.591,
+            "A3": 0.501,
+            "A4": 0.541
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.367
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": "A3",
+          "last_thought": "Strategy \u2192 cooperative (trust:0.54, stress:0.00)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.786,
+            "A3": 0.597,
+            "A4": 0.439
+          },
+          "known_items": [
+            "hotel",
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.094,
+            "arousal": 0.389
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "approval",
+          "goal_progress": 0.027,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as approval; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.475,
+            "A2": 0.52,
+            "A4": 0.49
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.035,
+            "arousal": 0.484
+          },
+          "stress": 0.038,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.04,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as curiosity; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.571,
+            "A2": 0.668,
+            "A3": 0.526
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.056,
+            "arousal": 0.475
+          },
+          "stress": 0.038,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.054,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.689
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.488
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.556
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.554
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.508
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A3",
+          "text": "Hey Designer, I'm working through food \u2014 any chance you can fill me in?",
+          "item": "food",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.559,
+        "mean_valence": 0.046,
+        "mean_arousal": 0.429,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.019,
+        "stress_variance": 0.0004,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 2,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "cooperative": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 6,
+        "group_tension": 0.08,
+        "group_cohesion": 0.58
+      },
+      "group_state": {
+        "tension": 0.08,
+        "cohesion": 0.58,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.5,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 9,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.592,
+            "A3": 0.295,
+            "A4": 0.542
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": -0.045,
+            "arousal": 0.379
+          },
+          "stress": 0.028,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A4",
+          "last_thought": "Strategy \u2192 avoidant (trust:0.48, stress:0.03)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.786,
+            "A3": 0.598,
+            "A4": 0.44
+          },
+          "known_items": [
+            "hotel",
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.091,
+            "arousal": 0.396
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "approval",
+          "goal_progress": 0.027,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as approval; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.395,
+            "A2": 0.52,
+            "A4": 0.49
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.034,
+            "arousal": 0.489
+          },
+          "stress": 0.086,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.04,
+          "in_conversation_with": "A1",
+          "last_thought": "A1 came across as curiosity; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.621,
+            "A2": 0.668,
+            "A3": 0.526
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.146,
+            "arousal": 0.506
+          },
+          "stress": 0.007,
+          "last_detected_emotion": "optimism",
+          "goal_progress": 0.069,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.60, stress:0.01)"
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.689
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.345
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.581
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.554
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.508
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A4",
+          "text": "Data Analyst, we'd make much faster progress if you could share what you know about attractions.",
+          "item": "attractions",
+          "reason": "need information"
+        },
+        {
+          "type": "refuse",
+          "actor": "A3",
+          "target": "A1",
+          "text": "Project Manager, I'd prefer to hold off on food for the moment.",
+          "item": "food",
+          "reason": "low trust"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.539,
+        "mean_valence": 0.056,
+        "mean_arousal": 0.443,
+        "conflict_rate": 0.5,
+        "avg_stress": 0.03,
+        "stress_variance": 0.0011,
+        "refusal_count": 1,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1,
+          "refuse": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 3,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 4,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "cooperative": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 2,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 7,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 4
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.5,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 10,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.592,
+            "A3": 0.295,
+            "A4": 0.542
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": -0.043,
+            "arousal": 0.387
+          },
+          "stress": 0.027,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.48, stress:0.03)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.786,
+            "A3": 0.598,
+            "A4": 0.44
+          },
+          "known_items": [
+            "hotel",
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.088,
+            "arousal": 0.403
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "approval",
+          "goal_progress": 0.027,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as approval; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.395,
+            "A2": 0.52,
+            "A4": 0.49
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.032,
+            "arousal": 0.495
+          },
+          "stress": 0.083,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.04,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as curiosity; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.621,
+            "A2": 0.668,
+            "A3": 0.526
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.141,
+            "arousal": 0.511
+          },
+          "stress": 0.006,
+          "last_detected_emotion": "optimism",
+          "goal_progress": 0.069,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.60, stress:0.01)"
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.689
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.345
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.581
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.554
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.508
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.539,
+        "mean_valence": 0.054,
+        "mean_arousal": 0.449,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.029,
+        "stress_variance": 0.0011,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {},
+        "progress_delta": 0.0,
+        "stalled_ticks": 4,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 5,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "cooperative": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 2,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 8,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 4,
+        "success_streak": 0,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 5
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.5,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 11,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.592,
+            "A3": 0.295,
+            "A4": 0.542
+          },
+          "known_items": [
+            "flights"
+          ],
+          "mood": {
+            "valence": -0.042,
+            "arousal": 0.394
+          },
+          "stress": 0.026,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": "A3",
+          "last_thought": "Strategy \u2192 avoidant (trust:0.48, stress:0.03)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.787,
+            "A3": 0.598,
+            "A4": 0.44
+          },
+          "known_items": [
+            "hotel",
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.084,
+            "arousal": 0.41
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "approval",
+          "goal_progress": 0.027,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as approval; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.415,
+            "A2": 0.52,
+            "A4": 0.49
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.031,
+            "arousal": 0.5
+          },
+          "stress": 0.081,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.621,
+            "A2": 0.668,
+            "A3": 0.526
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.136,
+            "arousal": 0.515
+          },
+          "stress": 0.006,
+          "last_detected_emotion": "optimism",
+          "goal_progress": 0.069,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.60, stress:0.01)"
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.689
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.355
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.582
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.554
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.508
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A3",
+          "text": "I'm stuck on Food Recommendations. I don't want to bother you, but do you have anything?",
+          "item": "food",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.541,
+        "mean_valence": 0.052,
+        "mean_arousal": 0.455,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.028,
+        "stress_variance": 0.001,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 5,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 6,
+        "strategy_distribution": {
+          "avoidant": 1,
+          "cooperative": 2,
+          "defensive": 1
+        },
+        "cumulative_refusals": 2,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 9,
+        "group_tension": 0.14,
+        "group_cohesion": 0.54
+      },
+      "group_state": {
+        "tension": 0.14,
+        "cohesion": 0.54,
+        "stall_ticks": 5,
+        "success_streak": 0,
+        "bottleneck_item": "food",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 6
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.5,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 12,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.592,
+            "A3": 0.399,
+            "A4": 0.542
+          },
+          "known_items": [
+            "food",
+            "flights"
+          ],
+          "mood": {
+            "valence": -0.009,
+            "arousal": 0.404
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.51, stress:0.00)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.787,
+            "A3": 0.599,
+            "A4": 0.441
+          },
+          "known_items": [
+            "hotel",
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.082,
+            "arousal": 0.417
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "approval",
+          "goal_progress": 0.027,
+          "in_conversation_with": "A4",
+          "last_thought": "A1 came across as approval; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.415,
+            "A2": 0.52,
+            "A4": 0.49
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.03,
+            "arousal": 0.505
+          },
+          "stress": 0.078,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": "A1",
+          "last_thought": "A1 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.622,
+            "A2": 0.689,
+            "A3": 0.527
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.131,
+            "arousal": 0.52
+          },
+          "stress": 0.006,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.084,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.69
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.407
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.582
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.565
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.508
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A4",
+          "text": "I think if we put our heads together on Attractions List we'll get there \u2014 do you have anything?",
+          "item": "attractions",
+          "reason": "need information"
+        },
+        {
+          "type": "share_info",
+          "actor": "A3",
+          "target": "A1",
+          "text": "Fine, Project Manager. food: it's important context for the next step \u2014 worth knowing.",
+          "item": "food",
+          "reason": "decided to share"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.552,
+        "mean_valence": 0.058,
+        "mean_arousal": 0.461,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.021,
+        "stress_variance": 0.0011,
+        "refusal_count": 0,
+        "share_count": 1,
+        "event_counts": {
+          "ask_info": 1,
+          "share_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 0,
+        "bottleneck_item": "attractions",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "cooperative": 3,
+          "defensive": 1
+        },
+        "cumulative_refusals": 2,
+        "cumulative_shares": 3,
+        "cumulative_stalled": 9,
+        "group_tension": 0.08,
+        "group_cohesion": 0.58
+      },
+      "group_state": {
+        "tension": 0.08,
+        "cohesion": 0.58,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "bottleneck_item": "attractions",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 0.75,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 13,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.592,
+            "A3": 0.399,
+            "A4": 0.542
+          },
+          "known_items": [
+            "food",
+            "flights"
+          ],
+          "mood": {
+            "valence": -0.009,
+            "arousal": 0.411
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.51, stress:0.00)"
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.787,
+            "A3": 0.599,
+            "A4": 0.604
+          },
+          "known_items": [
+            "attractions",
+            "hotel",
+            "flights"
+          ],
+          "mood": {
+            "valence": 0.219,
+            "arousal": 0.441
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "approval",
+          "goal_progress": 0.043,
+          "in_conversation_with": "A4",
+          "last_thought": "A4 came across as approval; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.415,
+            "A2": 0.52,
+            "A4": 0.49
+          },
+          "known_items": [
+            "food"
+          ],
+          "mood": {
+            "valence": 0.029,
+            "arousal": 0.51
+          },
+          "stress": 0.076,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A4",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.622,
+            "A2": 0.709,
+            "A3": 0.527
+          },
+          "known_items": [
+            "attractions",
+            "hotel"
+          ],
+          "mood": {
+            "valence": 0.127,
+            "arousal": 0.525
+          },
+          "stress": 0.006,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.099,
+          "in_conversation_with": "A2",
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.69
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.407
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.582
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.657
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.509
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A2",
+          "target": "A4",
+          "text": "Hey Data Analyst, I'm working through attractions \u2014 any chance you can fill me in?",
+          "item": "attractions",
+          "reason": "need information"
+        },
+        {
+          "type": "share_info",
+          "actor": "A4",
+          "target": "A2",
+          "text": "Of course \u2014 let me share this with you, Developer: it's important context for the next step \u2014 worth knowing.",
+          "item": "attractions",
+          "reason": "decided to share"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.567,
+        "mean_valence": 0.091,
+        "mean_arousal": 0.472,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.02,
+        "stress_variance": 0.001,
+        "refusal_count": 0,
+        "share_count": 1,
+        "event_counts": {
+          "ask_info": 1,
+          "share_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 0,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0,
+        "strategy_distribution": {
+          "cooperative": 3,
+          "defensive": 1
+        },
+        "cumulative_refusals": 2,
+        "cumulative_shares": 4,
+        "cumulative_stalled": 9,
+        "group_tension": 0.02,
+        "group_cohesion": 0.62
+      },
+      "group_state": {
+        "tension": 0.02,
+        "cohesion": 0.62,
+        "stall_ticks": 0,
+        "success_streak": 2,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0
+      },
+      "scenario": {
+        "id": "cafe_vacation",
+        "name": "Plan Group Vacation",
+        "description": "Agents share travel information.",
+        "tasks": {
+          "flights": true,
+          "hotel": true,
+          "food": true,
+          "attractions": true
+        },
+        "progress": 1.0,
+        "outcome": "success"
+      },
+      "ended": true,
+      "end_reason": "success"
+    }
+  ]
+}

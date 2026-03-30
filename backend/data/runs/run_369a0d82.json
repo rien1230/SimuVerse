@@ -1,0 +1,1905 @@
+{
+  "run_id": "369a0d82",
+  "scenario_id": "cafe_restaurant",
+  "scenario_name": "Choose Restaurant",
+  "seed": 42,
+  "timestamp": "2026-03-26T16:15:41.259926+00:00",
+  "outcome": "success",
+  "ticks": 10,
+  "final_progress": 1.0,
+  "metrics": {
+    "avg_trust": 0.571,
+    "avg_stress": 0.002,
+    "conflict_rate": 0.0,
+    "total_refusals": 0,
+    "total_shares": 0,
+    "stalled_ticks": 9,
+    "group_tension": 0.28,
+    "group_cohesion": 0.447
+  },
+  "group_state": {
+    "tension": 0.28,
+    "cohesion": 0.447,
+    "stall_ticks": 0,
+    "bottleneck_item": null,
+    "bottleneck_holder": null
+  },
+  "tasks": {
+    "decision": true
+  },
+  "completion_order": [],
+  "peak_tension": 0.32,
+  "time_to_first_share": null,
+  "intervention_count": 0,
+  "interventions": [],
+  "agents": [
+    {
+      "id": "A1",
+      "strategy": "neutral",
+      "final_stress": 0.0,
+      "final_valence": 0.018,
+      "known_items": [
+        "italian"
+      ],
+      "trust": {
+        "A2": 0.621,
+        "A3": 0.501,
+        "A4": 0.541
+      }
+    },
+    {
+      "id": "A2",
+      "strategy": "cooperative",
+      "final_stress": 0.007,
+      "final_valence": 0.141,
+      "known_items": [
+        "vegan"
+      ],
+      "trust": {
+        "A1": 0.753,
+        "A3": 0.618,
+        "A4": 0.667
+      }
+    },
+    {
+      "id": "A3",
+      "strategy": "defensive",
+      "final_stress": 0.0,
+      "final_valence": 0.0,
+      "known_items": [
+        "cheap"
+      ],
+      "trust": {
+        "A1": 0.455,
+        "A2": 0.5,
+        "A4": 0.47
+      }
+    },
+    {
+      "id": "A4",
+      "strategy": "neutral",
+      "final_stress": 0.0,
+      "final_valence": 0.013,
+      "known_items": [
+        "fancy"
+      ],
+      "trust": {
+        "A1": 0.551,
+        "A2": 0.646,
+        "A3": 0.526
+      }
+    }
+  ],
+  "history": [
+    {
+      "tick": 1,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": "A2",
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.64,
+            "A3": 0.595,
+            "A4": 0.635
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.309
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.645,
+            "A3": 0.525
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.018,
+            "arousal": 0.311
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.605
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.64
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A2",
+          "text": "Developer, I'm stuck on Final Decision and could really use your help.",
+          "item": "decision",
+          "reason": "need information"
+        },
+        {
+          "type": "suggest",
+          "actor": "A2",
+          "target": "A4",
+          "text": "I suggest italian.",
+          "preference": "italian"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.552,
+        "mean_valence": 0.005,
+        "mean_arousal": 0.309,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.0,
+        "stress_variance": 0.0,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1,
+          "suggest": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 1,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 1,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5
+      },
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 2,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": "A2",
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.661,
+            "A3": 0.596,
+            "A4": 0.636
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.645,
+            "A3": 0.525
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.017,
+            "arousal": 0.32
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.615
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.64
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A2",
+          "text": "Developer, any chance you know about decision?",
+          "item": "decision",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.554,
+        "mean_valence": 0.004,
+        "mean_arousal": 0.318,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.0,
+        "stress_variance": 0.0,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 2,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 2,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5
+      },
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 3,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.326
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": "A2",
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.681,
+            "A3": 0.596,
+            "A4": 0.636
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.018,
+            "arousal": 0.385
+          },
+          "stress": 0.019,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as curiosity; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.326
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.645,
+            "A3": 0.525
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.017,
+            "arousal": 0.328
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.626
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.641
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A2",
+          "text": "Developer, I need Final Decision to make progress. Can you share anything?",
+          "item": "decision",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.556,
+        "mean_valence": 0.009,
+        "mean_arousal": 0.341,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.005,
+        "stress_variance": 0.0001,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 3,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 3,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5
+      },
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 4,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.335
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.681,
+            "A3": 0.596,
+            "A4": 0.656
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.035,
+            "arousal": 0.452
+          },
+          "stress": 0.038,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as curiosity; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.335
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.645,
+            "A3": 0.525
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.016,
+            "arousal": 0.337
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": "A2",
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.626
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.651
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A2",
+          "text": "Do you have anything on decision, Developer? I'm a bit stuck.",
+          "item": "decision",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.558,
+        "mean_valence": 0.013,
+        "mean_arousal": 0.365,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.01,
+        "stress_variance": 0.0003,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 4,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 4,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 4,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5
+      },
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "stall_ticks": 4,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 4
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 5,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.57,
+            "A3": 0.5,
+            "A4": 0.54
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.343
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.681,
+            "A3": 0.596,
+            "A4": 0.535
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": -0.016,
+            "arousal": 0.517
+          },
+          "stress": 0.089,
+          "last_detected_emotion": "fear",
+          "goal_progress": 0.066,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as fear; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.343
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.55,
+            "A2": 0.645,
+            "A3": 0.525
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.016,
+            "arousal": 0.345
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.626
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.545
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.59
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "challenge",
+          "actor": "A4",
+          "target": "A2",
+          "text": "unknown feels a bit risky to me \u2014 I'd go another way.",
+          "preference": "unknown"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.547,
+        "mean_valence": -0.0,
+        "mean_arousal": 0.387,
+        "conflict_rate": 1.0,
+        "avg_stress": 0.022,
+        "stress_variance": 0.0015,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "challenge": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 5,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 5,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 5,
+        "group_tension": 0.32,
+        "group_cohesion": 0.42
+      },
+      "group_state": {
+        "tension": 0.32,
+        "cohesion": 0.42,
+        "stall_ticks": 5,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 5
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 6,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.571,
+            "A3": 0.501,
+            "A4": 0.541
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.351
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": "A2",
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.702,
+            "A3": 0.597,
+            "A4": 0.536
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": -0.015,
+            "arousal": 0.521
+          },
+          "stress": 0.086,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.079,
+          "in_conversation_with": null,
+          "last_thought": "A1 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.351
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.551,
+            "A2": 0.646,
+            "A3": 0.526
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.015,
+            "arousal": 0.353
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.636
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.546
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.548
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.591
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A2",
+          "text": "I can't move forward without Final Decision, Developer. Do you know anything?",
+          "item": "decision",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.55,
+        "mean_valence": -0.0,
+        "mean_arousal": 0.394,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.021,
+        "stress_variance": 0.0014,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 6,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 6,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 6,
+        "group_tension": 0.32,
+        "group_cohesion": 0.42
+      },
+      "group_state": {
+        "tension": 0.32,
+        "cohesion": 0.42,
+        "stall_ticks": 6,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 6
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 7,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.571,
+            "A3": 0.501,
+            "A4": 0.541
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.359
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.702,
+            "A3": 0.617,
+            "A4": 0.536
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": -0.015,
+            "arousal": 0.526
+          },
+          "stress": 0.083,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.092,
+          "in_conversation_with": null,
+          "last_thought": "A3 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.359
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": "A2",
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.551,
+            "A2": 0.646,
+            "A3": 0.526
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.015,
+            "arousal": 0.361
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.636
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.546
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.591
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A3",
+          "target": "A2",
+          "text": "I can't move forward without Final Decision. Do you have it?",
+          "item": "decision",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.551,
+        "mean_valence": -0.0,
+        "mean_arousal": 0.401,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.021,
+        "stress_variance": 0.0013,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 7,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 7,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 7,
+        "group_tension": 0.32,
+        "group_cohesion": 0.42
+      },
+      "group_state": {
+        "tension": 0.32,
+        "cohesion": 0.42,
+        "stall_ticks": 7,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 7
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 8,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.571,
+            "A3": 0.501,
+            "A4": 0.541
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.367
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.702,
+            "A3": 0.617,
+            "A4": 0.556
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.004,
+            "arousal": 0.589
+          },
+          "stress": 0.1,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.105,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as curiosity; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.367
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.551,
+            "A2": 0.646,
+            "A3": 0.526
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.014,
+            "arousal": 0.369
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": "A2",
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.637
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.546
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.601
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A4",
+          "target": "A2",
+          "text": "Developer, I need Final Decision to make progress. Can you share anything?",
+          "item": "decision",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.553,
+        "mean_valence": 0.004,
+        "mean_arousal": 0.423,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.025,
+        "stress_variance": 0.0019,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 8,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 8,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 8,
+        "group_tension": 0.32,
+        "group_cohesion": 0.42
+      },
+      "group_state": {
+        "tension": 0.32,
+        "cohesion": 0.42,
+        "stall_ticks": 8,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 8
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 9,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.571,
+            "A3": 0.501,
+            "A4": 0.541
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.375
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.703,
+            "A3": 0.618,
+            "A4": 0.557
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.004,
+            "arousal": 0.592
+          },
+          "stress": 0.097,
+          "last_detected_emotion": "curiosity",
+          "goal_progress": 0.105,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as curiosity; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.375
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.551,
+            "A2": 0.646,
+            "A3": 0.526
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.014,
+            "arousal": 0.376
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.637
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.546
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.601
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.553,
+        "mean_valence": 0.004,
+        "mean_arousal": 0.429,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.024,
+        "stress_variance": 0.0018,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {},
+        "progress_delta": 0.0,
+        "stalled_ticks": 9,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 9,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 9,
+        "group_tension": 0.32,
+        "group_cohesion": 0.42
+      },
+      "group_state": {
+        "tension": 0.32,
+        "cohesion": 0.42,
+        "stall_ticks": 9,
+        "success_streak": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 9
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 0.0,
+        "outcome": "running"
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 10,
+      "agents": [
+        {
+          "id": "A1",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.621,
+            "A3": 0.501,
+            "A4": 0.541
+          },
+          "known_items": [
+            "italian"
+          ],
+          "mood": {
+            "valence": 0.018,
+            "arousal": 0.384
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        },
+        {
+          "id": "A2",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.753,
+            "A3": 0.618,
+            "A4": 0.667
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.141,
+            "arousal": 0.62
+          },
+          "stress": 0.007,
+          "last_detected_emotion": "admiration",
+          "goal_progress": 0.133,
+          "in_conversation_with": null,
+          "last_thought": "A4 came across as admiration; I feel okay."
+        },
+        {
+          "id": "A3",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.455,
+            "A2": 0.5,
+            "A4": 0.47
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.0,
+            "arousal": 0.382
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.551,
+            "A2": 0.646,
+            "A3": 0.526
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.013,
+            "arousal": 0.384
+          },
+          "stress": 0.0,
+          "last_detected_emotion": "neutral",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "A2 came across as neutral; I feel okay."
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.687
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.478
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.546
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.559
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.656
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.498
+        }
+      ],
+      "events": [
+        {
+          "type": "suggest",
+          "actor": "A1",
+          "target": "A2",
+          "text": "I suggest cheap.",
+          "preference": "cheap"
+        },
+        {
+          "type": "suggest",
+          "actor": "A2",
+          "target": "A1",
+          "text": "I suggest fancy.",
+          "preference": "fancy"
+        },
+        {
+          "type": "agree",
+          "actor": "A4",
+          "target": "A2",
+          "text": "Sounds good to me \u2014 unknown it is, A2.",
+          "preference": "unknown"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.571,
+        "mean_valence": 0.043,
+        "mean_arousal": 0.442,
+        "conflict_rate": 0.0,
+        "avg_stress": 0.002,
+        "stress_variance": 0.0,
+        "refusal_count": 0,
+        "share_count": 0,
+        "event_counts": {
+          "suggest": 2,
+          "agree": 1
+        },
+        "progress_delta": 0.0,
+        "stalled_ticks": 0,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 9,
+        "group_tension": 0.28,
+        "group_cohesion": 0.447
+      },
+      "group_state": {
+        "tension": 0.28,
+        "cohesion": 0.447,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "tasks": {
+          "decision": true
+        },
+        "progress": 1.0,
+        "outcome": "success"
+      },
+      "ended": true,
+      "end_reason": "success"
+    }
+  ]
+}

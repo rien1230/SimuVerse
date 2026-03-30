@@ -13,7 +13,6 @@ from app.services.event_logger import EventLogger
 # Define possible states for the simulation run.
 RunStatus = Literal["idle", "running", "paused", "stopped"]
 
-
 SIMUVERSION = "0.3.0"
 SCHEMA_VERSION = 1
 
@@ -32,9 +31,9 @@ class RunManager:
 
     """
 
-    seed: int  #Random seed for deterministic simulation
+    seed: int  # Random seed for deterministic simulation
 
-    #Config captured for replay determinism
+    # Config captured for replay determinism
     config: Dict[str, Any] = field(default_factory=dict)
     run_id: str = field(default_factory=lambda: uuid.uuid4().hex[:10])
     status: RunStatus = "idle"  # Current state of the run
@@ -51,6 +50,11 @@ class RunManager:
         3. Initialise the event logger
         4. Write metadata header for replay file
         """
+        # DEBUG: Print what's received
+        print(f"\n=== RunManager __post_init__ ===")
+        print(f"Seed: {self.seed}")
+        print(f"Original config: {self.config}")
+
         # Default configuration values (Milestone 2/3)
         defaults = {
             "min_events_per_tick": 2,  # Minimum events to generate per tick
@@ -61,9 +65,22 @@ class RunManager:
         merged = {**defaults, **(self.config or {})}
         self.config = merged
 
+        # DEBUG: Print merged config
+        print(f"Merged config: {self.config}")
+        print(f"Config keys: {list(self.config.keys())}")
+        print(f"Environment value: {self.config.get('environment', 'NOT FOUND')}")
+
         # Create the simulation model with the seed and merged config
         # This is where the actual agent-based simulation is instantiated
-        self.model = SimModel(seed=self.seed, **self.config)
+        print(f"Creating SimModel with seed={self.seed} and config={self.config}")
+        try:
+            self.model = SimModel(seed=self.seed, **self.config)
+            print(f" SimModel created successfully")
+        except Exception as e:
+            print(f" Failed to create SimModel: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
 
         # Initialise the event logger for this specific run
         self.logger = EventLogger(run_id=self.run_id)
@@ -81,7 +98,7 @@ class RunManager:
                 "mesa": getattr(mesa, "__version__", "unknown"),  # Mesa framework version
             }
         )
-
+        print(f" RunManager initialization complete for run_id: {self.run_id}\n")
 
     # The different type of simulation run state:
 

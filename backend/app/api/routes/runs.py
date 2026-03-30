@@ -13,16 +13,16 @@ registry = RunRegistry()
 class CreateRunBody(BaseModel):
     """ for validating create run requests. Ensuring the incoming JSON has the right structure and types. """
     seed: int
-    environment: str  # NEW: from frontend Page 1
-    goal: str         # NEW: from frontend Page 1
-    team_type: str    # NEW: from frontend Page 2
+    environment: str
+    goal: str
+    team_type: str
 
 def _locked_call(entry, fn, *args, **kwargs):
     """ Helper function to run a method under a run's lock. Ensuring thread safety when multiple clients try to interact with the same simulation run at the same time. """
     with entry.lock:
         return fn(*args, **kwargs)
 
-# NEW ROUTE: Get available configuration options for frontend
+
 @router.get("/runs/options")
 async def get_run_options() -> Dict[str, Any]:
     """ Get available environments, goals, and team presets for configuration. """
@@ -32,12 +32,11 @@ async def get_run_options() -> Dict[str, Any]:
 async def create_run(body: CreateRunBody) -> Dict[str, Any]:
     """ Create a new simulation run. It creates the run, adds it to the registry, and returns the run_id. """
     try:
-        # NEW: Build config from user choices (environment, goal, team_type)
+
         config = build_simulation_config(body.environment, body.goal, body.team_type)
         # synchronous function, so we run it in a thread pool. Preventing blocking the async event loop
         run_id = await anyio.to_thread.run_sync(registry.create_run, body.seed, config)
         entry = registry.get_run(run_id)
-        # NEW: Return selected config for frontend confirmation
         return {
             "run_id": run_id,
             "status": entry.manager.status if entry else "created",
