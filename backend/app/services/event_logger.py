@@ -35,7 +35,7 @@ class EventLogger:
 
     def __post_init__(self) -> None:
         """
-        Initialize the logger after the dataclass fields are set.
+        initialised the logger after the dataclass fields are set.
 
         Sets up the file path for this run's replay file.
         Creates the directory if it doesn't exist.

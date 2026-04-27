@@ -1,15 +1,22 @@
+"""Loads saved runs and reshapes them for the history and replay views."""
+
 from __future__ import annotations
 
 import json
 import logging
+import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+_prune_lock = threading.Lock()
+
 RUNS_DIR = Path(__file__).resolve().parents[2] / "data" / "runs"
+MAX_SAVED_RUNS = 50
+MAX_RUN_AGE_DAYS = 14
 
 
 def _ensure_dir() -> None:
@@ -20,9 +27,48 @@ def _run_path(run_id: str) -> Path:
     return RUNS_DIR / f"run_{run_id}.json"
 
 
-def build_run_summary(model, run_id: str) -> Dict[str, Any]:
+def _iter_run_files() -> List[Path]:
+    _ensure_dir()
+    return sorted(RUNS_DIR.glob("run_*.json"))
+
+
+def prune_runs(max_saved_runs: int = MAX_SAVED_RUNS, max_age_days: int = MAX_RUN_AGE_DAYS) -> int:
+    """Delete old saved run files by age and retention count."""
+    with _prune_lock:
+        removed = 0
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(days=max(0, max_age_days))
+
+        files_with_time: List[tuple[Path, datetime]] = []
+        for fpath in _iter_run_files():
+            try:
+                mtime = datetime.fromtimestamp(fpath.stat().st_mtime, tz=timezone.utc)
+                if max_age_days >= 0 and mtime < cutoff:
+                    fpath.unlink(missing_ok=True)
+                    removed += 1
+                    continue
+                files_with_time.append((fpath, mtime))
+            except OSError:
+                continue
+
+        if max_saved_runs >= 0 and len(files_with_time) > max_saved_runs:
+            files_with_time.sort(key=lambda item: item[1], reverse=True)
+            for fpath, _ in files_with_time[max_saved_runs:]:
+                try:
+                    fpath.unlink(missing_ok=True)
+                    removed += 1
+                except OSError:
+                    continue
+
+        if removed:
+            logger.info("Pruned %s saved run file(s) from history", removed)
+        return removed
+
+
+def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     metrics       = model.last_diff.get("metrics", {})      if model.last_diff else {}
     interventions = model.last_diff.get("interventions", []) if model.last_diff else []
+    persisted_config = {k: v for k, v in (config or {}).items() if v is not None}
 
     # Compute whole-run peak tension and time_to_first_share from metric_history
     history = getattr(model, "metric_history", [])
@@ -34,6 +80,9 @@ def build_run_summary(model, run_id: str) -> Dict[str, Any]:
     agents_summary = [
         {
             "id":            a.public_id,
+            "name":          a.public_id,
+            "role":          getattr(a, "to_state", lambda: {})().get("role", a.public_id),
+            "personality":   getattr(a, "personality_type", ""),
             "strategy":      a.strategy,
             "final_stress":  round(a.stress, 3),
             "final_valence": round(a.valence, 3),
@@ -49,13 +98,15 @@ def build_run_summary(model, run_id: str) -> Dict[str, Any]:
         "scenario_name":  model.scenario.name,
         "seed":           getattr(model, "seed_value", None),
         "timestamp":      datetime.now(timezone.utc).isoformat(),
+        "config":         persisted_config,
         "outcome":        model.end_reason,
         "ticks":          model.tick,
         "final_progress": round(model.scenario.progress_ratio(), 3),
         "metrics": {
             "avg_trust":      metrics.get("avg_trust", 0.0),
             "avg_stress":     metrics.get("avg_stress", 0.0),
-            "conflict_rate":  metrics.get("conflict_rate", 0.0),
+            "conflict_rate":  metrics.get("cumulative_conflict_rate",
+                               metrics.get("conflict_rate", 0.0)),
             "total_refusals": model.total_refusals,
             "total_shares":   model.total_shares,
             "stalled_ticks":  model.total_stalled_ticks,
@@ -82,11 +133,16 @@ def build_run_summary(model, run_id: str) -> Dict[str, Any]:
     }
 
 
-def save_run(model, run_id: Optional[str] = None) -> str:
+def save_run(
+    model,
+    run_id: Optional[str] = None,
+    config: Optional[Dict[str, Any]] = None,
+) -> str:
     _ensure_dir()
+    prune_runs()
     if run_id is None:
         run_id = str(uuid.uuid4())[:8]
-    summary = build_run_summary(model, run_id)
+    summary = build_run_summary(model, run_id, config=config)
     with open(_run_path(run_id), "w") as f:
         json.dump(summary, f, indent=2)
     logger.info(f"Run saved: id={run_id}, outcome={model.end_reason}, ticks={model.tick}")
@@ -103,26 +159,39 @@ def load_run(run_id: str) -> Optional[Dict[str, Any]]:
 
 def list_runs(scenario_id: Optional[str] = None) -> List[Dict[str, Any]]:
     _ensure_dir()
+    prune_runs()
     runs = []
     for fpath in RUNS_DIR.glob("run_*.json"):
         try:
             with open(fpath) as f:
                 data = json.load(f)
+            config = data.get("config", {}) or {}
             if scenario_id and data.get("scenario_id") != scenario_id:
                 continue
+            timestamp = data.get("timestamp")
+            if not timestamp:
+                timestamp = datetime.fromtimestamp(
+                    fpath.stat().st_mtime,
+                    tz=timezone.utc,
+                ).isoformat()
             runs.append({
                 "run_id":             data["run_id"],
                 "scenario_id":        data["scenario_id"],
                 "scenario_name":      data.get("scenario_name", ""),
                 "seed":               data.get("seed"),
-                "timestamp":          data.get("timestamp"),
+                "timestamp":          timestamp,
                 "outcome":            data.get("outcome"),
                 "ticks":              data.get("ticks"),
                 "final_progress":     data.get("final_progress"),
                 "metrics":            data.get("metrics", {}),
                 "intervention_count": data.get("intervention_count", 0),
+                "environment":        config.get("environment"),
+                "team_type":          config.get("team_type"),
+                "goal":               config.get("goal"),
+                "config":             config,
             })
         except (json.JSONDecodeError, KeyError):
+            logger.warning("Skipping malformed run file: %s", fpath.name)
             continue
     runs.sort(key=lambda r: r.get("timestamp", ""), reverse=True)
     return runs
@@ -136,6 +205,19 @@ def delete_run(run_id: str) -> bool:
         return True
     logger.warning(f"Delete requested for non-existent run: id={run_id}")
     return False
+
+
+def clear_runs() -> int:
+    """Delete all saved run files and return the number removed."""
+    removed = 0
+    for fpath in _iter_run_files():
+        try:
+            fpath.unlink()
+            removed += 1
+        except OSError:
+            continue
+    logger.info("Cleared %s saved run file(s) from history", removed)
+    return removed
 
 
 def replay_run(run_id: str) -> Optional[List[Dict[str, Any]]]:

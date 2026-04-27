@@ -1,3 +1,5 @@
+"""API routes for browsing saved run history and replay details."""
+
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from app.services.run_history_service import (
@@ -5,10 +7,12 @@ from app.services.run_history_service import (
     load_run,
     compare_runs,
     delete_run,
+    clear_runs,
     replay_run,
 )
 
 router = APIRouter(prefix="/runs", tags=["run history"])
+history_router = APIRouter(prefix="/history", tags=["run history"])
 
 
 @router.get("/")
@@ -17,6 +21,13 @@ async def get_all_runs(scenario_id: Optional[str] = Query(None, description="Fil
     List all saved simulation runs.
     Optionally filter by scenario_id (e.g. 'office_proposal').
     """
+    runs = list_runs(scenario_id=scenario_id)
+    return {"runs": runs, "count": len(runs)}
+
+
+@history_router.get("/runs")
+async def get_all_saved_runs(scenario_id: Optional[str] = Query(None, description="Filter by scenario")):
+    """Alias endpoint for saved run history to avoid clashing with live run registry routes."""
     runs = list_runs(scenario_id=scenario_id)
     return {"runs": runs, "count": len(runs)}
 
@@ -30,6 +41,15 @@ async def get_run(run_id: str):
     return run
 
 
+@history_router.get("/runs/{run_id}")
+async def get_saved_run(run_id: str):
+    """Alias endpoint for a single saved run summary."""
+    run = load_run(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
+    return run
+
+
 @router.delete("/{run_id}")
 async def delete_run_endpoint(run_id: str):
     """Delete a saved run from history."""
@@ -37,6 +57,26 @@ async def delete_run_endpoint(run_id: str):
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
     return {"success": True, "message": f"Run '{run_id}' deleted"}
+
+
+@history_router.delete("/runs/{run_id}")
+async def delete_saved_run(run_id: str):
+    """Alias endpoint for deleting a saved run from history."""
+    deleted = delete_run(run_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
+    return {"success": True, "message": f"Run '{run_id}' deleted"}
+
+
+@history_router.delete("/runs")
+async def clear_saved_runs():
+    """Delete all saved runs from history."""
+    deleted_count = clear_runs()
+    return {
+        "success": True,
+        "deleted_count": deleted_count,
+        "message": f"Cleared {deleted_count} saved run{'s' if deleted_count != 1 else ''}",
+    }
 
 
 @router.get("/compare/{run_id_a}/{run_id_b}")
@@ -72,6 +112,19 @@ async def get_replay(run_id: str):
         "run_id":      run_id,
         "tick_count":  len(history),
         "history":     history,
+    }
+
+
+@history_router.get("/runs/{run_id}/replay")
+async def get_saved_replay(run_id: str):
+    """Alias endpoint for replaying a saved run."""
+    history = replay_run(run_id)
+    if history is None:
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
+    return {
+        "run_id":     run_id,
+        "tick_count": len(history),
+        "history":    history,
     }
 
 

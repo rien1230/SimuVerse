@@ -1,10 +1,45 @@
+"""Service layer that validates and dispatches intervention actions."""
+
 from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 
 from app.sim import interventions as iv
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _failure(message: str) -> Dict[str, Any]:
+    return {
+        "success": False,
+        "message": message,
+    }
+
+
+def _normalise_result(result: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Ensure every handler result always contains:
+      - success: bool
+      - message: str
+    """
+    if not isinstance(result, dict):
+        return _failure("Intervention handler returned an invalid result")
+
+    success = bool(result.get("success", False))
+    message = result.get("message") or result.get("reason")
+
+    if not message:
+        message = "Intervention applied successfully" if success else "Intervention failed"
+
+    normalised = dict(result)
+    normalised["success"] = success
+    normalised["message"] = message
+    return normalised
 
 
 # ---------------------------------------------------------------------------
@@ -13,56 +48,72 @@ logger = logging.getLogger(__name__)
 
 def _handle_reveal_info(model, params: Dict[str, Any]) -> Dict[str, Any]:
     agent_id = params.get("agent_id")
-    item     = params.get("item")
+    item = params.get("item")
+
     if not agent_id or not item:
-        return {"success": False, "reason": "reveal_info requires 'agent_id' and 'item'"}
-    return iv.reveal_info(model, agent_id, item)
+        return _failure("reveal_info requires 'agent_id' and 'item'")
+
+    return _normalise_result(iv.reveal_info(model, agent_id, item))
 
 
 def _handle_nudge_strategy(model, params: Dict[str, Any]) -> Dict[str, Any]:
     agent_id = params.get("agent_id")
     strategy = params.get("strategy")
+
     if not agent_id or not strategy:
-        return {"success": False, "reason": "nudge_strategy requires 'agent_id' and 'strategy'"}
-    return iv.nudge_strategy(model, agent_id, strategy)
+        return _failure("nudge_strategy requires 'agent_id' and 'strategy'")
+
+    return _normalise_result(iv.nudge_strategy(model, agent_id, strategy))
 
 
 def _handle_boost_urgency(model, params: Dict[str, Any]) -> Dict[str, Any]:
     amount = params.get("amount", 0.2)
+
     try:
         amount = float(amount)
     except (TypeError, ValueError):
-        return {"success": False, "reason": "'amount' must be a float between 0.0 and 1.0"}
-    return iv.boost_urgency(model, amount)
+        return _failure("'amount' must be a float between 0.0 and 1.0")
+
+    if not 0.0 <= amount <= 1.0:
+        return _failure("'amount' must be between 0.0 and 1.0")
+
+    return _normalise_result(iv.boost_urgency(model, amount))
 
 
 def _handle_inject_tension(model, params: Dict[str, Any]) -> Dict[str, Any]:
     amount = params.get("amount", 0.2)
+
     try:
         amount = float(amount)
     except (TypeError, ValueError):
-        return {"success": False, "reason": "'amount' must be a float between 0.0 and 1.0"}
-    return iv.inject_tension(model, amount)
+        return _failure("'amount' must be a float between 0.0 and 1.0")
+
+    if not 0.0 <= amount <= 1.0:
+        return _failure("'amount' must be between 0.0 and 1.0")
+
+    return _normalise_result(iv.inject_tension(model, amount))
 
 
 def _handle_force_meeting(model, params: Dict[str, Any]) -> Dict[str, Any]:
     agent_a = params.get("agent_a_id")
     agent_b = params.get("agent_b_id")
+
     if not agent_a or not agent_b:
-        return {"success": False, "reason": "force_meeting requires 'agent_a_id' and 'agent_b_id'"}
-    return iv.force_meeting(model, agent_a, agent_b)
+        return _failure("force_meeting requires 'agent_a_id' and 'agent_b_id'")
+
+    return _normalise_result(iv.force_meeting(model, agent_a, agent_b))
 
 
 # ---------------------------------------------------------------------------
-# Dispatch table — defined after handlers so references are valid
+# Dispatch table
 # ---------------------------------------------------------------------------
 
-_HANDLERS: Dict[str, Any] = {
-    "reveal_info":    _handle_reveal_info,
+_HANDLERS: Dict[str, Callable[..., Dict[str, Any]]] = {
+    "reveal_info": _handle_reveal_info,
     "nudge_strategy": _handle_nudge_strategy,
-    "boost_urgency":  _handle_boost_urgency,
+    "boost_urgency": _handle_boost_urgency,
     "inject_tension": _handle_inject_tension,
-    "force_meeting":  _handle_force_meeting,
+    "force_meeting": _handle_force_meeting,
 }
 
 
@@ -70,24 +121,41 @@ _HANDLERS: Dict[str, Any] = {
 # Public entry point
 # ---------------------------------------------------------------------------
 
-def apply_intervention(model, intervention_type: str, params: Dict[str, Any]) -> Dict[str, Any]:
+def apply_intervention(
+    model,
+    intervention_type: str,
+    params: Dict[str, Any],
+) -> Dict[str, Any]:
     """
     Route an intervention request to the correct handler.
-    Returns a result dict with 'success' and 'message' or 'reason'.
+
+    Always returns a dict containing:
+      - success: bool
+      - message: str
     """
     handler = _HANDLERS.get(intervention_type)
+
     if not handler:
-        logger.warning(f"Unknown intervention type requested: '{intervention_type}'")
-        return {
-            "success": False,
-            "reason": (
-                f"Unknown intervention type '{intervention_type}'. "
-                f"Valid types: {list(_HANDLERS.keys())}"
-            ),
-        }
-    result = handler(model, params)
-    if result.get("success"):
-        logger.info(f"Intervention applied: type={intervention_type}, params={params}, tick={getattr(model, 'tick', '?')}")
+        logger.warning("Unknown intervention type requested: '%s'", intervention_type)
+        return _failure(
+            f"Unknown intervention type '{intervention_type}'. "
+            f"Valid types: {list(_HANDLERS.keys())}"
+        )
+
+    result = _normalise_result(handler(model, params))
+
+    if result["success"]:
+        logger.info(
+            "Intervention applied: type=%s, params=%s, tick=%s",
+            intervention_type,
+            params,
+            getattr(model, "tick", "?"),
+        )
     else:
-        logger.warning(f"Intervention failed: type={intervention_type}, reason={result.get('reason')}")
+        logger.warning(
+            "Intervention failed: type=%s, message=%s",
+            intervention_type,
+            result["message"],
+        )
+
     return result

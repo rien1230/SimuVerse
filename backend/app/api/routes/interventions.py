@@ -1,38 +1,79 @@
+"""API routes for applying live interventions to an active run."""
+
+import logging
+from typing import Any, Dict
+
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
 from app.schemas.intervention import InterventionRequest, InterventionResponse
 from app.services.intervention_service import apply_intervention
-from app.api.routes.runs import registry   # reuse the same active run registry
+from app.services.run_registry import RunRegistry
+
+
+class _InterventionRequestBase(BaseModel):
+    """Minimal validated shape for intervention payloads (used for documentation)."""
+    run_id: str
+    type: str
+    params: Dict[str, Any] = {}
+
+registry = RunRegistry()
 
 router = APIRouter(prefix="/interventions", tags=["interventions"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/apply", response_model=InterventionResponse)
-async def apply_intervention_endpoint(request: InterventionRequest):
+async def apply_intervention_endpoint(request: InterventionRequest) -> InterventionResponse:
     """
     Apply a user intervention to a running simulation.
     """
-    entry = registry.get_run(request.run_id)
-    if entry is None:
-        raise HTTPException(status_code=404, detail=f"Run '{request.run_id}' not found")
+    try:
+        entry = registry.get_run(request.run_id)
+        if entry is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Run '{request.run_id}' not found",
+            )
 
-    model = entry.manager.model
-    if model is None:
-        raise HTTPException(status_code=404, detail=f"Run '{request.run_id}' has no active model")
+        model = getattr(entry.manager, "model", None)
+        if model is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Run '{request.run_id}' has no active model",
+            )
 
-    if model.ended:
-        raise HTTPException(status_code=400, detail="Simulation has already ended")
+        if getattr(model, "ended", False):
+            raise HTTPException(
+                status_code=400,
+                detail="Simulation has already ended",
+            )
 
-    result = apply_intervention(model, request.type, request.params)
+        result = apply_intervention(model, request.type, request.params)
 
-    if not result.get("success"):
-        raise HTTPException(status_code=400, detail=result.get("reason", "Intervention failed"))
+        if not result.get("success", False):
+            reason = result.get("reason") or result.get("message") or "Intervention failed"
+            raise HTTPException(status_code=400, detail=reason)
 
-    return InterventionResponse(
-        success=True,
-        message=result["message"],
-        intervention_type=request.type,
-        tick_applied=model.tick,
-    )
+        return InterventionResponse(
+            success=result["success"],
+            message=result["message"],
+            intervention_type=request.type,
+            tick_applied=getattr(model, "tick", 0),
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception(
+            "Unexpected intervention failure for run_id=%s type=%s params=%s",
+            request.run_id,
+            request.type,
+            request.params,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Could not apply the intervention right now. Please try again.",
+        )
 
 
 @router.get("/types")

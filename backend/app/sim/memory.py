@@ -1,3 +1,5 @@
+"""Short- and long-term memory helpers used by each agent."""
+
 from collections import deque
 from typing import Dict, List, Any, Optional
 from datetime import datetime

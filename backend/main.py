@@ -27,9 +27,11 @@ app.include_router(intervention_router, prefix="/api", tags=["interventions"])
 app.include_router(experiment_router,   prefix="/api", tags=["experiments"])
 app.include_router(simulation_router,   prefix="/api", tags=["simulation"])
 
+
 @app.get("/api/health")
 def health():
     return {"status": "ok", "version": app.version}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

@@ -1,3 +1,5 @@
+"""Logging setup so backend requests and sim output stay easy to follow."""
+
 import logging
 import sys
 

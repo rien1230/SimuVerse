@@ -1,5 +1,7 @@
+"""Schema definitions for intervention requests and responses."""
+
 from pydantic import BaseModel, Field
-from typing import Any, Dict, Optional, Literal
+from typing import Any, Dict, Literal
 
 
 class InterventionRequest(BaseModel):
@@ -21,7 +23,6 @@ class InterventionResponse(BaseModel):
     tick_applied: int
 
 
-# Optional param models (for documentation)
 class RevealInfoParams(BaseModel):
     agent_id: str
     item: str

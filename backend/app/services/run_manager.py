@@ -1,14 +1,21 @@
-# Manages one simulation run. starting + pausing + stepping + logging everything for replay.
+# Manages one simulation run: starting, pausing, stepping, and logging everything for replay.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Literal
+import logging
 import time
 import uuid
 import sys
+
+logger = logging.getLogger(__name__)
+
 import mesa
+
 from app.sim.model import SimModel
+from app.sim.agent_builder import apply_personality_to_agent, build_agent_traits
 from app.services.event_logger import EventLogger
+from app.services.run_history_service import save_run
 
 # Define possible states for the simulation run.
 RunStatus = Literal["idle", "running", "paused", "stopped"]
@@ -24,11 +31,10 @@ class RunManager:
 
     Responsibilities:
     - Creates and configures the simulation model
-    - Manages run states: idle + running + paused + stopped
+    - Manages run states: idle, running, paused, stopped
     - Executes simulation ticks deterministically
     - Logs all events for replay capability
     - Handles automatic stopping conditions
-
     """
 
     seed: int  # Random seed for deterministic simulation
@@ -39,68 +45,106 @@ class RunManager:
     status: RunStatus = "idle"  # Current state of the run
     model: SimModel = field(init=False)
     logger: EventLogger = field(init=False)  # Handles logging for replay
+    history_saved: bool = field(init=False, default=False)
 
     def __post_init__(self) -> None:
         """
         Initialises the RunManager after dataclass fields are set.
 
-        This is where I:
+        This is where we:
         1. Set up default configuration
-        2. Create the simulation model
-        3. Initialise the event logger
-        4. Write metadata header for replay file
+        2. Filter config so only SimModel-supported keys are passed in
+        3. Create the simulation model
+        4. Initialise the event logger
+        5. Write metadata header for replay file
         """
-        # DEBUG: Print what's received
-        print(f"\n=== RunManager __post_init__ ===")
-        print(f"Seed: {self.seed}")
-        print(f"Original config: {self.config}")
+        logger.debug("RunManager init — seed=%s config=%s", self.seed, self.config)
 
-        # Default configuration values (Milestone 2/3)
+        # Default configuration values
         defaults = {
-            "min_events_per_tick": 2,  # Minimum events to generate per tick
-            "episode_max_ticks": 120,  # Maximum ticks before auto-stop
+            "min_events_per_tick": 0,
+            "episode_max_ticks": 120,
+            "environment": "office",
+            "scenario_id": "office_proposal",
+            "use_nlp": False,
+            "team_type": None,
+            "team_preset": None,
         }
 
         # Merge configurations: user-provided values override defaults
         merged = {**defaults, **(self.config or {})}
         self.config = merged
 
-        # DEBUG: Print merged config
-        print(f"Merged config: {self.config}")
-        print(f"Config keys: {list(self.config.keys())}")
-        print(f"Environment value: {self.config.get('environment', 'NOT FOUND')}")
+        logger.debug(
+            "RunManager merged config — env=%s scenario=%s",
+            self.config.get("environment"),
+            self.config.get("scenario_id"),
+        )
 
-        # Create the simulation model with the seed and merged config
-        # This is where the actual agent-based simulation is instantiated
-        print(f"Creating SimModel with seed={self.seed} and config={self.config}")
+        # Only pass arguments that SimModel actually accepts.
+        # Keep the full config for replay metadata, but filter what goes into the model.
+        sim_config = {
+            "min_events_per_tick": self.config.get("min_events_per_tick", 2),
+            "episode_max_ticks": self.config.get("episode_max_ticks", 120),
+            "environment": self.config.get("environment", "office"),
+            "scenario_id": self.config.get("scenario_id", "office_proposal"),
+            "use_nlp": self.config.get("use_nlp", False),
+            "team_type": None,
+            "team_preset": None,
+        }
+
+        # Create the simulation model with the filtered config
         try:
-            self.model = SimModel(seed=self.seed, **self.config)
-            print(f" SimModel created successfully")
+            self.model = SimModel(seed=self.seed, **sim_config)
+            logger.debug("SimModel created — run_id=%s", self.run_id)
         except Exception as e:
-            print(f" Failed to create SimModel: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("Failed to create SimModel: %s", e)
             raise
+
+        # Align frontend-created runs with the same deterministic personality
+        # application path used by test_personalities.py.
+        scenario_type = self.config.get("environment", "office")
+        if scenario_type == "escape_room":
+            scenario_type = "escape"
+        self.model.scenario_type = scenario_type
+        self.model.team_type = self.config.get("resolved_team_type") or self.config.get("team_type")
+        self.model.team_preset = self.config.get("team_preset") or self.model.team_preset
+        self.model.conflict_score = 0.0
+        self.model.coord_pressure_score = 0.0
+
+        personalities = list(self.config.get("agent_personalities") or [])
+        if personalities:
+            for index, agent in enumerate(sorted(self.model.agents, key=lambda a: a.public_id)):
+                personality = personalities[index] if index < len(personalities) else "Easygoing"
+                apply_personality_to_agent(agent, personality)
+                traits, _ = build_agent_traits(
+                    self.config.get("scenario_id", "office_proposal"),
+                    agent_id=agent.public_id,
+                    personality=personality,
+                    add_noise=False,
+                )
+                for key, value in traits.items():
+                    setattr(agent, key, value)
+                    agent.traits[key] = value
 
         # Initialise the event logger for this specific run
         self.logger = EventLogger(run_id=self.run_id)
 
-        # Write metadata header to the replay file FIRST and including all information needed for deterministic replay.
+        # Write metadata header to the replay file first
         self.logger.start_new_replay(
             meta={
-                "type": "run_meta",  # Identifies this as metadata line
-                "schema_version": SCHEMA_VERSION,  # For compatibility checks
-                "sim_version": SIMUVERSION,  # SimuVerse version
-                "run_id": self.run_id,  # Unique identifier for this run
-                "seed": self.seed,  # Random seed used
-                "config": self.config,  # Complete configuration
-                "python": sys.version.split()[0],  # Python version (major.minor)
-                "mesa": getattr(mesa, "__version__", "unknown"),  # Mesa framework version
+                "type": "run_meta",
+                "schema_version": SCHEMA_VERSION,
+                "sim_version": SIMUVERSION,
+                "run_id": self.run_id,
+                "seed": self.seed,
+                "config": self.config,          # full config from route/services
+                "sim_config": sim_config,       # actual config passed to SimModel
+                "python": sys.version.split()[0],
+                "mesa": getattr(mesa, "__version__", "unknown"),
             }
         )
-        print(f" RunManager initialization complete for run_id: {self.run_id}\n")
-
-    # The different type of simulation run state:
+        logger.debug("RunManager ready — run_id=%s", self.run_id)
 
     def start(self) -> None:
         """
@@ -111,39 +155,50 @@ class RunManager:
         """
         if self.status == "stopped":
             raise RuntimeError("Run is stopped. Create a new RunManager for a new run.")
-        # idle -> running, paused -> running (resume)
         self.status = "running"
 
     def pause(self) -> None:
         """
         Pause the simulation run.
 
-        Only transitions from 'running' to 'paused' and other states would remain unchanged.
+        Only transitions from 'running' to 'paused'.
         """
-        # running -> paused
         if self.status == "running":
             self.status = "paused"
 
     def stop(self) -> None:
         """
         Stop the simulation run.
-        Can be called from any state to force stop (So,run can't be restarted at all).
-        """
-        # any -> stopped
-        self.status = "stopped"
 
-    # One deterministic tick:
+        Can be called from any state to force stop.
+        """
+        self.status = "stopped"
+        if self.model.tick > 0:
+            self._persist_history_once()
+
+    def _persist_history_once(self) -> None:
+        """Persist the current run exactly once so History can replay it."""
+        if self.history_saved:
+            return
+        if not bool(self.config.get("save_history", True)):
+            return
+
+        save_run(
+            self.model,
+            run_id=self.run_id,
+            config=self.config,
+        )
+        self.history_saved = True
 
     def step(self) -> Dict[str, Any]:
         """
-        Execute one simulation tick (time step).
+        Execute one simulation tick.
 
-        This is the core method that advances the simulation.
-        It:
+        This method:
         1. Advances the model by one tick
         2. Captures the state changes (diff)
         3. Logs the diff for replay
-        4. Updates run status if episode ended
+        4. Updates run status if the episode ended
 
         Returns:
             Dictionary containing the state diff for this tick
@@ -153,11 +208,12 @@ class RunManager:
         """
         if self.status == "stopped":
             raise RuntimeError("Run is stopped. Create a new RunManager for a new run.")
-        # Allow manual stepping from idle/paused too. Allowing users step through paused simulations
+
+        # Allow manual stepping from idle/paused too
         if self.status == "idle":
             self.status = "paused"
 
-        # Advances the simulation model by one tick
+        # Advance the simulation model by one tick
         ret = self.model.step()
 
         # Extract the state diff from the model
@@ -166,25 +222,24 @@ class RunManager:
         else:
             diff = getattr(self.model, "last_diff", None)
 
-        # Ensures that there is a diff
         if diff is None:
             raise RuntimeError("Model produced no diff. Check SimModel.step sets self.last_diff.")
 
-        # Log one JSONL line for determinism + replay capability (enables exact replay of simulations)
+        # Log one JSONL line for replay capability
         self.logger.log(diff)
 
-        # Auto-stop: this happens when episode_max_ticks is reached or other end conditions
+        # Auto-stop if the simulation ended
         if diff.get("ended") is True:
             self.status = "stopped"
+            self._persist_history_once()
 
         return diff
 
-    # Optional: run continuously (useful later for websocket "play")
     def run_loop(self, max_steps: Optional[int] = None, tick_hz: Optional[float] = None) -> None:
         """
-        Run the simulation continuously (not single-step).
+        Run the simulation continuously.
 
-        This method is useful for:
+        Useful for:
         - Automated testing
         - WebSocket streaming with auto-play
         - Batch processing
@@ -200,24 +255,19 @@ class RunManager:
             raise RuntimeError("Call start() before run_loop().")
 
         steps_done = 0
-        # Calculate sleep time between ticks if tick_hz is specified
         sleep_s = (1.0 / tick_hz) if (tick_hz and tick_hz > 0) else 0.0
 
-        # Main simulation loop
         while self.status == "running":
-            d = self.step()  # Execute one tick
+            diff = self.step()
             steps_done += 1
 
-            # Check if episode ended
-            if d.get("ended") is True:
+            if diff.get("ended") is True:
                 self.status = "stopped"
                 break
 
-            # Check if we've reached max steps
             if max_steps is not None and steps_done >= max_steps:
                 self.pause()
                 break
 
-            # Control simulation speed if tick_hz is specified
             if sleep_s > 0:
                 time.sleep(sleep_s)

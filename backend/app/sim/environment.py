@@ -1,3 +1,5 @@
+"""Environment presets and the modifiers each scenario applies to the sim."""
+
 from __future__ import annotations
 from typing import Dict, List, Optional, Any
 from enum import Enum
@@ -13,6 +15,10 @@ class EnvironmentType(Enum):
 
 
 class Environment:
+    ALIASES = {
+        "escape_room": "escape",
+    }
+
     ENVIRONMENTS = {
         "office": {
             "name": "Office",
@@ -153,6 +159,7 @@ class Environment:
     }
 
     def __init__(self, environment_type: str):
+        environment_type = self.ALIASES.get(environment_type, environment_type)
         if environment_type not in self.ENVIRONMENTS:
             raise ValueError(f"Unknown environment type: {environment_type}")
 

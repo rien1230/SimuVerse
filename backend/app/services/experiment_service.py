@@ -1,14 +1,144 @@
+"""Service helpers for building and running experiment batches."""
+
 from __future__ import annotations
 
 import logging
 import statistics
 from typing import Any, Dict, List, Optional
 
+from app.services.run_history_service import save_run
 from app.sim.model import SimModel
-from app.sim.scenario_data import SCENARIOS
+from app.sim.scenario_data import SCENARIOS, resolve_scenario_id
 from app.core.config import DEFAULT_N_RUNS, DEFAULT_EXPERIMENT_MAX_TICKS
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_TEAM_STYLE_SET = ["smooth", "tension", "creative"]
+DEFAULT_SCENARIO_SET = ["office_proposal", "cafe_restaurant", "escape_puzzle"]
+
+
+def _normalize_scenario_ids(scenario_ids: List[str]) -> List[str]:
+    initialised: List[str] = []
+    seen = set()
+    for scenario_id in scenario_ids:
+        resolved = resolve_scenario_id(scenario_id)
+        if resolved not in seen:
+            initialised.append(resolved)
+            seen.add(resolved)
+    return initialised
+
+
+def _display_team_type(team_type: Optional[str]) -> str:
+    labels = {
+        "smooth": "Smooth Team",
+        "tension": "Tension Team",
+        "creative": "Creative Team",
+        "pressure": "Pressure Team",
+        "balanced": "Balanced Team",
+        "cooperative": "Cooperative Team",
+        "tense": "Tense Team",
+        "random": "Random Team",
+    }
+    key = str(team_type or "not_recorded").lower()
+    return labels.get(key, str(team_type or "Not recorded").replace("_", " ").title())
+
+
+def _run_single_simulation(
+    scenario_id: str,
+    seed: int,
+    episode_max_ticks: int,
+    skip_emotions: bool = False,
+    team_type: Optional[str] = None,
+    persist_run: bool = False,
+    experiment_type: Optional[str] = None,
+) -> Dict[str, Any]:
+    scenario_id = resolve_scenario_id(scenario_id)
+    if scenario_id not in SCENARIOS:
+        return {"error": f"Unknown scenario '{scenario_id}'"}
+
+    model = SimModel(
+        seed=seed,
+        scenario_id=scenario_id,
+        environment=SCENARIOS[scenario_id]["environment"],
+        episode_max_ticks=episode_max_ticks,
+        team_type=team_type,
+    )
+    model.seed_value = seed
+    if skip_emotions:
+        model.skip_emotions = True
+
+    while not model.ended and model.tick < episode_max_ticks:
+        model.step()
+
+    history = model.metric_history
+    if history:
+        run_avg_trust = round(statistics.mean(h["avg_trust"] for h in history), 4)
+        run_avg_stress = round(statistics.mean(h["avg_stress"] for h in history), 4)
+        run_conflict_rate = round(statistics.mean(h["conflict_rate"] for h in history), 4)
+        run_group_tension = round(statistics.mean(h["group_tension"] for h in history), 4)
+        run_group_cohesion = round(statistics.mean(h["group_cohesion"] for h in history), 4)
+        run_peak_stress = round(max(h["avg_stress"] for h in history), 4)
+        run_peak_tension = round(max(h["group_tension"] for h in history), 4)
+    else:
+        # No metric history: fall back to last_diff metrics, then live model state.
+        # Avoids reporting 0.00 for peak_stress on runs that ended before recording any tick.
+        metrics = model.last_diff.get("metrics", {}) if model.last_diff else {}
+        run_avg_trust = metrics.get("avg_trust", model.group_cohesion)
+        run_avg_stress = metrics.get("avg_stress", 0.0)
+        run_conflict_rate = metrics.get("conflict_rate", 0.0)
+        run_group_tension = model.group_tension
+        run_group_cohesion = model.group_cohesion
+        # Derive peak_stress from live agent state if metric history is absent
+        if model.agents:
+            agent_stresses = [getattr(a, "stress", 0.0) for a in model.agents]
+            run_peak_stress = round(max(run_avg_stress, max(agent_stresses, default=0.0)), 4)
+        else:
+            run_peak_stress = run_avg_stress
+        run_peak_tension = model.group_tension
+
+    first_share_tick = next(
+        (h["tick"] for h in history if h.get("share_count", 0) > 0),
+        None,
+    )
+
+    run_id = None
+    if persist_run:
+        run_id = save_run(
+            model,
+            config={
+                "scenario_id": scenario_id,
+                "environment": SCENARIOS[scenario_id]["environment"],
+                "episode_max_ticks": episode_max_ticks,
+                "team_type": team_type,
+                "use_nlp": not skip_emotions,
+                "experiment_type": experiment_type,
+            },
+        )
+
+    return {
+        "run_id": run_id,
+        "seed": seed,
+        "scenario_id": scenario_id,
+        "scenario_name": SCENARIOS[scenario_id]["name"],
+        "environment": SCENARIOS[scenario_id]["environment"],
+        "team_type": team_type,
+        "team_label": _display_team_type(team_type),
+        "outcome": model.end_reason,
+        "ticks": model.tick,
+        "final_progress": round(model.scenario.progress_ratio(), 3),
+        "avg_trust": run_avg_trust,
+        "avg_stress": run_avg_stress,
+        "peak_stress": run_peak_stress,
+        "conflict_rate": run_conflict_rate,
+        "group_tension": run_group_tension,
+        "peak_tension": run_peak_tension,
+        "group_cohesion": run_group_cohesion,
+        "total_refusals": model.total_refusals,
+        "total_shares": model.total_shares,
+        "stalled_ticks": model.total_stalled_ticks,
+        "first_share_tick": first_share_tick,
+        "completion_order": getattr(model, "completion_order", []),
+    }
 
 
 def run_experiment(
@@ -16,6 +146,8 @@ def run_experiment(
     n_runs: int = 20,
     episode_max_ticks: int = 120,
     skip_emotions: bool = False,
+    team_type: Optional[str] = None,
+    persist_runs: bool = False,
 ) -> Dict[str, Any]:
     """
     Run the same scenario n_runs times with seeds 0..n_runs-1.
@@ -28,82 +160,42 @@ def run_experiment(
     episode_max_ticks : hard tick limit per run
     skip_emotions     : disable NLP pipeline for baseline comparison
     """
+    scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
         return {"error": f"Unknown scenario '{scenario_id}'. Valid: {list(SCENARIOS.keys())}"}
 
-    logger.info(f"Starting experiment: scenario={scenario_id}, n_runs={n_runs}, "
-                f"max_ticks={episode_max_ticks}, nlp={'off' if skip_emotions else 'on'}")
+    logger.info(
+        "Starting experiment: scenario=%s, n_runs=%s, max_ticks=%s, nlp=%s, team=%s",
+        scenario_id,
+        n_runs,
+        episode_max_ticks,
+        "off" if skip_emotions else "on",
+        team_type or "default",
+    )
 
     results = []
 
     for seed in range(n_runs):
-        logger.debug(f"  Run {seed + 1}/{n_runs} (seed={seed})")
-        model = SimModel(
-            seed=seed,
-            scenario_id=scenario_id,
-            environment=SCENARIOS[scenario_id]["environment"],
-            episode_max_ticks=episode_max_ticks,
+        logger.debug("  Run %s/%s (seed=%s)", seed + 1, n_runs, seed)
+        results.append(
+            _run_single_simulation(
+                scenario_id=scenario_id,
+                seed=seed,
+                episode_max_ticks=episode_max_ticks,
+                skip_emotions=skip_emotions,
+                team_type=team_type,
+                persist_run=persist_runs,
+                experiment_type="batch",
+            )
         )
-        model.seed_value = seed
-        if skip_emotions:
-            model.skip_emotions = True
-
-        # Hard outer guard — prevents infinite loop if model logic has a bug
-        while not model.ended and model.tick < episode_max_ticks:
-            model.step()
-
-        # ----------------------------------------------------------------
-        # Use whole-run averages from metric_history, not last-tick only.
-        # This fixes the conflict_rate=0.0 problem and gives accurate
-        # trust/stress figures that reflect the full simulation arc.
-        # ----------------------------------------------------------------
-        history = model.metric_history
-        if history:
-            run_avg_trust      = round(statistics.mean(h["avg_trust"]     for h in history), 4)
-            run_avg_stress     = round(statistics.mean(h["avg_stress"]    for h in history), 4)
-            run_conflict_rate  = round(statistics.mean(h["conflict_rate"] for h in history), 4)
-            run_group_tension  = round(statistics.mean(h["group_tension"] for h in history), 4)
-            run_group_cohesion = round(statistics.mean(h["group_cohesion"] for h in history), 4)
-            run_peak_stress    = round(max(h["avg_stress"]    for h in history), 4)
-            run_peak_tension   = round(max(h["group_tension"] for h in history), 4)
-        else:
-            # Fallback to last-tick metrics if history is empty
-            m = model.last_diff.get("metrics", {}) if model.last_diff else {}
-            run_avg_trust      = m.get("avg_trust", 0.0)
-            run_avg_stress     = m.get("avg_stress", 0.0)
-            run_conflict_rate  = m.get("conflict_rate", 0.0)
-            run_group_tension  = model.group_tension
-            run_group_cohesion = model.group_cohesion
-            run_peak_stress    = run_avg_stress
-            run_peak_tension   = run_group_tension
-
-        # Time to first share (tick number)
-        first_share_tick = next(
-            (h["tick"] for h in history if h["share_count"] > 0), None
-        )
-
-        results.append({
-            "seed":              seed,
-            "outcome":           model.end_reason,
-            "ticks":             model.tick,
-            "final_progress":    round(model.scenario.progress_ratio(), 3),
-            "avg_trust":         run_avg_trust,
-            "avg_stress":        run_avg_stress,
-            "peak_stress":       run_peak_stress,
-            "conflict_rate":     run_conflict_rate,
-            "group_tension":     run_group_tension,
-            "peak_tension":      run_peak_tension,
-            "group_cohesion":    run_group_cohesion,
-            "total_refusals":    model.total_refusals,
-            "total_shares":      model.total_shares,
-            "stalled_ticks":     model.total_stalled_ticks,
-            "first_share_tick":  first_share_tick,
-            "completion_order":  getattr(model, "completion_order", []),
-        })
 
     result = _aggregate(scenario_id, n_runs, skip_emotions, results)
-    logger.info(f"Experiment complete: success_rate={result['success_rate']:.0%}, "
-                f"deadlock_rate={result['outcome_rates'].get('deadlock', 0):.0%}")
+    result["team_type"] = team_type
+    logger.info(
+        "Experiment complete: success_rate=%s, deadlock_rate=%s",
+        f"{result['success_rate']:.0%}",
+        f"{result['outcome_rates'].get('deadlock', 0):.0%}",
+    )
     return result
 
 
@@ -111,13 +203,15 @@ def run_multi_scenario_experiment(
     scenario_ids: List[str],
     n_runs: int = 20,
     episode_max_ticks: int = 120,
+    team_type: Optional[str] = None,
+    persist_runs: bool = False,
 ) -> Dict[str, Any]:
     """
     Run multiple scenarios and return results for all of them.
     Useful for cross-scenario comparison in the dissertation.
     """
     results = {}
-    for sid in scenario_ids:
+    for sid in _normalize_scenario_ids(scenario_ids):
         if sid not in SCENARIOS:
             results[sid] = {"error": f"Unknown scenario '{sid}'"}
             continue
@@ -126,6 +220,8 @@ def run_multi_scenario_experiment(
             n_runs=n_runs,
             episode_max_ticks=episode_max_ticks,
             skip_emotions=False,
+            team_type=team_type,
+            persist_runs=persist_runs,
         )
     return results
 
@@ -198,6 +294,175 @@ def _aggregate(
     }
 
 
+def compare_team_styles(
+    scenario_id: str,
+    seed: int = 5902,
+    episode_max_ticks: int = 120,
+    team_types: Optional[List[str]] = None,
+    persist_runs: bool = True,
+) -> Dict[str, Any]:
+    scenario_id = resolve_scenario_id(scenario_id)
+    if scenario_id not in SCENARIOS:
+        return {"error": f"Unknown scenario '{scenario_id}'"}
+
+    selected_team_types = list(team_types or DEFAULT_TEAM_STYLE_SET)
+    rows = [
+        _run_single_simulation(
+            scenario_id=scenario_id,
+            seed=seed,
+            episode_max_ticks=episode_max_ticks,
+            team_type=team_type,
+            persist_run=persist_runs,
+            experiment_type="team_styles",
+        )
+        for team_type in selected_team_types
+    ]
+
+    sorted_rows = sorted(
+        rows,
+        key=lambda row: (
+            row.get("final_progress", 0),
+            row.get("avg_trust", 0),
+            -row.get("peak_stress", 0),
+            -row.get("conflict_rate", 0),
+        ),
+        reverse=True,
+    )
+    best = sorted_rows[0]
+    worst = sorted_rows[-1]
+    key_difference = (
+        f"Only team style changed. Scenario and seed stayed fixed at "
+        f"{SCENARIOS[scenario_id]['name']} and {seed}. "
+        f"{best['team_label']} finished at {round(best['final_progress'] * 100)}% progress "
+        f"with trust {best['avg_trust']:.2f} and peak stress {best['peak_stress']:.2f}, "
+        f"while {worst['team_label']} ended at {round(worst['final_progress'] * 100)}% "
+        f"with conflict {worst['conflict_rate']:.2f}."
+    )
+
+    return {
+        "experiment": "team_styles",
+        "scenario_id": scenario_id,
+        "scenario_name": SCENARIOS[scenario_id]["name"],
+        "seed": seed,
+        "rows": rows,
+        "controlled_variable": "team_style",
+        "fixed_factors": {
+            "scenario_id": scenario_id,
+            "seed": seed,
+            "episode_max_ticks": episode_max_ticks,
+            "nlp_enabled": False,
+        },
+        "method_note": "Only team style changes here. Scenario, seed, and tick limit stay fixed for every row.",
+        "key_difference": key_difference,
+    }
+
+
+def compare_scenarios(
+    team_type: str,
+    seed: int = 5902,
+    episode_max_ticks: int = 120,
+    scenario_ids: Optional[List[str]] = None,
+    persist_runs: bool = True,
+) -> Dict[str, Any]:
+    selected_scenarios = _normalize_scenario_ids(list(scenario_ids or DEFAULT_SCENARIO_SET))
+    rows = [
+        _run_single_simulation(
+            scenario_id=scenario_id,
+            seed=seed,
+            episode_max_ticks=episode_max_ticks,
+            team_type=team_type,
+            persist_run=persist_runs,
+            experiment_type="scenario_pressure",
+        )
+        for scenario_id in selected_scenarios
+        if scenario_id in SCENARIOS
+    ]
+
+    highest_stress = max(rows, key=lambda row: row.get("peak_stress", 0))
+    calmest = min(rows, key=lambda row: row.get("peak_stress", 0))
+    key_difference = (
+        f"Only scenario changed. Team style stayed fixed as {rows[0]['team_label']} and seed stayed fixed at {seed}. "
+        f"{highest_stress['scenario_name']} produced the highest peak stress ({highest_stress['peak_stress']:.2f}), "
+        f"while {calmest['scenario_name']} stayed calmest at {calmest['peak_stress']:.2f}. "
+        f"This isolates environment pressure rather than personality changes."
+    )
+
+    return {
+        "experiment": "scenarios",
+        "team_type": team_type,
+        "team_label": _display_team_type(team_type),
+        "seed": seed,
+        "rows": rows,
+        "controlled_variable": "scenario",
+        "fixed_factors": {
+            "team_type": team_type,
+            "seed": seed,
+            "episode_max_ticks": episode_max_ticks,
+            "nlp_enabled": False,
+        },
+        "method_note": "Only the scenario changes here. Team style, seed, and tick limit stay fixed for every row.",
+        "key_difference": key_difference,
+    }
+
+
+def robustness_experiment(
+    scenario_id: str,
+    team_type: str,
+    seed_start: int = 5902,
+    n_runs: int = 5,
+    episode_max_ticks: int = 120,
+    persist_runs: bool = True,
+) -> Dict[str, Any]:
+    scenario_id = resolve_scenario_id(scenario_id)
+    if scenario_id not in SCENARIOS:
+        return {"error": f"Unknown scenario '{scenario_id}'"}
+
+    rows = [
+        _run_single_simulation(
+            scenario_id=scenario_id,
+            seed=seed_start + offset,
+            episode_max_ticks=episode_max_ticks,
+            team_type=team_type,
+            persist_run=persist_runs,
+            experiment_type="robustness",
+        )
+        for offset in range(n_runs)
+    ]
+
+    aggregate = _aggregate(scenario_id, n_runs, skip_emotions=False, results=rows)
+    aggregate["team_type"] = team_type
+    aggregate["seed_start"] = seed_start
+
+    progress_spread = aggregate["final_progress"]["max"] - aggregate["final_progress"]["min"]
+    key_difference = (
+        f"Only seed changed. Scenario stayed fixed as {SCENARIOS[scenario_id]['name']} and team style stayed fixed as "
+        f"{_display_team_type(team_type)}. Across {n_runs} seeds starting at {seed_start}, "
+        f"average progress was {round(aggregate['final_progress']['mean'] * 100)}% and success rate was "
+        f"{round(aggregate['success_rate'] * 100)}%. Progress spread across seeds was {round(progress_spread * 100)} points."
+    )
+
+    return {
+        "experiment": "robustness",
+        "scenario_id": scenario_id,
+        "scenario_name": SCENARIOS[scenario_id]["name"],
+        "team_type": team_type,
+        "team_label": _display_team_type(team_type),
+        "seed_start": seed_start,
+        "n_runs": n_runs,
+        "rows": rows,
+        "aggregate": aggregate,
+        "controlled_variable": "seed",
+        "fixed_factors": {
+            "scenario_id": scenario_id,
+            "team_type": team_type,
+            "episode_max_ticks": episode_max_ticks,
+            "nlp_enabled": False,
+        },
+        "method_note": "Only the seed changes here. Scenario, team style, and tick limit stay fixed for every run.",
+        "key_difference": key_difference,
+    }
+
+
 def compare_experiments(
     scenario_id: str,
     n_runs: int = 20,
@@ -207,6 +472,7 @@ def compare_experiments(
     Key academic experiment: same scenario, NLP on vs NLP off.
     Directly answers: does the emotion pipeline affect coordination outcomes?
     """
+    scenario_id = resolve_scenario_id(scenario_id)
     with_nlp    = run_experiment(scenario_id, n_runs, episode_max_ticks, skip_emotions=False)
     without_nlp = run_experiment(scenario_id, n_runs, episode_max_ticks, skip_emotions=True)
 
@@ -286,6 +552,7 @@ def compare_intervention_experiment(
             n_runs=20,
         )
     """
+    scenario_id = resolve_scenario_id(scenario_id)
     baseline     = run_experiment(scenario_id, n_runs, episode_max_ticks, skip_emotions=False)
     with_intervention = _run_with_intervention(
         scenario_id, n_runs, episode_max_ticks,
@@ -349,6 +616,7 @@ def _run_with_intervention(
     intervention_tick: int,
 ) -> Dict[str, Any]:
     """Run n_runs simulations applying an intervention at a specific tick."""
+    scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
         return {"error": f"Unknown scenario '{scenario_id}'"}
 

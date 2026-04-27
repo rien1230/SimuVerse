@@ -1,6 +1,6 @@
 """
 Central configuration for SimuVerse backend.
-Import settings from here rather than scattering magic numbers across files.
+Import settings from here rather than scattering numbers across files.
 """
 
 # Simulation defaults
