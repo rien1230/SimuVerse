@@ -1,0 +1,140 @@
+{
+  "office": {
+    "smooth_team": {
+      "personalities": {"A1": "Leader", "A2": "Easygoing", "A3": "Decisive", "A4": "Creative"},
+      "ticks": 9.7,
+      "success": "3/3",
+      "emotional": 0.035,
+      "coord_pressure": 0.548,
+      "conflict": 0.028,
+      "peak_stress": 0.09,
+      "summary": "Fastest resolution. Smooth team communicates efficiently with minimal stress.",
+      "key_insight": "Leader coordinates well with Easygoing support. Decisive action on design. Creative solutions on budget."
+    },
+    "tension_team": {
+      "personalities": {"A1": "Skeptical", "A2": "Overthinker", "A3": "Skeptical", "A4": "Decisive"},
+      "ticks": 13.3,
+      "success": "3/3",
+      "emotional": 0.133,
+      "coord_pressure": 0.554,
+      "conflict": 0.102,
+      "peak_stress": 0.34,
+      "summary": "Deliberate process. Tension team questions everything, creating verification cycles.",
+      "key_insight": "Skeptical leads cause verification delays. Overthinker hesitates. Decisive breaks ties."
+    },
+    "creative_team": {
+      "personalities": {"A1": "Creative", "A2": "Overthinker", "A3": "Creative", "A4": "Easygoing"},
+      "ticks": 15.0,
+      "success": "3/3",
+      "emotional": 0.08,
+      "coord_pressure": 0.536,
+      "conflict": 0.056,
+      "peak_stress": 0.22,
+      "summary": "Slowest resolution. Creative thinking explores alternatives.",
+      "key_insight": "Two creatives explore options extensively. Overthinker doubts. Easygoing smooths conflicts."
+    },
+    "pressure_team": {
+      "personalities": {"A1": "Leader", "A2": "Decisive", "A3": "Skeptical", "A4": "Overthinker"},
+      "ticks": 13.3,
+      "success": "3/3",
+      "emotional": 0.098,
+      "coord_pressure": 0.614,
+      "conflict": 0.024,
+      "peak_stress": 0.24,
+      "summary": "Moderate tension. Leader drives closure under skeptical resistance.",
+      "key_insight": "Decisive action from leader compensates for skeptical resistance. Overthinker stress under pressure."
+    }
+  },
+  "cafe": {
+    "smooth_team": {
+      "personalities": {"A1": "Leader", "A2": "Easygoing", "A3": "Decisive", "A4": "Creative"},
+      "ticks": 11.3,
+      "success": "3/3",
+      "emotional": 0.032,
+      "coord_pressure": 0.4,
+      "conflict": 0.0,
+      "peak_stress": 0.08,
+      "summary": "Smooth consensus. Team aligns quickly on venue, food, budget, location.",
+      "key_insight": "Lowest peak stress scenario. Easygoing compromise keeps tension minimal. Leader coordinates naturally."
+    },
+    "tension_team": {
+      "personalities": {"A1": "Skeptical", "A2": "Overthinker", "A3": "Skeptical", "A4": "Decisive"},
+      "ticks": 13.0,
+      "success": "3/3",
+      "emotional": 0.098,
+      "coord_pressure": 0.33,
+      "conflict": 0.081,
+      "peak_stress": 0.27,
+      "summary": "Deliberate planning. Skeptics verify options thoroughly.",
+      "key_insight": "Takes longer to lock decisions. Multiple rounds of questioning on dietary, budget, venue."
+    },
+    "creative_team": {
+      "personalities": {"A1": "Creative", "A2": "Overthinker", "A3": "Creative", "A4": "Easygoing"},
+      "ticks": 11.0,
+      "success": "3/3",
+      "emotional": 0.044,
+      "coord_pressure": 0.277,
+      "conflict": 0.14,
+      "peak_stress": 0.12,
+      "summary": "Imaginative planning with practical compromise.",
+      "key_insight": "Creatives explore options. Easygoing accepts suggestions. Overthinker validates choices."
+    },
+    "pressure_team": {
+      "personalities": {"A1": "Leader", "A2": "Decisive", "A3": "Skeptical", "A4": "Overthinker"},
+      "ticks": 14.3,
+      "success": "3/3",
+      "emotional": 0.097,
+      "coord_pressure": 0.386,
+      "conflict": 0.0,
+      "peak_stress": 0.29,
+      "summary": "Leader drives decisions under skeptical scrutiny.",
+      "key_insight": "Overthinker stress rises mid-planning. Skeptic questions venue quality. Resolution achieved."
+    }
+  },
+  "escape": {
+    "smooth_team": {
+      "personalities": {"A1": "Leader", "A2": "Easygoing", "A3": "Decisive", "A4": "Creative"},
+      "ticks": 10.3,
+      "success": "3/3",
+      "emotional": 0.058,
+      "coord_pressure": 0.855,
+      "conflict": 0.0,
+      "peak_stress": 0.17,
+      "summary": "Coordinated puzzle solving. Clear handoff of clues and code.",
+      "key_insight": "Leader coordinates clue sharing. Easygoing accepts solutions. Decisive confirms pattern. Creative finds code."
+    },
+    "tension_team": {
+      "personalities": {"A1": "Skeptical", "A2": "Overthinker", "A3": "Skeptical", "A4": "Decisive"},
+      "ticks": 13.7,
+      "success": "3/3",
+      "emotional": 0.212,
+      "coord_pressure": 0.802,
+      "conflict": 0.073,
+      "peak_stress": 0.57,
+      "summary": "Highest stress scenario. Skeptical verification delays code entry.",
+      "key_insight": "HIGHEST peak stress (0.57). Multiple doubt checks on pattern and code. Overthinker anxiety peaks."
+    },
+    "creative_team": {
+      "personalities": {"A1": "Creative", "A2": "Overthinker", "A3": "Creative", "A4": "Easygoing"},
+      "ticks": 10.7,
+      "success": "3/3",
+      "emotional": 0.12,
+      "coord_pressure": 0.782,
+      "conflict": 0.0,
+      "peak_stress": 0.33,
+      "summary": "Fast escape with creative problem-solving.",
+      "key_insight": "Second fastest completion. Creatives see patterns. Easygoing eases tension. Overthinker validates."
+    },
+    "pressure_team": {
+      "personalities": {"A1": "Leader", "A2": "Decisive", "A3": "Skeptical", "A4": "Overthinker"},
+      "ticks": 8.7,
+      "success": "3/3",
+      "emotional": 0.093,
+      "coord_pressure": 0.85,
+      "conflict": 0.0,
+      "peak_stress": 0.27,
+      "summary": "Fastest escape. Leader drives urgency. Decisive execution.",
+      "key_insight": "Fastest completion (8.7 ticks). High coordination pressure but effective. Skeptic stays focused."
+    }
+  }
+}
