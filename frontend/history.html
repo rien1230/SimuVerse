@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!-- History page for browsing saved runs and reopening them. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SimuVerse — History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="history.css">
+  <link rel="stylesheet" href="nav.css">
+</head>
+<body>
+  <header class="sv-topbar">
+    <div class="sv-brand">
+      <a class="sv-mark" href="index.html">SV</a>
+      <span class="sv-name">SimuVerse</span>
+      <span class="sv-divider"></span>
+      <span class="sv-sub">Run history &amp; replay</span>
+    </div>
+    <span class="sv-spacer"></span>
+    <nav class="sv-nav">
+      <a href="index.html">Home</a>
+      <a href="setup.html">Setup</a>
+      <a href="history.html" class="active">History</a>
+    </nav>
+  </header>
+  <div id="offlineBanner" class="offline-banner" role="alert" aria-live="polite" style="margin:10px 24px 0;">
+    <span class="offline-banner-icon">⚠</span>
+    <span class="offline-banner-msg" id="offlineBannerMsg">Backend is offline. History data may be stale.</span>
+  </div>
+  <div class="page">
+
+    <section class="hero">
+      <h2>History</h2>
+      <p>View previous simulation runs and reopen a replay.</p>
+    </section>
+
+    <section class="stat-grid">
+      <article class="stat-card">
+        <div class="stat-icon blue">↗</div>
+        <div>
+          <div class="stat-label">Total Runs</div>
+          <div class="stat-value" id="statTotalRuns">0</div>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon green">⌘</div>
+        <div>
+          <div class="stat-label">Last Scenario</div>
+          <div class="stat-value large" id="statLastScenario">—</div>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon purple">▷</div>
+        <div>
+          <div class="stat-label">Saved Replays</div>
+          <div class="stat-value" id="statSavedReplays">0</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="main-grid">
+      <section class="panel">
+        <div class="toolbar">
+          <div class="search-box">
+            <span class="search-ic">⌕</span>
+            <input id="searchInput" placeholder="Search by Run ID or Scenario..." />
+          </div>
+          <div class="filter-box">
+            <select id="scenarioFilter"></select>
+          </div>
+          <div class="filter-box">
+            <select id="teamFilter"></select>
+          </div>
+          <div class="date-box">
+            <div class="date-field">
+              <label for="dateFrom">From</label>
+              <input id="dateFrom" type="date" />
+            </div>
+            <div class="date-field">
+              <label for="dateTo">To</label>
+              <input id="dateTo" type="date" />
+            </div>
+          </div>
+        </div>
+
+        <div class="selection-bar">
+          <div class="selection-status" id="selectionStatus">No runs selected.</div>
+          <div class="selection-actions">
+            <button class="clear-history-btn" id="clearHistoryBtn" type="button">Clear History</button>
+            <button class="bulk-delete-btn" id="deleteSelectedBtn" type="button" disabled>Delete Selected</button>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th class="select-col">
+                <input id="selectAllRuns" type="checkbox" aria-label="Select all visible runs" />
+              </th>
+              <th>Run ID</th>
+              <th>Scenario</th>
+              <th>Team</th>
+              <th>Steps</th>
+              <th>Outcome</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="runsTableBody">
+            <tr><td colspan="8" class="empty-table">Loading saved runs…</td></tr>
+          </tbody>
+        </table>
+
+        <div class="pager">
+          <button class="page-btn" id="prevBtn">‹ Previous</button>
+          <div class="page-status" id="pageStatus">Page 1 of 1</div>
+          <button class="page-btn next" id="nextBtn">Next ›</button>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <div class="history-modal" id="historyModal" hidden>
+    <div class="history-dialog" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle">
+      <div class="history-dialog-head">
+        <div class="history-dialog-title">
+          <h3 id="historyModalTitle">Interactive Run Summary</h3>
+          <p id="historyModalSubtitle">Conversation log and what happened in this intervention-driven run.</p>
+        </div>
+        <button class="modal-close" id="historyModalClose" type="button" aria-label="Close summary">×</button>
+      </div>
+      <div class="history-dialog-summary" id="historyModalSummary"></div>
+      <div class="history-dialog-log" id="historyModalLog"></div>
+    </div>
+  </div>
+  <script src="api.js"></script>
+  <script src="history.js"></script>
+</body>
+</html>

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<!-- Landing page that introduces the project and routes people into setup or history. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimuVerse — Multi-Agent Simulation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="nav.css">
+  <style>
+    /* ── Variables ────────────────────────────────────────────── */
+    :root {
+      --bg:          #f2f6fb;
+      --surface:     #ffffff;
+      --surface-2:   #f8fafd;
+      --border:      rgba(17, 34, 58, 0.10);
+      --border-soft: rgba(17, 34, 58, 0.06);
+      --text:        #0f1f33;
+      --text-2:      #3d5068;
+      --muted:       #6b7f96;
+      --navy:        #0f2744;
+      --blue:        #1f6fd4;
+      --blue-mid:    #1a5bb8;
+      --blue-soft:   #ddeeff;
+      --teal:        #14857a;
+      --teal-soft:   #d8f5f1;
+      --amber:       #b56e12;
+      --amber-soft:  #fef3dc;
+      --violet:      #6b3cc9;
+      --violet-soft: #efe8ff;
+      --shadow-sm:   0 1px 4px rgba(10, 25, 50, 0.07);
+      --shadow-md:   0 6px 20px rgba(10, 25, 50, 0.09);
+      --shadow-lg:   0 18px 52px rgba(10, 25, 50, 0.13);
+      --r-xl: 24px;
+      --r-lg: 18px;
+      --r-md: 13px;
+      --r-sm: 9px;
+      --font-ui:      "Manrope", system-ui, sans-serif;
+      --font-display: "Fraunces", Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout shell ─────────────────────────────────────────── */
+    .page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1320px, 100%);
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(160deg, #0d2244 0%, #153261 55%, #1b3f74 100%);
+      position: relative;
+      overflow: hidden;
+      padding: 88px 0 72px;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 80% 110%, rgba(46, 143, 255, 0.22) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at -10% 10%,  rgba(100, 190, 255, 0.10) 0%, transparent 55%);
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: var(--bg);
+      clip-path: ellipse(56% 100% at 50% 100%);
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+      gap: 48px;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(160, 200, 255, 0.85);
+      margin-bottom: 20px;
+    }
+
+    .hero-eyebrow-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #5ab0ff;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.55; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      margin: 0 0 20px;
+      font-family: var(--font-display);
+      font-size: clamp(2.8rem, 4.5vw, 4.6rem);
+      line-height: 0.96;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: #80c4ff;
+    }
+
+    .hero-lead {
+      margin: 0 0 32px;
+      font-size: 1.08rem;
+      line-height: 1.7;
+      color: rgba(195, 218, 255, 0.82);
+      max-width: 560px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .btn-hero-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      background: #ffffff;
+      color: var(--navy);
+      border-radius: var(--r-md);
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 0.95rem;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(0,0,0,0.24);
+    }
+
+    .btn-hero-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 22px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: rgba(255,255,255,0.9);
+      border-radius: var(--r-md);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+
+    .btn-hero-ghost:hover {
+      background: rgba(255,255,255,0.16);
+      transform: translateY(-2px);
+    }
+
+    /* Hero stat pills */
+    .hero-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stat-pill {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--r-lg);
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    .stat-pill-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--r-sm);
+      background: rgba(255,255,255,0.12);
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .stat-pill-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(160,200,255,0.85);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 3px;
+    }
+
+    .stat-pill-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: rgba(230,240,255,0.9);
+      line-height: 1.45;
+    }
+
+    /* ── Section wrapper ──────────────────────────────────────── */
+    .section {
+      padding: 72px 0;
+    }
+
+    .section-kicker {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3vw, 2.8rem);
+      line-height: 1.02;
+      font-weight: 600;
+      color: var(--navy);
+    }
+
+    .section-sub {
+      margin: 0;
+      font-size: 1.02rem;
+      line-height: 1.7;
+      color: var(--text-2);
+      max-width: 600px;
+    }
+
+    /* ── Feature cards ────────────────────────────────────────── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: 28px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--r-md);
+      display: grid;
+      place-items: center;
+      font-size: 1.3rem;
+    }
+
+    .feature-icon.blue   { background: var(--blue-soft);   color: var(--blue); }
+    .feature-icon.teal   { background: var(--teal-soft);   color: var(--teal); }
+    .feature-icon.amber  { background: var(--amber-soft);  color: var(--amber); }
+    .feature-icon.violet { background: var(--violet-soft); color: var(--violet); }
+
+    .feature-card h3 {
+      margin: 0;
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .feature-card p {
+      margin: 0;
+      font-size: 0.93rem;
+      line-height: 1.65;
+      color: var(--text-2);
+      flex: 1;
+    }
+
+    /* ── Scenarios ────────────────────────────────────────────── */
+    .scenarios-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border-soft);
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .scenario-card {
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      position: relative;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .scenario-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .scenario-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.4s ease;
+    }
+
+    .scenario-card:hover::before {
+      transform: scale(1.03);
+    }
+
+    .scenario-card.office::before   { background-image: url("image/office_background.png"); }
+    .scenario-card.cafe::before     { background-image: url("image/cafe_background.png"); }
+    .scenario-card.escape::before   { background-image: url("image/escape_room_background.png"); }
+
+    .scenario-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(8, 20, 42, 0.88) 0%,
+        rgba(8, 20, 42, 0.45) 50%,
+        rgba(8, 20, 42, 0.10) 100%
+      );
+    }
+
+    .scenario-body {
+      position: relative;
+      z-index: 1;
+      padding: 24px;
+    }
+
+    .scenario-tag {
+      display: inline-block;
+      padding: 4px 11px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 10px;
+      backdrop-filter: blur(4px);
+    }
+
+    .scenario-body h3 {
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .scenario-body p {
+      margin: 0 0 18px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: rgba(210, 228, 255, 0.85);
+    }
+
+    .scenario-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #7dc8ff;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── How it works ─────────────────────────────────────────── */
+    .steps-section {
+      background: var(--bg);
+    }
+
+    .steps-track {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0;
+      margin-top: 48px;
+      position: relative;
+    }
+
+    .steps-track::before {
+      content: "";
+      position: absolute;
+      top: 22px;
+      left: calc(10% + 11px);
+      right: calc(10% + 11px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue-soft), var(--blue-soft));
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+      padding: 0 12px;
+    }
+
+    .step-num {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 2px solid var(--blue-soft);
+      display: grid;
+      place-items: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--blue);
+      position: relative;
+      z-index: 1;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .step-num.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(31, 111, 212, 0.35);
+    }
+
+    .step h4 {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .step p {
+      margin: 0;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    /* ── Navigation CTA bar ───────────────────────────────────── */
+    .cta-bar {
+      background: linear-gradient(135deg, var(--navy) 0%, #1a3a6b 100%);
+      padding: 52px 0;
+    }
+
+    .cta-inner {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .cta-copy h2 {
+      margin: 0 0 10px;
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .cta-copy p {
+      margin: 0;
+      font-size: 0.97rem;
+      color: rgba(200, 220, 255, 0.78);
+      line-height: 1.6;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 22px;
+      background: #ffffff;
+      color: var(--navy);
+      border-radius: var(--r-md);
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 0.93rem;
+      transition: transform 0.18s, box-shadow 0.18s;
+      white-space: nowrap;
+    }
+
+    .btn-cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+
+    .btn-cta-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 20px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: rgba(255,255,255,0.88);
+      border-radius: var(--r-md);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.93rem;
+      transition: background 0.18s, transform 0.18s;
+      white-space: nowrap;
+    }
+
+    .btn-cta-ghost:hover {
+      background: rgba(255,255,255,0.17);
+      transform: translateY(-2px);
+    }
+
+    /* ── Footer strip ─────────────────────────────────────────── */
+    .footer-strip {
+      background: #09192f;
+      padding: 18px 0;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .footer-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #2e8fff, #1155dd);
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 0.66rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .footer-name {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: rgba(200,220,255,0.75);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 6px;
+    }
+
+    .footer-links a {
+      padding: 6px 12px;
+      border-radius: var(--r-sm);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: rgba(180, 205, 255, 0.65);
+      text-decoration: none;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .footer-links a:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.07);
+    }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 1080px) {
+      .hero-inner { grid-template-columns: 1fr; max-width: 680px; }
+      .hero-stats  { flex-direction: row; flex-wrap: wrap; }
+      .stat-pill   { flex: 1; min-width: 200px; }
+      .cta-inner   { grid-template-columns: 1fr; }
+      .cta-buttons { justify-content: flex-start; }
+    }
+
+    @media (max-width: 860px) {
+      .feature-grid,
+      .scenario-grid { grid-template-columns: 1fr; }
+
+      .steps-track {
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+      }
+
+      .steps-track::before { display: none; }
+
+      .hero { padding: 64px 0 56px; }
+    }
+
+    @media (max-width: 580px) {
+      .steps-track { grid-template-columns: 1fr; }
+      .hero h1     { font-size: 2.4rem; }
+      .container   { padding: 0 18px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── Top navigation ─────────────────────────────────────── -->
+  <header class="sv-topbar">
+    <div class="sv-brand">
+      <a class="sv-mark" href="index.html">SV</a>
+      <span class="sv-name">SimuVerse</span>
+      <span class="sv-divider"></span>
+      <span class="sv-sub">Multi-agent simulation</span>
+    </div>
+    <span class="sv-spacer"></span>
+    <nav class="sv-nav">
+      <a href="index.html" class="active">Home</a>
+      <a href="setup.html">Setup</a>
+      <a href="history.html">History</a>
+    </nav>
+  </header>
+
+  <!-- ── Hero ───────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+
+        <div class="hero-copy">
+          <div class="hero-eyebrow">
+            <span class="hero-eyebrow-dot"></span>
+            Multi-Agent Behavioural Simulation
+          </div>
+
+          <h1>How teams <em>behave</em><br>under pressure</h1>
+
+          <p class="hero-lead">
+            SimuVerse runs controlled experiments with personality-parameterised agents
+            working through shared tasks. Watch stress, trust, tension and cohesion evolve
+            in real time — then intervene and see what changes.
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn-hero-primary" href="setup.html">
+              Start a simulation ›
+            </a>
+            <a class="btn-hero-ghost" href="history.html">
+              Browse past runs
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-pill">
+            <div class="stat-pill-icon">♙</div>
+            <div>
+              <div class="stat-pill-label">Agents</div>
+              <div class="stat-pill-value">Four personality types interact across every run — Easygoing, Driven, Creative, and Tense.</div>
+            </div>
+          </div>
+
+          <div class="stat-pill">
+            <div class="stat-pill-icon">▰</div>
+            <div>
+              <div class="stat-pill-label">Scenarios</div>
+              <div class="stat-pill-value">Office coordination, café negotiation, and escape-room problem solving.</div>
+            </div>
+          </div>
+
+          <div class="stat-pill">
+            <div class="stat-pill-icon">∿</div>
+            <div>
+              <div class="stat-pill-label">Live metrics</div>
+              <div class="stat-pill-value">Stress, trust, tension, cohesion and progress tracked every step.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── What SimuVerse does ─────────────────────────────────── -->
+  <section class="section">
+    <div class="container">
+      <div class="section-kicker">What it does</div>
+      <h2 class="section-title">Three moving parts behind every run</h2>
+      <p class="section-sub">
+        Each simulation combines personality-driven agents, a structured scenario,
+        and a live metrics layer so every run is both observable and comparable.
+      </p>
+
+      <div class="feature-grid">
+
+        <article class="feature-card">
+          <div class="feature-icon blue">♙</div>
+          <h3>Personality-driven agents</h3>
+          <p>
+            Every agent carries a personality type that shapes how it responds to pressure,
+            conflict and requests. Traits like stress tolerance, agreeableness and neuroticism
+            shift behaviour tick-by-tick.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon teal">↺</div>
+          <h3>Scenario progression</h3>
+          <p>
+            Tasks unlock in dependency order. Agents share information, refuse requests,
+            negotiate and block each other — just like real teams do when the goal is unclear
+            or the stakes are high.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-icon amber">Δ</div>
+          <h3>Quantified team dynamics</h3>
+          <p>
+            Stress, trust, tension, cohesion, urgency and task progress all update every step.
+            The metrics make individual runs easy to inspect, and saved runs easy to compare.
+          </p>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Scenarios ──────────────────────────────────────────── -->
+  <section class="section scenarios-section">
+    <div class="container">
+      <div class="section-kicker">Environments</div>
+      <h2 class="section-title">Three environments, three coordination problems</h2>
+      <p class="section-sub">
+        The same team dynamics surface differently depending on setting and stakes.
+        Pick a scenario to shape what the agents must solve together.
+      </p>
+
+      <div class="scenario-grid">
+
+        <a class="scenario-card office" href="setup.html">
+          <div class="scenario-body">
+            <span class="scenario-tag">Office</span>
+            <h3>Project Proposal</h3>
+            <p>Agents must align on a proposal before the deadline. Role boundaries and information hoarding create friction.</p>
+            <span class="scenario-link">Run this scenario ›</span>
+          </div>
+        </a>
+
+        <a class="scenario-card cafe" href="setup.html">
+          <div class="scenario-body">
+            <span class="scenario-tag">Café</span>
+            <h3>Group Decision</h3>
+            <p>A low-stakes social setting where preference mismatches and soft negotiation drive the outcome.</p>
+            <span class="scenario-link">Run this scenario ›</span>
+          </div>
+        </a>
+
+        <a class="scenario-card escape" href="setup.html">
+          <div class="scenario-body">
+            <span class="scenario-tag">Escape Room</span>
+            <h3>Clue Sequence</h3>
+            <p>High time pressure forces agents to cooperate strictly in sequence. One refusal can cascade into failure.</p>
+            <span class="scenario-link">Run this scenario ›</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How it works ───────────────────────────────────────── -->
+  <section class="section steps-section">
+    <div class="container">
+      <div class="section-kicker">How it works</div>
+      <h2 class="section-title">From setup to replay in five steps</h2>
+
+      <div class="steps-track">
+
+        <div class="step">
+          <div class="step-num active">1</div>
+          <h4>Choose a scenario</h4>
+          <p>Pick the environment and task structure that fits what you want to study.</p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <h4>Set the team</h4>
+          <p>Select a personality preset or build a custom team from four agent profiles.</p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <h4>Run the simulation</h4>
+          <p>Step through manually or let it run automatically at a steady pace.</p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <h4>Intervene live</h4>
+          <p>Apply interventions — inject tension, reveal information, force meetings — and observe the effect.</p>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <h4>Review and replay</h4>
+          <p>Every run is saved. Revisit any past run, compare outcomes, and export the metrics.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA bar ─────────────────────────────────────────────── -->
+  <section class="cta-bar">
+    <div class="container">
+      <div class="cta-inner">
+        <div class="cta-copy">
+          <h2>Ready to run your first simulation?</h2>
+          <p>Configure a team, pick a scenario, and watch group dynamics play out — step by step.</p>
+        </div>
+        <div class="cta-buttons">
+          <a class="btn-cta-primary" href="setup.html">Open Setup ›</a>
+          <a class="btn-cta-ghost"    href="history.html">Browse History</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <footer class="footer-strip">
+    <div class="container">
+      <div class="footer-inner">
+        <a class="footer-brand" href="index.html">
+          <div class="footer-mark">SV</div>
+          <span class="footer-name">SimuVerse</span>
+        </a>
+        <nav class="footer-links">
+          <a href="setup.html">Setup</a>
+          <a href="history.html">History</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

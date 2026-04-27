@@ -1,0 +1,170 @@
+/* ── Shared topbar — all pages except interactive & dashboard ── */
+
+.sv-topbar {
+  flex: 0 0 auto;
+  height: 54px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 1000;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(6,18,50,0.28);
+}
+
+.sv-topbar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #071e4e 0%, #0d2f6b 50%, #091e4a 100%);
+  z-index: 0;
+}
+
+.sv-topbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% -20%, rgba(255,255,255,0.12) 0%, transparent 45%),
+    radial-gradient(circle at 88% 130%, rgba(22,103,245,0.18) 0%, transparent 42%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.sv-topbar > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Brand block ── */
+.sv-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 0 0 auto;
+  color: #fff;
+  text-decoration: none;
+}
+
+.sv-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #2e8fff 0%, #1155dd 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 8px 20px rgba(22, 103, 245, 0.35);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  font-size: 0.74rem;
+  color: #fff;
+  text-decoration: none;
+  flex-shrink: 0;
+  font-family: "Manrope", system-ui, sans-serif;
+  transition: box-shadow 0.15s;
+}
+
+.sv-mark:hover {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 10px 28px rgba(22, 103, 245, 0.5);
+}
+
+.sv-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.sv-divider {
+  width: 1px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+}
+
+.sv-sub {
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* ── Spacer ── */
+.sv-spacer {
+  flex: 1;
+}
+
+/* ── Nav links ── */
+nav.sv-nav,
+.sv-nav {
+  position: static !important;
+  height: auto !important;
+  padding: 0 !important;
+  background: none !important;
+  backdrop-filter: none !important;
+  border: none !important;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+}
+
+.sv-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+
+.sv-nav a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.sv-nav a.active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Responsive ── */
+@media (max-width: 680px) {
+  .sv-sub { display: none; }
+  .sv-divider { display: none; }
+  .sv-nav a { padding: 0 10px; font-size: 0.74rem; }
+}
+
+@media (max-width: 480px) {
+  .sv-name { display: none; }
+  .sv-nav a span { display: none; }
+}

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<!-- Replay dashboard for stepping through a finished run and seeing why it changed. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimuVerse Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="nav.css">
+  <link rel="stylesheet" href="dashboard.css?v=20260425d">
+</head>
+<body>
+  <header class="topbar sv-topbar">
+    <div class="sv-brand">
+      <a class="sv-mark brand-mark" href="setup.html">SV</a>
+      <span class="sv-name">SimuVerse</span>
+      <span class="sv-divider"></span>
+      <span class="sv-sub">Dashboard</span>
+    </div>
+    <nav class="sv-nav">
+      <a href="index.html">Home</a>
+      <a href="setup.html">Setup</a>
+      <a href="history.html">History</a>
+    </nav>
+
+    <div class="context-wrap">
+      <div class="context-line" id="contextLine">
+        <span class="context-item"><span class="context-label">Scenario</span><strong id="contextScenario">Office Project</strong></span>
+        <span class="context-sep">|</span>
+        <span class="context-item"><span class="context-label">Team</span><strong id="contextTeam">Smooth Team</strong></span>
+        <span class="context-sep">|</span>
+        <span class="context-item"><span class="context-label">Step</span><strong id="contextTick">1 of 1</strong></span>
+        <span class="context-sep">|</span>
+        <span class="context-item"><span class="context-label">Status</span><strong id="contextStatus">Running</strong></span>
+      </div>
+      <div class="context-note" id="contextNote" style="display:none"></div>
+    </div>
+
+    <div class="top-actions">
+      <div class="mode-pill" id="modePill">Mode: Watch Mode</div>
+      <button class="details-btn" id="exportResultsBtn" type="button">Export Results</button>
+      <button class="details-btn" id="runDetailsBtn" type="button" aria-expanded="false">Run details</button>
+      <a class="ghost-link" id="historyLink" href="history.html">History</a>
+      <a class="ghost-link" href="setup.html">New Setup</a>
+    </div>
+  </header>
+  <div class="fit-shell">
+  <div class="shell">
+    <div class="dashboard-grid">
+      <aside class="stack">
+        <section class="panel left-panel panel-strong">
+          <div class="panel-head">
+            <h2 class="panel-title">Mission Progress</h2>
+            <p class="panel-copy">Track which tasks are complete.</p>
+          </div>
+          <div class="progress-hero">
+            <div class="progress-hero-figure">
+              <span class="progress-hero-value" id="progressHeroValue">0</span>
+              <span class="progress-hero-unit">%</span>
+            </div>
+            <div class="progress-hero-meta">
+              <div class="progress-hero-count" id="progressHeroCount">0 of 0 tasks</div>
+              <div class="progress-hero-label">complete</div>
+            </div>
+          </div>
+          <div class="task-progress-track">
+            <div class="task-progress-fill" id="taskProgressFill"></div>
+          </div>
+          <div class="task-list" id="taskList"></div>
+        </section>
+
+        <section class="logic-card">
+          <h3 id="blockerTitle">What's Holding Progress?</h3>
+          <div class="logic-item" id="blockerCopy">The run begins with a single unresolved dependency.</div>
+          <div class="logic-item" id="logicLineA" style="display:none"></div>
+          <div class="logic-item" id="logicLineB" style="display:none"></div>
+        </section>
+      </aside>
+
+      <section class="panel center-panel panel-strong">
+        <div class="center-head">
+          <div>
+            <div class="eyebrow" style="color: var(--muted);">What is happening</div>
+            <h2 id="sceneHeading">Live simulation</h2>
+            <p id="sceneIntro">Agents exchange information. Trust, stress, and progress update after each interaction.</p>
+            <p class="scene-goal" id="sceneGoal">Goal: complete all required tasks by sharing and confirming information between agents.</p>
+          </div>
+
+          <div class="center-toolbar">
+            <div class="view-switch" id="viewSwitch">
+              <button class="active" data-view="live">Live Simulation</button>
+              <button data-view="log">Run Timeline</button>
+            </div>
+
+            <div class="control-group">
+              <button class="control-btn" id="resetBtn">Reset</button>
+              <button class="control-btn" id="prevBtn">Previous</button>
+              <button class="control-btn primary" id="playBtn">Play</button>
+              <button class="control-btn" id="nextBtn">Next</button>
+              <button class="control-btn accent" id="pauseBtn">Pause</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="views">
+          <div class="view active" id="viewLive">
+            <section class="current-event">
+              <div class="event-top">
+                <div>
+                  <div class="event-kicker-row">
+                    <div class="event-step" id="eventStep">CURRENT STEP — Step 1 of 1</div>
+                  </div>
+                  <div class="event-summary" id="eventSummary">Waiting for the first handoff.</div>
+                </div>
+                <div class="event-type ask" id="eventType">ASK</div>
+              </div>
+              <div class="event-message" id="eventMessage">The live view turns each step into a clear team moment with visible cause and effect.</div>
+              <div class="effect-row" id="eventEffects"></div>
+            </section>
+
+            <div class="stage" id="sceneStage" data-scenario="office">
+              <div class="stage-props">
+                <div class="prop board soft"></div>
+                <div class="prop counter soft"></div>
+                <div class="prop menu soft"></div>
+                <div class="prop map soft"></div>
+                <div class="prop lock dark"></div>
+                <div class="prop table dark"></div>
+                <div class="prop window soft"></div>
+              </div>
+              <svg class="scene-links" id="sceneLinks" viewBox="0 0 1000 600" preserveAspectRatio="none"></svg>
+              <div class="scene-token" id="sceneToken" style="display:none"></div>
+              <div class="agents-layer" id="sceneAgents"></div>
+              <div class="floor-line"></div>
+            </div>
+          </div>
+
+          <div class="view" id="viewLog">
+            <div class="timeline-wrap">
+              <div class="timeline-head">
+                <p class="timeline-intro">Each card is one step of the run. Scroll sideways or use the arrows to move through the story.</p>
+                <div class="timeline-counter" id="timelineCounter" aria-live="polite">Step 1 of 1</div>
+              </div>
+              <div class="timeline-track">
+                <button class="timeline-nav prev" id="timelinePrev" aria-label="Scroll to previous steps" type="button">
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 6l-6 6 6 6"/></svg>
+                </button>
+                <div class="log-timeline" id="logTimeline"></div>
+                <button class="timeline-nav next" id="timelineNext" aria-label="Scroll to next steps" type="button">
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack right-stack">
+        <section class="panel why-panel panel-strong">
+          <div class="panel-head">
+            <h2 class="panel-title">Why This Happened</h2>
+            <p class="panel-copy">Explains why the current step happened.</p>
+          </div>
+
+          <div class="why-kicker" id="whyTag">Step 1 · ASK</div>
+          <h3 class="why-headline" id="whyTitle">Waiting on the first dependency</h3>
+
+          <div class="why-section" data-kind="trigger">
+            <h4>Trigger</h4>
+            <p id="whyTrigger">The dashboard points to the current dependency first, so it is obvious what the team is waiting on.</p>
+          </div>
+
+          <div class="why-section" data-kind="reason">
+            <h4>Reason</h4>
+            <p id="whyReasoning">The acting agent is responding to the dependency, the team style, and the pressure of the current step.</p>
+          </div>
+
+          <div class="why-section" data-kind="impact">
+            <h4>Impact</h4>
+            <p id="whyImpact">This block explains what changed in progress, trust, or stress because of the current interaction.</p>
+            <div class="effect-list" id="whyEffects"></div>
+          </div>
+        </section>
+
+        <!-- Active Agents panel intentionally hidden; agent details revealed via click -->
+        <div class="focus-grid" id="agentFocus" style="display:none"></div>
+      </aside>
+    </div>
+
+    <section class="metrics-grid">
+      <article class="panel metric-card panel-strong is-hero" data-metric="progress">
+        <div class="metric-label">Progress</div>
+        <div class="metric-value" id="metricProgressValue">0%</div>
+        <div class="metric-state" id="metricProgressState">Just starting</div>
+        <div class="metric-spark progress"><span id="metricProgressBar"></span></div>
+        <p class="metric-copy" id="metricProgressCopy">Progress is how many scenario goals have been completed.</p>
+      </article>
+
+      <article class="panel metric-card panel-strong" data-metric="trust">
+        <div class="metric-label">Team Trust</div>
+        <div class="metric-value" id="metricTrustValue">0.00</div>
+        <div class="metric-state" id="metricTrustState">Stable cooperation</div>
+        <div class="metric-spark trust"><span id="metricTrustBar"></span></div>
+        <p class="metric-copy" id="metricTrustCopy">Average trust shows how willing the team is to accept help from one another.</p>
+      </article>
+
+      <article class="panel metric-card panel-strong" data-metric="avgstress">
+        <div class="metric-label">Team Stress</div>
+        <div class="metric-value" id="metricAvgStressValue">0.00</div>
+        <div class="metric-state" id="metricAvgStressState">Low pressure</div>
+        <div class="metric-spark avgstress"><span id="metricAvgStressBar"></span></div>
+        <p class="metric-copy" id="metricAvgStressCopy">Average emotional load carried by all agents at this step.</p>
+      </article>
+
+      <article class="panel metric-card panel-strong" data-metric="stress">
+        <div class="metric-label">Peak Stress</div>
+        <div class="metric-value" id="metricStressValue">0.00</div>
+        <div class="metric-state" id="metricStressState">Low pressure</div>
+        <div class="metric-spark stress"><span id="metricStressBar"></span></div>
+        <p class="metric-copy" id="metricStressCopy">Highest individual stress reached during the run so far.</p>
+      </article>
+
+      <article class="panel metric-card panel-strong" data-metric="conflict">
+        <div class="metric-label">Friction</div>
+        <div class="metric-value" id="metricConflictValue">0.00</div>
+        <div class="metric-state" id="metricConflictState">Low friction</div>
+        <div class="metric-spark conflict"><span id="metricConflictBar"></span></div>
+        <p class="metric-copy" id="metricConflictCopy">Refusals, doubt, and coordination pressure the team has encountered.</p>
+      </article>
+
+      <article class="panel metric-card panel-strong" data-metric="stage">
+        <div class="metric-label">Run Stage</div>
+        <div class="metric-value" id="metricTicksValue">0</div>
+        <div class="metric-state" id="metricTicksState">Simulation step</div>
+        <div class="metric-spark ticks"><span id="metricTicksBar"></span></div>
+        <p class="metric-copy" id="metricTicksCopy">Where this moment sits within the full run.</p>
+      </article>
+    </section>
+
+    <div class="footer-note" id="footerNote">A first-class SimuVerse dashboard is readable because every visual has a reason: what happened, why it happened, and what changed because of it.</div>
+  </div>
+  </div>
+
+  <!-- ── completion modal ─────────────────────────────────────── -->
+  <div class="done-overlay" id="doneOverlay" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+    <div class="done-modal">
+      <header class="done-header">
+        <button class="done-close" id="doneCloseBtn" aria-label="Close">×</button>
+        <div class="done-eyebrow">Run summary</div>
+        <h2 class="done-title" id="doneTitle">Simulation complete</h2>
+        <p class="done-sub" id="doneSub">—</p>
+      </header>
+
+      <div class="done-body">
+        <div class="done-grid">
+          <div class="done-card">
+            <div class="done-card-label">Progress</div>
+            <div class="done-card-value" id="doneOutcomeValue">—</div>
+            <p class="done-card-sub" id="doneOutcomeSub">—</p>
+          </div>
+          <div class="done-card">
+            <div class="done-card-label">Team trust</div>
+            <div class="done-card-value" id="doneTrustValue">—</div>
+            <p class="done-card-sub" id="doneTrustSub">—</p>
+          </div>
+          <div class="done-card">
+            <div class="done-card-label">Highest stress</div>
+            <div class="done-card-value" id="doneStressValue">—</div>
+            <p class="done-card-sub" id="doneStressSub">—</p>
+          </div>
+        </div>
+
+        <div class="done-insight" id="doneInsight">—</div>
+      </div>
+
+      <div class="done-actions">
+        <button class="done-btn primary" id="doneReplayBtn">Replay Run</button>
+        <button class="done-btn" id="doneHistoryBtn">Open History</button>
+        <button class="done-btn" id="doneTimelineBtn">View Timeline</button>
+        <button class="done-btn" id="doneExportBtn">Export Results</button>
+        <button class="done-btn" id="doneNewSetupBtn">New Setup</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script src="export-utils.js"></script>
+  <script src="dashboard.js?v=20260425d"></script>
+</body>
+</html>

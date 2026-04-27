@@ -1,0 +1,12 @@
+/*
+ * interaction.css — import manifest
+ *
+ * Split into three focused modules. Load order is required:
+ *   base  → sets CSS variables consumed by the others
+ *   panels → component-level styles (agents, events, interventions)
+ *   js    → overrides for JS-built DOM classes, view tabs, analysis sections
+ */
+
+@import url("interaction-base.css");
+@import url("interaction-panels.css");
+@import url("interaction-js.css");

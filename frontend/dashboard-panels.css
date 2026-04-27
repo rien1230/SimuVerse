@@ -1,0 +1,690 @@
+
+
+    .agent-avatar {
+      width: 96px !important;
+      height: 120px !important;
+    }
+    .agent-avatar::after { display: none; }
+    .avatar-portrait {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      display: block;
+      filter: drop-shadow(0 12px 18px rgba(17, 32, 51, 0.22));
+    }
+    .avatar-portrait .eyes {
+      transform-origin: center center;
+      animation: portraitBlink 5.2s ease-in-out infinite;
+    }
+    .avatar-portrait .mouth-closed { display: block; }
+    .avatar-portrait .mouth-open { display: none; }
+    .agent-node.actor-focus .avatar-portrait .mouth-closed,
+    .agent-node.speaking .avatar-portrait .mouth-closed { display: none; }
+    .agent-node.actor-focus .avatar-portrait .mouth-open,
+    .agent-node.speaking .avatar-portrait .mouth-open { display: block; }
+    .agent-node.actor-focus .avatar-portrait .mouth-open {
+      animation: portraitTalk 0.42s ease-in-out infinite;
+      transform-origin: 70px 86px;
+    }
+    .agent-node.refusing .avatar-portrait {
+      animation: portraitShake 0.45s ease-in-out 3;
+    }
+    @keyframes portraitBlink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      94%, 97% { transform: scaleY(0.1); }
+    }
+    @keyframes portraitTalk {
+      0%, 100% { transform: scaleY(0.8); }
+      50% { transform: scaleY(1.15); }
+    }
+    @keyframes portraitShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+
+    /* ---- Clean layout overrides: reduce clutter & overlap ---- */
+
+    /* Subtle dim + soft stage band behind the agents row so they pop above scene props */
+    .stage::after {
+      background:
+        linear-gradient(180deg, rgba(10,20,40,0.22) 0%, rgba(10,20,40,0) 35%, rgba(10,20,40,0) 55%, rgba(255,255,255,0.08) 100%) !important;
+    }
+    .agents-layer::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 38%;
+      height: 46%;
+      background: radial-gradient(ellipse at center, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.18) 45%, rgba(255,255,255,0) 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .agent-badge { display: none !important; }
+
+
+    .agent-state-chip {
+      position: static !important;
+      left: auto !important;
+      right: auto !important;
+      top: auto !important;
+      transform: none !important;
+      padding: 3px 6px !important;
+      font-size: 0.65rem !important;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      background: rgba(42, 120, 200, 0.08) !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+
+    .agent-nameplate {
+      padding: 7px 10px !important;
+      border-radius: 12px !important;
+      background: #ffffff !important;
+      backdrop-filter: none !important;
+      box-shadow: 0 6px 14px rgba(17,32,51,0.18) !important;
+      max-width: 132px;
+    }
+    .agent-name {
+      font-size: 0.86rem !important;
+      line-height: 1.1 !important;
+      font-weight: 900 !important;
+    }
+    .coordinator-badge {
+      font-size: 0.55rem !important;
+      padding: 2px 5px !important;
+      margin-left: 3px !important;
+    }
+    .agent-role {
+      font-size: 0.72rem !important;
+      margin-top: 1px !important;
+      font-weight: 750 !important;
+    }
+    .agent-state-line {
+      font-size: 0.65rem !important;
+      margin-top: 4px !important;
+      font-weight: 800 !important;
+    }
+    .agent-personality {
+      font-size: 0.62rem !important;
+      margin-top: 2px !important;
+      font-weight: 700 !important;
+    }
+    .agent-stats {
+      font-size: 0.7rem !important;
+      margin-top: 4px !important;
+      color: #475569 !important;
+      white-space: nowrap;
+      font-weight: 700 !important;
+    }
+
+
+    .speech-bubble {
+      min-width: 264px !important;
+      max-width: 380px !important;
+      padding: 16px 20px !important;
+      font-size: 1rem !important;
+      font-weight: 700 !important;
+      line-height: 1.5 !important;
+      color: #0b1322 !important;
+      margin-left: 0;
+      transform: translate(-50%, -100%);
+      background: #ffffff !important;
+      backdrop-filter: none !important;
+      box-shadow: 0 18px 34px rgba(17,32,51,0.24) !important;
+      border: 2px solid rgba(17,32,51,0.1) !important;
+      border-radius: 22px !important;
+      z-index: 8 !important;
+    }
+    .speech-bubble::after {
+      left: var(--bubble-tail, 50%) !important;
+      margin-left: -8px;
+      bottom: -8px !important;
+      width: 16px !important;
+      height: 16px !important;
+      background: #ffffff !important;
+      border-right: 2px solid rgba(17,32,51,0.1) !important;
+      border-bottom: 2px solid rgba(17,32,51,0.1) !important;
+    }
+    .speech-head {
+      font-size: 0.86rem !important;
+      font-weight: 900 !important;
+      color: #0b1322 !important;
+      margin-bottom: 8px !important;
+      letter-spacing: -0.01em;
+    }
+    .speech-tag {
+      font-size: 0.68rem !important;
+      font-weight: 900 !important;
+      padding: 4px 8px !important;
+      letter-spacing: 0.08em !important;
+      border-width: 2px !important;
+    }
+
+    .stage[data-scenario="cafe"] .agents-layer::before {
+      display: none !important;
+    }
+
+
+    .agent-card-visual {
+      margin-top: 10px;
+    }
+
+
+    .agent-node {
+      z-index: 4;
+    }
+    .agent-node.actor-focus,
+    .agent-node.target-focus {
+      z-index: 9 !important;
+    }
+
+
+    .agent-node {
+      width: 172px !important;
+    }
+    .agent-card-visual {
+      width: 138px !important;
+      height: 176px !important;
+    }
+    .agent-avatar {
+      width: 122px !important;
+      height: 152px !important;
+    }
+    .agent-ring {
+      inset: 14px 16px 26px !important;
+    }
+
+
+
+    .agent-name {
+      font-size: 1.12rem !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.01em;
+      color: #0b1322 !important;
+    }
+    .coordinator-badge {
+      font-size: 0.68rem !important;
+      padding: 3px 8px !important;
+      margin-left: 6px !important;
+      font-weight: 850 !important;
+    }
+    .agent-role {
+      font-size: 0.84rem !important;
+      font-weight: 850 !important;
+      color: #1e293b !important;
+      margin-top: 3px !important;
+    }
+    .agent-state-line {
+      font-size: 0.76rem !important;
+      margin-top: 5px !important;
+      font-weight: 800 !important;
+    }
+    .agent-personality {
+      font-size: 0.72rem !important;
+      margin-top: 3px !important;
+      font-weight: 750 !important;
+    }
+    .agent-stats {
+      font-size: 0.82rem !important;
+      font-weight: 750 !important;
+      color: #334155 !important;
+      margin-top: 6px !important;
+      letter-spacing: 0.01em;
+    }
+    .agent-nameplate {
+      padding: 10px 12px !important;
+      max-width: 188px !important;
+      border-top-width: 4px !important;
+    }
+
+    .agent-state-chip {
+      font-size: 0.74rem !important;
+      font-weight: 700 !important;
+      padding: 4px 8px !important;
+      letter-spacing: 0.01em !important;
+      position: static !important;
+      top: auto !important;
+      border: none !important;
+    }
+
+    /* Hide per-avatar stress/trust caption — the canvas stays visual, not numeric */
+    .agent-stats { display: none !important; }
+
+    /* ---- Wider side panels + bigger, bolder text for accessibility ---- */
+
+    .dashboard-grid {
+      grid-template-columns: 330px minmax(0, 1fr) 360px !important;
+      gap: 16px !important;
+    }
+
+    .left-panel,
+    .why-panel,
+    .center-panel,
+    .metric-card {
+      padding: 18px !important;
+    }
+
+    .panel-title {
+      font-size: 1.14rem !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.01em;
+      color: #0b1322 !important;
+    }
+    .panel-copy {
+      font-size: 0.9rem !important;
+      font-weight: 600 !important;
+      line-height: 1.45 !important;
+      color: #334155 !important;
+    }
+    .panel-head { gap: 6px !important; margin-bottom: 14px !important; }
+
+    /* Left panel — Mission Progress */
+    .task-row {
+      padding: 11px 12px !important;
+      gap: 10px !important;
+    }
+    .task-name {
+      font-size: 0.98rem !important;
+      font-weight: 900 !important;
+      color: #0b1322 !important;
+      line-height: 1.2 !important;
+    }
+    .task-status {
+      font-size: 0.76rem !important;
+      font-weight: 900 !important;
+      padding: 5px 10px !important;
+      letter-spacing: 0.04em;
+    }
+    .task-owner {
+      font-size: 0.82rem !important;
+      font-weight: 700 !important;
+      color: #475569 !important;
+      margin-top: 4px !important;
+    }
+    .task-bullet {
+      width: 18px !important;
+      height: 18px !important;
+    }
+    .task-progress-track {
+      height: 11px !important;
+      margin-bottom: 14px !important;
+    }
+
+    /* Left dark logic card */
+    .logic-card {
+      padding: 18px !important;
+    }
+    .logic-card h3 {
+      font-size: 1.08rem !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.01em;
+    }
+    .logic-card .logic-item {
+      font-size: 0.92rem !important;
+      font-weight: 600 !important;
+      line-height: 1.45 !important;
+    }
+
+    /* Right panel — Why This Happened */
+    .why-kicker {
+      font-size: 0.8rem !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.08em !important;
+      padding: 5px 10px !important;
+    }
+    .why-headline {
+      font-size: 1.2rem !important;
+      font-weight: 900 !important;
+      line-height: 1.22 !important;
+      letter-spacing: -0.01em;
+      color: #0b1322 !important;
+      margin-top: 8px !important;
+    }
+    .why-section { margin-top: 12px !important; }
+    .why-section h4 {
+      font-size: 0.84rem !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #1d4ed8 !important;
+      margin: 0 0 5px 0 !important;
+    }
+    .why-section p {
+      font-size: 0.92rem !important;
+      font-weight: 600 !important;
+      line-height: 1.45 !important;
+      color: #1e293b !important;
+      margin: 0 !important;
+    }
+    .effect-list,
+    .effect-list * {
+      font-size: 0.86rem !important;
+      font-weight: 700 !important;
+    }
+
+    /* Responsive: on narrow screens let the grid collapse gracefully */
+    @media (max-width: 1500px) {
+      .dashboard-grid {
+        grid-template-columns: 300px minmax(0, 1fr) 330px !important;
+        gap: 14px !important;
+      }
+    }
+    @media (max-width: 1260px) {
+      .dashboard-grid {
+        grid-template-columns: 320px minmax(0, 1fr) !important;
+      }
+      .right-stack {
+        grid-column: 1 / -1 !important;
+      }
+    }
+
+    /* ---- Middle panel: bigger, bolder text ---- */
+
+    .center-head h2 {
+      font-size: 1.52rem !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.015em;
+      line-height: 1.15 !important;
+      color: #0b1322 !important;
+    }
+    .center-head .eyebrow,
+    #sceneIntro,
+    .center-head p {
+      font-size: 1.05rem !important;
+      font-weight: 700 !important;
+      line-height: 1.5 !important;
+      color: #334155 !important;
+    }
+    .scene-goal {
+      font-size: 0.9rem !important;
+      font-weight: 700 !important;
+      line-height: 1.38 !important;
+      color: #1e293b !important;
+    }
+
+    /* View switch (Live Simulation / Log) */
+    .view-switch button {
+      font-size: 0.86rem !important;
+      font-weight: 800 !important;
+      padding: 8px 14px !important;
+      letter-spacing: 0.01em;
+    }
+
+    /* Playback control buttons */
+    .control-btn {
+      font-size: 0.84rem !important;
+      font-weight: 800 !important;
+      padding: 8px 12px !important;
+      letter-spacing: 0.01em;
+    }
+
+    /* Current Step card */
+    .event-label {
+      font-size: 0.95rem !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .event-step {
+      font-size: 0.84rem !important;
+      font-weight: 800 !important;
+    }
+    .event-summary {
+      font-size: 1.16rem !important;
+      font-weight: 900 !important;
+      line-height: 1.2 !important;
+      color: #0b1322 !important;
+      margin-top: 4px !important;
+    }
+    .event-type {
+      font-size: 0.78rem !important;
+      font-weight: 900 !important;
+      padding: 6px 11px !important;
+      letter-spacing: 0.08em;
+    }
+    .event-message {
+      font-size: 0.95rem !important;
+      font-weight: 600 !important;
+      line-height: 1.45 !important;
+      color: #1e293b !important;
+      margin-top: 6px !important;
+    }
+    .effect-row,
+    .effect-row * {
+      font-size: 0.84rem !important;
+      font-weight: 700 !important;
+    }
+
+    /* Log view */
+    .timeline-intro {
+      font-size: 1.05rem !important;
+      font-weight: 600 !important;
+      line-height: 1.5 !important;
+      color: #334155 !important;
+    }
+    .log-timeline,
+    .log-timeline * {
+      font-size: 1rem !important;
+    }
+    .log-timeline .log-title,
+    .log-timeline strong,
+    .log-timeline h3,
+    .log-timeline h4 {
+      font-size: 1.1rem !important;
+      font-weight: 900 !important;
+      color: #0b1322 !important;
+    }
+
+
+    .why-section p,
+    .panel-copy,
+    .metric-copy,
+    .focus-summary,
+    .focus-stat,
+    .log-quote,
+    .log-why,
+    .task-note {
+      display: block !important;
+      -webkit-line-clamp: unset !important;
+      -webkit-box-orient: unset !important;
+      overflow: visible !important;
+    }
+
+    .brand-copy {
+      display: none !important;
+    }
+
+    .context-note {
+      display: none !important;
+    }
+
+    .context-note.is-open {
+      display: inline-flex !important;
+    }
+
+    /* Show all effect chips, not the first 3 */
+    .effect-row .effect-chip:nth-child(n + 4),
+    .log-effects .log-effect:nth-child(n + 3) {
+      display: inline-flex !important;
+    }
+
+    /* Lighten the inactive agents so Zara/Nova stay visible */
+    .agent-node.dimmed {
+      opacity: 0.85 !important;
+      filter: saturate(0.96) !important;
+    }
+    .agent-node.team-focus {
+      opacity: 0.92 !important;
+      filter: none !important;
+    }
+
+
+    .done-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 22, 36, 0.55);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+      animation: done-fade 0.22s ease;
+    }
+    .done-overlay.is-open { display: flex; }
+
+    @keyframes done-fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .done-modal {
+      width: 100%;
+      max-width: 540px;
+      background: #ffffff;
+      border-radius: var(--radius-xl);
+      box-shadow: 0 30px 80px rgba(10, 22, 36, 0.35);
+      overflow: hidden;
+      font-family: var(--font-ui);
+      color: var(--text);
+      transform: translateY(8px);
+      animation: done-pop 0.28s cubic-bezier(.2,.9,.3,1.1) forwards;
+    }
+
+    @keyframes done-pop {
+      to { transform: translateY(0); }
+    }
+
+    .done-header {
+      padding: 26px 28px 20px;
+      background:
+        radial-gradient(ellipse at top right, rgba(255, 255, 255, 0.12), transparent 55%),
+        linear-gradient(135deg, #17324d 0%, #205d8c 60%, #2878c8 100%);
+      color: #ffffff;
+      position: relative;
+    }
+    .done-eyebrow {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: rgba(255,255,255,0.68);
+      margin-bottom: 8px;
+    }
+    .done-title {
+      font-family: var(--font-display);
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      margin: 0 0 8px;
+      line-height: 1.12;
+    }
+    .done-sub {
+      margin: 0;
+      color: rgba(255,255,255,0.82);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .done-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.12);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .done-close:hover { background: rgba(255,255,255,0.22); }
+
+    .done-body { padding: 22px 28px 6px; }
+
+    .done-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .done-card {
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--panel-inset);
+    }
+    .done-card-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .done-card-value {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--navy);
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      font-feature-settings: "tnum";
+    }
+    .done-card-sub {
+      margin: 4px 0 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .done-insight {
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      background: #eff6fd;
+      border: 1px solid rgba(40, 120, 200, 0.18);
+      color: var(--navy);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .done-actions {
+      padding: 4px 28px 24px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .done-btn {
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: #ffffff;
+      color: var(--navy);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .done-btn:hover { transform: translateY(-1px); }
+    .done-btn.primary {
+      background: linear-gradient(135deg, #17324d 0%, #2878c8 100%);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 10px 22px rgba(23, 50, 77, 0.22);
+      font-weight: 800;
+    }
+
+    @media (max-width: 520px) {
+      .done-grid { grid-template-columns: 1fr; }
+      .done-actions { justify-content: stretch; }
+      .done-actions .done-btn { flex: 1; }
+    }

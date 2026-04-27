@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<!-- Live interaction page for stepping a run and watching it react in real time. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimuVerse — Live Interactive</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="interaction.css">
+</head>
+
+<body>
+  <!-- Top navigation -->
+  <header class="topbar">
+    <div class="brand-block">
+      <a class="brand-mark" href="index.html" aria-label="SimuVerse home">
+        <span>SV</span>
+      </a>
+
+      <div class="brand-title-wrap">
+        <span class="brand-title">SimuVerse</span>
+      </div>
+
+      <span class="brand-divider"></span>
+
+      <span class="mode-pill" id="modePill">
+        <span class="mode-dot" id="modeDot"></span>
+        <span id="modeLabel">Live Interactive</span>
+      </span>
+    </div>
+
+    <nav class="top-links" aria-label="Main navigation">
+      <a class="nav-link" href="index.html">Home</a>
+      <a class="nav-link" href="setup.html">Setup</a>
+      <a class="nav-link" href="history.html">History</a>
+    </nav>
+    <a class="hidden" id="dashboardLink" href="dashboard.html">Dashboard</a>
+  </header>
+
+  <!-- Fallback: no run -->
+  <div class="fallback hidden" id="fallbackMissing">
+    <div class="fallback-box">
+      <h2>No live run attached</h2>
+      <p>Start a live run from Setup. It will create the run and open this page automatically.</p>
+      <div class="fallback-btns">
+        <a class="btn primary" href="setup.html">Go to Setup</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fallback: stale run -->
+  <div class="fallback hidden" id="fallbackStale">
+    <div class="fallback-box">
+      <h2>That run is no longer live</h2>
+      <p>Run <code id="staleRunId">—</code> is not in the live registry. Start a fresh run or review it in replay.</p>
+      <div class="fallback-btns">
+        <a class="btn primary" href="setup.html">Start a new live run</a>
+        <a class="btn" id="fallbackReplayLink" href="dashboard.html">Dashboard / Replay</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main live session -->
+  <div id="liveSession" class="hidden">
+    <div class="page-inner">
+
+      <!-- Status strip -->
+      <section class="status-strip" aria-label="Simulation status summary">
+
+        <article class="sc-card sc-card-step">
+          <div class="sc-label">Step</div>
+          <div class="sc-value status-value" id="sTick">0</div>
+        </article>
+
+        <article class="sc-card">
+          <div class="sc-label">Status</div>
+          <div class="sc-value status-value" id="sStatus">Ready</div>
+        </article>
+
+        <article class="sc-card sc-card-wide">
+          <div class="sc-label">Environment</div>
+          <div class="sc-value status-value" id="sEnv">—</div>
+          <div class="sc-sub" id="sTeam">—</div>
+        </article>
+
+        <article class="sc-card sc-card-wide">
+          <div class="sc-label" id="blockerStripLabel">Blocked By</div>
+          <div class="sc-blocker" id="blockerBadge">
+            <span class="blocker-dot"></span>
+            <span class="sc-value" id="sBlocker">—</span>
+          </div>
+          <div class="sc-sub" id="blockerStripSub">In progress</div>
+        </article>
+
+        <article class="sc-card sc-card-urgency">
+          <div class="sc-label">Urgency</div>
+          <div class="sc-value status-value" id="sUrgency">1.00</div>
+        </article>
+
+        <article class="sc-card sc-card-tension">
+          <div class="sc-label">Tension</div>
+          <div class="sc-value status-value" id="sTension">0.00</div>
+        </article>
+
+        <article class="sc-card sc-card-cohesion">
+          <div class="sc-label">Cohesion</div>
+          <div class="sc-value status-value" id="sCohesion">0.00</div>
+        </article>
+
+      </section>
+
+      <!-- View toggle -->
+      <nav class="view-toggle" id="viewToggle" aria-label="Page views">
+        <button class="view-tab is-active" data-view="live">
+          <span class="vt-icon">⬡</span> Live Simulation
+        </button>
+        <button class="view-tab" data-view="metrics">
+          <span class="vt-icon">◈</span> Metrics &amp; Analysis
+        </button>
+        <button class="view-tab" data-view="impact">
+          <span class="vt-icon">⇄</span> Intervention Impact
+        </button>
+      </nav>
+
+      <!-- View container -->
+      <div class="view-container">
+
+        <!-- ① Live Simulation view -->
+        <section id="liveView" class="view-section">
+          <div class="main-area">
+
+            <!-- Left agents panel -->
+            <aside class="col-panel panel-agents">
+              <div class="panel-head">
+                <h2>Agents</h2>
+                <span class="panel-head-icon">♙</span>
+              </div>
+
+              <div class="panel-scroll">
+                <div class="agent-list" id="agentList">
+                  <div class="empty-state">Waiting for first step…</div>
+                </div>
+              </div>
+            </aside>
+
+            <!-- Main log panel -->
+            <main class="col-panel panel-log">
+              <div class="panel-head log-head">
+                <div class="log-head-copy">
+                  <div class="log-title-row">
+                    <div class="log-title-block">
+                      <h2>Live Simulation Log</h2>
+                      <p>Who acted, why it happened, and what changed.</p>
+                    </div>
+                    <div class="log-inline-status">
+                      <span class="log-inline-label">Current Situation</span>
+                      <h1 id="currentProblemText">Waiting for simulation state…</h1>
+                      <p id="objectiveText">The live run will explain what the agents are trying to solve.</p>
+                      <p class="suggest-line" id="suggestText">Press Next Step to begin the simulation.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="log-head-actions" id="logHeadActions">
+                  <div class="step-control-panel">
+                    <span class="step-control-label">Step Control</span>
+                    <div class="step-control-actions">
+                      <button class="btn-reset" id="btnReset" disabled>Reset</button>
+                      <button class="btn-step primary" id="btnStep" disabled>
+                        Next Step
+                        <span>›</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel-scroll log-scroll" id="eventLogScroll">
+                <div class="log conversation-stream" id="eventLog">
+                  <div data-placeholder class="empty-state">
+                    <div class="empty-trace-card">
+                      <div class="empty-trace-title">Simulation ready</div>
+                      <div class="empty-trace-copy">
+                        Press <strong>Next Step</strong> to generate the first agent interaction.
+                      </div>
+                      <div class="empty-trace-points">Who acted · What changed · Why it happened · Effect on the team</div>
+                      <button class="btn-empty-start" id="btnStepInline" type="button">Start first step</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </main>
+
+            <!-- Right interventions panel -->
+            <aside class="col-panel panel-interventions">
+              <div class="panel-head">
+                <h2>Intervention Lab</h2>
+                <span class="panel-head-icon">⚗</span>
+              </div>
+
+              <div class="panel-scroll">
+                <div class="iv-console" id="ivConsole">
+
+                  <div class="iv-recommend hidden" id="ivRecommend">—</div>
+                  <button class="hidden" id="ivMoreToggle" type="button" aria-expanded="true">All interventions ▾</button>
+                  <div id="ivMore">
+
+                  <article class="iv-card iv-green">
+                    <div class="iv-head">
+                      <div class="iv-icon">♙</div>
+                      <div>
+                        <h3>Force Meeting</h3>
+                        <p class="iv-desc">Rallies two agents to discuss the current blocker directly.</p>
+                      </div>
+                    </div>
+
+                    <div class="iv-item-controls iv-double">
+                      <select id="forceAgentA"></select>
+                      <select id="forceAgentB"></select>
+                      <button class="btn-iv iv-green" data-iv="force_meeting" disabled>Apply</button>
+                    </div>
+                  </article>
+
+                  <article class="iv-card iv-blue">
+                    <div class="iv-head">
+                      <div class="iv-icon">ⓘ</div>
+                      <div>
+                        <h3>Reveal Info</h3>
+                        <p class="iv-desc">Gives one agent missing knowledge so it can affect the next turn.</p>
+                      </div>
+                    </div>
+
+                    <div class="iv-item-controls iv-double">
+                      <select id="revealAgent"></select>
+                      <select id="revealItem"></select>
+                      <button class="btn-iv iv-blue" data-iv="reveal_info" disabled>Apply</button>
+                    </div>
+                  </article>
+
+                  <article class="iv-card iv-purple">
+                    <div class="iv-head">
+                      <div class="iv-icon">♙</div>
+                      <div>
+                        <h3>Nudge Cooperation</h3>
+                        <p class="iv-desc">Encourages supportive behaviour from one agent.</p>
+                      </div>
+                    </div>
+
+                    <div class="iv-item-controls">
+                      <select id="nudgeAgent"></select>
+                      <button class="btn-iv iv-purple" data-iv="nudge_strategy" disabled>Apply</button>
+                    </div>
+                  </article>
+
+                  <article class="iv-card iv-red">
+                    <div class="iv-head">
+                      <div class="iv-icon">∿</div>
+                      <div>
+                        <h3>Inject Tension</h3>
+                        <p class="iv-desc">Introduces mild conflict to test how the team reacts.</p>
+                      </div>
+                    </div>
+
+                    <div class="iv-item-controls">
+                      <select id="tensionAmt">
+                        <option value="0.15">Small +0.15</option>
+                        <option value="0.25" selected>Medium +0.25</option>
+                        <option value="0.40">Strong +0.40</option>
+                      </select>
+                      <button class="btn-iv iv-red" data-iv="inject_tension" disabled>Apply</button>
+                    </div>
+                  </article>
+
+                  <article class="iv-card iv-orange">
+                    <div class="iv-head">
+                      <div class="iv-icon">ϟ</div>
+                      <div>
+                        <h3>Boost Urgency</h3>
+                        <p class="iv-desc">Increases time pressure to push the team toward action.</p>
+                      </div>
+                    </div>
+
+                    <div class="iv-item-controls">
+                      <select id="pressureAmt">
+                        <option value="0.15">Small +0.15</option>
+                        <option value="0.25" selected>Medium +0.25</option>
+                        <option value="0.40">Strong +0.40</option>
+                      </select>
+                      <button class="btn-iv iv-orange" data-iv="boost_urgency" disabled>Apply</button>
+                    </div>
+                  </article>
+
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ② Metrics & Analysis view -->
+        <section id="metricsView" class="view-section hidden">
+          <div class="mv-inner">
+            <div class="mv-cards">
+              <article class="mv-stat-card">
+                <div class="mv-stat-label">Stress</div>
+                <div class="mv-stat-value" id="mvFinalStress">—</div>
+                <div class="mv-stat-sub">Current avg emotional load</div>
+              </article>
+              <article class="mv-stat-card">
+                <div class="mv-stat-label">Trust</div>
+                <div class="mv-stat-value is-trust" id="mvFinalTrust">—</div>
+                <div class="mv-stat-sub">Current avg cooperation quality</div>
+              </article>
+              <article class="mv-stat-card">
+                <div class="mv-stat-label">Cohesion</div>
+                <div class="mv-stat-value is-cohesion" id="mvCohesion">—</div>
+                <div class="mv-stat-sub">Current group alignment</div>
+              </article>
+              <article class="mv-stat-card">
+                <div class="mv-stat-label">Conflict Rate</div>
+                <div class="mv-stat-value is-conflict" id="mvConflict">—</div>
+                <div class="mv-stat-sub">Refusals &amp; friction</div>
+              </article>
+              <article class="mv-stat-card">
+                <div class="mv-stat-label">Steps Taken</div>
+                <div class="mv-stat-value is-ticks" id="mvTicks">0</div>
+                <div class="mv-stat-sub">Simulation ticks completed</div>
+              </article>
+            </div>
+
+            <div class="mv-chart-panel">
+              <div class="mv-chart-head">
+                <div>
+                  <h3>Stress, Trust &amp; Cohesion over time</h3>
+                  <p>Each line tracks a metric value at every simulation step.</p>
+                </div>
+              </div>
+              <div class="mv-chart-wrap">
+                <canvas id="chartMainLine"></canvas>
+              </div>
+            </div>
+
+            <div class="mv-note">
+              These metrics are generated from backend simulation state at each step. <strong>Stress</strong> measures agent emotional load (lower is better), <strong>Trust</strong> reflects cooperation quality (higher is better), and <strong>Cohesion</strong> indicates group alignment. All values are normalised 0–1.
+            </div>
+          </div>
+        </section>
+
+        <!-- ③ Intervention Impact view -->
+        <section id="impactView" class="view-section hidden">
+          <div class="iv-impact-inner">
+            <div class="iv-impact-empty" id="ivImpactEmpty">
+              <div class="iv-impact-empty-icon">⇄</div>
+              <strong>No intervention applied yet.</strong>
+              <p>Apply an intervention in <strong>Live Simulation</strong> and advance one step to see the before/after impact here.</p>
+            </div>
+            <div class="iv-impact-list hidden" id="ivImpactList"></div>
+          </div>
+        </section>
+
+      </div><!-- /.view-container -->
+
+      <!-- Hidden state panels kept for existing JS compatibility -->
+      <section class="semantic-data hidden" aria-hidden="true">
+        <div id="lastInterventionCard">
+          <div id="ivTickStamp">—</div>
+          <div id="ivButton">—</div>
+          <div id="ivStateChange">—</div>
+          <div id="ivBlockerPill">—</div>
+          <div id="ivExpected">—</div>
+          <div id="ivMetricDelta">—</div>
+          <div id="ivConsequence">—</div>
+          <div id="ivConfirmBadge">—</div>
+          <div id="ivConfirmNote">—</div>
+        </div>
+      </section>
+
+      <section class="semantic-data hidden" aria-hidden="true">
+        <div id="nextExpectedText">—</div>
+        <div id="nextRequiredAction">—</div>
+        <div id="latestSummaryText">—</div>
+        <div id="latestSummaryNote">—</div>
+        <div id="latestSummaryRec">—</div>
+        <div id="progressList"></div>
+      </section>
+
+    </div><!-- /.page-inner -->
+  </div><!-- /#liveSession -->
+
+  <div class="end-modal hidden" id="endRunModal">
+    <div class="end-modal-card">
+      <div class="end-modal-badge">Run complete</div>
+      <h2 id="endRunTitle">This run has ended.</h2>
+      <p id="endRunText">Interventions are disabled. Start a new live run from Setup.</p>
+      <div class="end-modal-actions">
+        <button class="btn-complete" id="btnDismissEndModal" type="button">Keep viewing log</button>
+        <a class="btn-complete is-primary" id="endRunDashboardLink" href="dashboard.html">Open Dashboard</a>
+        <a class="btn-complete is-primary" href="setup.html">Start New Run</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="hidden" id="banner"></div>
+
+  <script src="api.js"></script>
+  <script src="interaction.js" defer></script>
+</body>
+</html>
