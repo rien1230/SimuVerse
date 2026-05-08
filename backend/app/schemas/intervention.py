@@ -1,7 +1,7 @@
 """Schema definitions for intervention requests and responses."""
 
 from pydantic import BaseModel, Field
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, Optional
 
 
 class InterventionRequest(BaseModel):
@@ -10,6 +10,7 @@ class InterventionRequest(BaseModel):
         "reveal_info",
         "nudge_strategy",
         "boost_urgency",
+        "ease_pressure",
         "inject_tension",
         "force_meeting",
     ] = Field(..., description="Intervention type")
@@ -21,6 +22,10 @@ class InterventionResponse(BaseModel):
     message: str
     intervention_type: str
     tick_applied: int
+    # Populated for pressure interventions so the frontend can update the
+    # Pressure card immediately without parsing the message text.
+    pressure_before: Optional[float] = None
+    pressure_after: Optional[float] = None
 
 
 class RevealInfoParams(BaseModel):
@@ -35,6 +40,10 @@ class NudgeStrategyParams(BaseModel):
 
 
 class BoostUrgencyParams(BaseModel):
+    amount: float = Field(ge=0.0, le=1.0)
+
+
+class EasePressureParams(BaseModel):
     amount: float = Field(ge=0.0, le=1.0)
 
 

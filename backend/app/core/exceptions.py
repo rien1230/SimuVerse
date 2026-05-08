@@ -1,6 +1,8 @@
 """
-Domain-specific exceptions for
+Domain-specific exceptions for SimuVerse.
 
+Raise these instead of bare ValueError / RuntimeError so callers
+can catch specific failure modes rather than catching everything.
 """
 from __future__ import annotations
 

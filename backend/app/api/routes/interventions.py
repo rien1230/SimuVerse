@@ -7,7 +7,6 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.schemas.intervention import InterventionRequest, InterventionResponse
-from app.services.intervention_service import apply_intervention
 from app.services.run_registry import RunRegistry
 
 
@@ -49,7 +48,10 @@ async def apply_intervention_endpoint(request: InterventionRequest) -> Intervent
                 detail="Simulation has already ended",
             )
 
-        result = apply_intervention(model, request.type, request.params)
+        # Call model.apply_intervention() — not the service directly — so the
+        # intervention is logged to _tick_interventions / _applied_interventions_log
+        # and therefore appears in the saved history and run summary.
+        result = model.apply_intervention(request.type, request.params)
 
         if not result.get("success", False):
             reason = result.get("reason") or result.get("message") or "Intervention failed"
@@ -57,9 +59,11 @@ async def apply_intervention_endpoint(request: InterventionRequest) -> Intervent
 
         return InterventionResponse(
             success=result["success"],
-            message=result["message"],
+            message=result.get("message", ""),
             intervention_type=request.type,
-            tick_applied=getattr(model, "tick", 0),
+            tick_applied=result.get("tick_applied", getattr(model, "tick", 0)),
+            pressure_before=result.get("pressure_before"),
+            pressure_after=result.get("pressure_after"),
         )
     except HTTPException:
         raise
@@ -99,6 +103,11 @@ async def list_intervention_types():
             {
                 "type": "boost_urgency",
                 "description": "Raise urgency — agents become more willing to share",
+                "params": {"amount": "float 0.0–1.0"},
+            },
+            {
+                "type": "ease_pressure",
+                "description": "Lower urgency — agents get more breathing room",
                 "params": {"amount": "float 0.0–1.0"},
             },
             {

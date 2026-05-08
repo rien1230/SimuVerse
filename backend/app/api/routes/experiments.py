@@ -1,5 +1,6 @@
 """API routes for creating and inspecting experiment runs."""
 
+import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
@@ -8,20 +9,22 @@ from app.services.experiment_service import (
     run_multi_scenario_experiment, compare_intervention_experiment,
     compare_team_styles, compare_scenarios, robustness_experiment,
 )
+from app.services.experiment_runner import run_experiment_batch, VALID_TEAM_STYLES
 from app.sim.scenario_data import SCENARIOS, resolve_scenario_id
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/experiments", tags=["experiments"])
 
 
 def _normalize_scenario_ids(scenario_ids: List[str]) -> List[str]:
-    initialised: List[str] = []
+    normalized: List[str] = []
     seen = set()
     for scenario_id in scenario_ids:
         resolved = resolve_scenario_id(scenario_id)
         if resolved not in seen:
-            initialised.append(resolved)
+            normalized.append(resolved)
             seen.add(resolved)
-    return initialised
+    return normalized
 
 
 class ExperimentRequest(BaseModel):
@@ -250,3 +253,86 @@ async def list_scenarios():
             for sid, data in SCENARIOS.items()
         ]
     }
+
+
+# ── Batch experiment runner ────────────────────────────────────────────────────
+
+class ExperimentBatchRequest(BaseModel):
+    # Which experiment to run
+    experiment_type: str = Field(
+        default="team_comparison",
+        description="team_comparison | scenario_comparison | seed_reproducibility",
+    )
+    # ── Team comparison ──────────────────────────────────────────────────────
+    scenario: str = Field(
+        default="escape",
+        description="Single scenario (team_comparison / seed_reproducibility).",
+    )
+    team_styles: List[str] = Field(
+        default=["smooth", "tension", "creative", "pressure"],
+        description="Team styles to compare (team_comparison only).",
+    )
+    # ── Scenario comparison ──────────────────────────────────────────────────
+    scenarios: List[str] = Field(
+        default=[],
+        description="Multiple scenario short names (scenario_comparison only).",
+    )
+    team_style: Optional[str] = Field(
+        default=None,
+        description="Single team style (scenario_comparison / seed_reproducibility).",
+    )
+    # ── Shared ───────────────────────────────────────────────────────────────
+    seeds: List[int] = Field(
+        default=[101, 102, 103, 104, 105],
+        description="RNG seeds — each seed runs once per style or scenario.",
+    )
+    max_steps: int = Field(default=30, ge=5, le=120, description="Step cap per run.")
+    group_by: str = Field(default="team_style")
+
+
+_VALID_EXP_TYPES = {"team_comparison", "scenario_comparison", "seed_reproducibility"}
+
+
+@router.post("/batch")
+async def run_batch_experiment(body: ExperimentBatchRequest) -> Dict[str, Any]:
+    """
+    Run a controlled batch experiment using the real simulation engine.
+
+    Supports three experiment types:
+      • team_comparison      — fixed scenario, compare multiple team styles across seeds
+      • scenario_comparison  — fixed team style, compare multiple scenarios across seeds
+      • seed_reproducibility — fixed team + scenario, verify consistency across seeds
+    """
+    if body.experiment_type not in _VALID_EXP_TYPES:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unknown experiment_type '{body.experiment_type}'. "
+                   f"Valid: {sorted(_VALID_EXP_TYPES)}",
+        )
+    if not body.seeds:
+        raise HTTPException(422, "At least one seed is required.")
+    if len(body.seeds) > 20:
+        raise HTTPException(422, "Maximum 20 seeds per batch request.")
+
+    if body.experiment_type == "team_comparison":
+        invalid = [s for s in body.team_styles if s not in VALID_TEAM_STYLES]
+        if invalid:
+            raise HTTPException(422, f"Unknown team style(s): {invalid}.")
+        if not body.team_styles:
+            raise HTTPException(422, "At least one team style is required.")
+
+    elif body.experiment_type == "scenario_comparison":
+        if not body.scenarios:
+            raise HTTPException(422, "Provide at least one scenario for scenario_comparison.")
+        if not body.team_style:
+            raise HTTPException(422, "team_style is required for scenario_comparison.")
+
+    elif body.experiment_type == "seed_reproducibility":
+        if not body.team_style:
+            raise HTTPException(422, "team_style is required for seed_reproducibility.")
+
+    try:
+        return run_experiment_batch(body.model_dump())
+    except Exception as exc:
+        logger.exception("Experiment batch failed")
+        raise HTTPException(status_code=500, detail=str(exc))

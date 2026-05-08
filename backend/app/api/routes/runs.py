@@ -35,6 +35,12 @@ class CreateRunBody(BaseModel):
     goal: Optional[str] = None
     team_type: Optional[str] = None
     save_history: bool = True
+    # Optional free-text emotion that gets classified and injected at tick 0,
+    # shifting all agents' stress/trust/valence before the first step runs.
+    emotion_text: Optional[str] = None
+    # Frontend mode that launched this run: "step" = Watch Mode, "live" = Live Interactive.
+    # Stored in config so History can label and route the run correctly.
+    run_mode: Optional[str] = None
 
 
 def _locked_call(entry, fn, *args, **kwargs):
@@ -86,10 +92,35 @@ async def create_run(body: CreateRunBody) -> Dict[str, Any]:
             body.team_type or "balanced",
         )
         config["save_history"] = bool(body.save_history)
-        config["source"] = "interactive"
+        # Map frontend mode to a canonical source value saved in the run config.
+        # "step" (Watch Mode) → "watch"; "live" (Live Interactive) → "live_interactive".
+        # Runs created without run_mode (legacy / API calls) keep "interactive".
+        _run_mode = str(body.run_mode or "").strip().lower()
+        if _run_mode == "step":
+            config["source"] = "watch"
+        elif _run_mode == "live":
+            config["source"] = "live_interactive"
+        else:
+            config["source"] = "interactive"
         seed = body.seed if body.seed is not None else random.SystemRandom().randint(1, 2_147_483_647)
         run_id = await anyio.to_thread.run_sync(registry.create_run, seed, config)
         entry = registry.get_run(run_id)
+
+        # Apply initial group mood if provided — classifies the text and injects
+        # the emotion effect at tick 0 before any steps run.
+        if body.emotion_text and entry:
+            _model = getattr(entry.manager, "model", None)
+            if _model is not None:
+                _text = body.emotion_text.strip()
+                try:
+                    await anyio.to_thread.run_sync(
+                        lambda: _model.inject_user_emotion(_text, tick=0)
+                    )
+                except Exception:
+                    logger.warning(
+                        "Could not apply initial emotion for run %s: text=%r",
+                        run_id, _text[:60],
+                    )
 
         return {
             "run_id": run_id,
@@ -162,6 +193,7 @@ async def get_run_status(run_id: str) -> Dict[str, Any]:
             "tasks": getattr(model.scenario, "tasks", {}),
             "knowledge_map": getattr(model.scenario, "knowledge_map", {}),
             "progress": round(model.scenario.progress_ratio(), 3),
+            "urgency_modifier": round(getattr(model.environment, "urgency_modifier", 0.0), 3),
             "outcome": model.scenario.outcome(model_tick),
             "final_decision": getattr(model, "_final_decision", None),
         }
@@ -170,6 +202,7 @@ async def get_run_status(run_id: str) -> Dict[str, Any]:
         group_state = {
             "tension": getattr(model, "group_tension", 0.0),
             "cohesion": getattr(model, "group_cohesion", 0.0),
+            "pressure": round(getattr(model.environment, "urgency_modifier", 0.0), 3),
             "stall_ticks": getattr(model, "progress_stall_ticks", 0),
             "success_streak": getattr(model, "recent_success_ticks", 0),
             "bottleneck_item": getattr(model, "bottleneck_item", None),
@@ -352,10 +385,20 @@ async def run_ws(websocket: WebSocket, run_id: str) -> None:
 
 
 def _save_run_on_disconnect(run_id: str) -> None:
-    """Persist the run to history when the last WebSocket client disconnects."""
+    """Checkpoint the run to history when the last WebSocket client disconnects.
+
+    Uses _checkpoint_history() rather than _persist_history_once() so the
+    history_saved flag is NOT set.  This means that if the client reconnects
+    and the run completes, _persist_history_once() can still overwrite the
+    checkpoint with the correct final result.
+
+    If the run has already been marked as final (history_saved = True) —
+    e.g. it completed naturally before the last client dropped — the checkpoint
+    is skipped entirely (handled inside _checkpoint_history).
+    """
     entry = registry.get_run(run_id)
     if entry and entry.client_count == 0 and entry.manager.model.tick > 0:
-        entry.manager._persist_history_once()
+        entry.manager._checkpoint_history()
 
 
 def _inc_clients(run_id: str, delta: int) -> None:
