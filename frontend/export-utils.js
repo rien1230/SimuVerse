@@ -1,4 +1,4 @@
-
+// Small browser export helpers for filenames, downloads, and saved snapshots.
 (function(global) {
   function pad(value) {
     return String(value).padStart(2, "0");

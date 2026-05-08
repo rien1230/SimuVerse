@@ -176,20 +176,6 @@ const SCENARIOS = {
             blockerText: "The team cannot read the room until the Scout shares the map."
           },
           {
-            key: "key",
-            label: "Key Location",
-            completedLabel: "Key Location Found",
-            artifact: "key location",
-            owner: "A2",
-            requester: "A1",
-            receiver: "A4",
-            shareText: [
-              "I found the key location. It is under the loose tile by the door.",
-              "The key location is confirmed. It is hidden near the exit panel."
-            ],
-            blockerText: "The team is still waiting on the Code Breaker's key location clue."
-          },
-          {
             key: "lock",
             label: "Lock Pattern",
             completedLabel: "Lock Pattern Solved",
@@ -202,6 +188,20 @@ const SCENARIOS = {
               "I decoded the lock pattern, so the team can stop guessing."
             ],
             blockerText: "The next mechanism stays blocked until the lock pattern is known."
+          },
+          {
+            key: "key",
+            label: "Key Location",
+            completedLabel: "Key Location Found",
+            artifact: "key location",
+            owner: "A2",
+            requester: "A1",
+            receiver: "A4",
+            shareText: [
+              "I found the key location. It is under the loose tile by the door.",
+              "The key location is confirmed. It is hidden near the exit panel."
+            ],
+            blockerText: "The team is still waiting on the Code Breaker's key location clue."
           },
           {
             key: "door",
@@ -322,6 +322,10 @@ const SCENARIOS = {
 
     function normalizeMode(value) {
       const lower = String(value || "").toLowerCase();
+      // Replay modes from History — passed through as distinct internal values so
+      // the dashboard can label itself correctly without mixing up live modes.
+      if (lower === "watch_replay") return "watch_replay";
+      if (lower === "interactive_replay") return "interactive_replay";
       if (lower.includes("step") || lower === "interactive") return "step";
       return "auto";
     }
@@ -480,6 +484,8 @@ const SCENARIOS = {
     }
 
     function modeLabel(mode) {
+      if (mode === "watch_replay") return "Watch Mode Replay";
+      if (mode === "interactive_replay") return "Live Interactive Replay";
       return mode === "step" ? "Interactive Mode" : "Watch Mode";
     }
 
@@ -492,7 +498,7 @@ const SCENARIOS = {
     function scenarioResolvedNoun(scenario) {
       if (scenario.key === "escape") return "clues";
       if (scenario.key === "cafe") return "plan details";
-      return "dependencies";
+      return "project information";
     }
 
     function scenarioWrapCopy(scenario) {
@@ -638,7 +644,19 @@ const SCENARIOS = {
       });
 
       const templateMap = taskTemplateByKey(scenarioKey);
-      return Object.entries(taskState || {}).map(([key, done]) => {
+
+      // Use the canonical template order so the Task Flow always matches the
+      // scenario chain (e.g. Escape: map → lock → key → door → unlock).
+      // Fall back to dict iteration for any keys not covered by the template.
+      const templateKeys = (SCENARIOS[scenarioKey]?.tasks || []).map((t) => t.key);
+      const stateKeys = Object.keys(taskState || {});
+      const orderedKeys = [
+        ...templateKeys.filter((k) => k in (taskState || {})),
+        ...stateKeys.filter((k) => !templateKeys.includes(k)),
+      ];
+
+      return orderedKeys.map((key) => {
+        const done = (taskState || {})[key];
         const template = templateMap.get(key);
         const label = template?.label || prettifyKey(key);
         return {
@@ -686,36 +704,34 @@ const SCENARIOS = {
           return {
             statusTone: "waiting",
             statusText: "Waiting",
-            detail: "Shared by " + actorNameFromEvent(step, latest) + " — awaiting " + targetNameFromEvent(step, latest) + " confirmation"
+            detail: "Shared by " + actorNameFromEvent(step, latest) + " — waiting for " + targetNameFromEvent(step, latest)
           };
         }
         if (latest?.type === "ask_info") {
           return {
             statusTone: "waiting",
             statusText: "Waiting",
-            detail: actorNameFromEvent(step, latest) + " requested this clue from " + targetNameFromEvent(step, latest)
+            detail: actorNameFromEvent(step, latest) + " requested this from " + targetNameFromEvent(step, latest)
           };
         }
         if (latest?.type === "challenge") {
           return {
             statusTone: "waiting",
             statusText: "Waiting",
-            detail: actorNameFromEvent(step, latest) + " is re-checking this clue with " + targetNameFromEvent(step, latest)
+            detail: actorNameFromEvent(step, latest) + " is re-checking this with " + targetNameFromEvent(step, latest)
           };
         }
         return {
           statusTone: "waiting",
           statusText: "Waiting",
-          detail: "Waiting for " + (owner ? owner.name : "the owner") + " to resolve this clue"
+          detail: "Waiting for " + (owner ? owner.name : "the owner")
         };
       }
 
       return {
         statusTone: "pending",
         statusText: "Locked",
-        detail: activeBlockerLabel !== "Complete"
-          ? "Locked until " + activeBlockerLabel + " is confirmed"
-          : "Not available yet"
+        detail: ""
       };
     }
 
@@ -795,11 +811,24 @@ const SCENARIOS = {
     }
 
     function peakStressThroughIndex(snapshots, lastIndex) {
+      // Read avg_stress from snapshot.metrics first — the backend writes this value
+      // directly from compute_metrics(), which is the SAME source as
+      // metric_trajectory.stress_peak.  Computing from snapshot.agents manually
+      // re-introduces rounding differences (backend rounds each agent to 3dp then
+      // averages; JS would average the pre-rounded values) that cause the modal
+      // card to show a different number than the insight text.
       let peak = 0;
       snapshots.slice(0, lastIndex + 1).forEach((snapshot) => {
-        (snapshot?.agents || []).forEach((agent) => {
-          peak = Math.max(peak, agent?.stress || 0);
-        });
+        const backendAvg = snapshot?.metrics?.avg_stress;
+        if (typeof backendAvg === "number") {
+          peak = Math.max(peak, backendAvg);
+          return;
+        }
+        // Fallback: compute from agents if avg_stress is absent (older snapshots)
+        const agents = snapshot?.agents || [];
+        if (!agents.length) return;
+        const avgStress = agents.reduce((sum, a) => sum + (a?.stress || 0), 0) / agents.length;
+        peak = Math.max(peak, avgStress);
       });
       return peak;
     }
@@ -817,7 +846,10 @@ const SCENARIOS = {
         averageTrust: trustFromSnapshot(snapshot),
         averageStress: stressFromSnapshot(snapshot),
         peakStress: peakStressThroughIndex(snapshots, stepIndex),
-        conflict: conflictFromSnapshot(snapshot)
+        conflict: conflictFromSnapshot(snapshot),
+        cohesion: typeof snapshot?.group_state?.cohesion === "number"
+          ? snapshot.group_state.cohesion
+          : (typeof snapshot?.metrics?.group_cohesion === "number" ? snapshot.metrics.group_cohesion : 0)
       };
     }
 
@@ -866,7 +898,7 @@ const SCENARIOS = {
       return map[type] || type || "say";
     }
 
-    function backendEventLabel(type, initialisedType) {
+    function backendEventLabel(type, normalizedType) {
       const explicit = {
         ask_info: "ASK",
         share_info: "SHARE",
@@ -878,7 +910,7 @@ const SCENARIOS = {
         ignore: "IGNORE",
         insult: "INSULT"
       };
-      return explicit[type] || EVENT_META[initialisedType]?.label || titleCase(type || "say");
+      return explicit[type] || EVENT_META[normalizedType]?.label || titleCase(type || "say");
     }
 
     function buildAgentMap(agents, scenarioKey) {
@@ -921,8 +953,9 @@ const SCENARIOS = {
       const target = agentsById[event.target];
       const actorName = actor ? actor.name : (event.actor || "Agent");
       const targetName = target ? target.name : (event.target || "team");
-      const text = event.text || titleCase(event.type);
-      return actorName + " -> " + targetName + ": " + text;
+      // Use the event-type label only — raw speech text belongs only in the animation bubble.
+      const label = backendEventLabel(event.type, normalizeBackendEventType(event.type));
+      return actorName + " → " + targetName + ": " + label;
     }
 
     function completedTasksBetween(previousTasks, currentTasks) {
@@ -945,7 +978,7 @@ const SCENARIOS = {
       if (!previousMetrics) {
         bullets.push({
           tone: "note",
-          text: nextMetrics.progress > 0 ? "Progress: 0% → " + nextMetrics.progress + "%" : "Ready to begin"
+          text: nextMetrics.progress > 0 ? "Progress: 0% → " + nextMetrics.progress + "%" : "Waiting on first response"
         });
       } else if (nextMetrics.progress !== previousMetrics.progress) {
         bullets.push({
@@ -1014,20 +1047,25 @@ const SCENARIOS = {
         return eventContext.leadItemLabel + " is under pressure, so this step checks whether the current answer is reliable enough to use.";
       }
       if (!event) return isPreStart
-        ? blockerLabel + " is the current blocker, so this is where the team needs to start."
-        : blockerLabel + " is still the current blocker, so this step keeps the team aligned on that dependency.";
+        ? blockerLabel + " is the current focus, so this is where the team needs to start."
+        : blockerLabel + " is still the current focus, so this step keeps the team aligned on that required item.";
       const item = event.item ? prettifyKey(event.item) : blockerLabel;
       if (event.type === "share_info") return item + " is blocking progress, so the team is trying to pass the clue to the next person.";
       if (event.type === "ask_info") return item + " is still missing, so the team is requesting the detail it needs.";
       if (event.type === "challenge") return item + " is under pressure, so the team is checking whether the current answer is reliable.";
       if (event.type === "agree") return item + " is close to being locked in, so the team is confirming it before moving on.";
-      return blockerLabel + " is the current blocker, so this step is still about clearing that dependency.";
+      return blockerLabel + " is the current focus, so this step is still about clearing that required item.";
     }
 
-    function whyReasoning(event, eventContext, actor, target, isPreStart, agentMap) {
+    function whyReasoning(event, eventContext, actor, target, isPreStart, agentMap, ended, scenarioKey) {
+      // Escape completion: all prerequisites confirmed — give a scenario-specific explanation
+      // rather than falling through to the generic "A3 spoke to A2 about..." fallback.
+      if (ended && scenarioKey === "escape") {
+        return "The final escape step completed because all prerequisite clues were already confirmed: Room Map, Lock Pattern, Key Location, and Door Code.";
+      }
       if (!event) return isPreStart
         ? "Run is ready. No agent interaction recorded yet."
-        : "No direct agent exchange landed this step, so the run carried the current blocker state forward.";
+        : "No direct agent exchange landed this step, so the run carried the current focus state forward.";
       if (eventContext?.ask && eventContext?.share && eventContext.ask.item === eventContext.share.item) {
         const asker = actorNameFromEvent({ agents: agentMap }, eventContext.ask, "the team");
         const sharer = actorNameFromEvent({ agents: agentMap }, eventContext.share, "the team");
@@ -1039,12 +1077,12 @@ const SCENARIOS = {
         const confirmer = actorNameFromEvent({ agents: agentMap }, eventContext.agree, "the team");
         return sharer + " surfaced " + eventContext.leadItemLabel + " and " + confirmer + " treated it as reliable enough to move the run forward.";
       }
-      const item = event.item ? prettifyKey(event.item) : "the current blocker";
+      const item = event.item ? prettifyKey(event.item) : "the current focus";
       if (event.type === "share_info") return actor.name + " shared the " + item + " so " + target.name + " has what's needed to move forward.";
-      if (event.type === "ask_info") return actor.name + " requested the " + item + " from " + target.name + " because the team needs this missing detail.";
+      if (event.type === "ask_info") return actor.name + " asked " + target.name + " for the " + item + " so the team can proceed.";
       if (event.type === "agree") return actor.name + " confirmed the " + item + " with " + target.name + ", locking it in and moving progress forward.";
       if (event.type === "challenge") return actor.name + " questioned the " + item + " with " + target.name + " to test whether it holds under pressure.";
-      if (event.type === "suggest") return actor.name + " suggested a next move to " + target.name + " based on the current blocker.";
+      if (event.type === "suggest") return actor.name + " suggested a next move to " + target.name + " based on the current focus.";
       return actor.name + " spoke to " + target.name + " about " + item + ".";
     }
 
@@ -1058,9 +1096,9 @@ const SCENARIOS = {
       const shifts = [];
 
       if (nextMetrics.progress !== previousMetrics.progress) {
-        shifts.push("Progress moved from " + previousMetrics.progress + "% to " + nextMetrics.progress + "%.");
+        shifts.push("Progress increased from " + previousMetrics.progress + "% to " + nextMetrics.progress + "%.");
       } else {
-        shifts.push("Progress stays at " + nextMetrics.progress + "%.");
+        shifts.push("Progress stayed at " + nextMetrics.progress + "%.");
       }
 
       if (completedTasks.length) {
@@ -1078,7 +1116,12 @@ const SCENARIOS = {
         shifts.push("Peak stress stayed broadly steady because no new interaction landed.");
       }
       if (ended) {
-        shifts.push("The run ended as " + titleCase(endReason || "complete") + ".");
+        const finalLabel = String(endReason || "").toLowerCase();
+        shifts.push(
+          finalLabel === "success" || finalLabel === "harmony"
+            ? "The run ended successfully."
+            : "The run ended as " + titleCase(endReason || "complete") + "."
+        );
       }
 
       return shifts.join(" ");
@@ -1147,6 +1190,29 @@ const SCENARIOS = {
       const summaries = stepEvents.filter(Boolean).map((event) => summarizeEvent(event, agentMap)).filter(Boolean);
       const effectList = effectBullets(previousMetrics, metrics, completedTasks, snapshot?.ended, snapshot?.end_reason);
 
+      // Build a human-readable summary for multi-event steps (e.g. group confirm/agree).
+      // When 3+ events share the same type, collapse them to "Confirmed by A1, A3 and A4"
+      // rather than showing a crowded "A1 → A4: Confirm · A4 → A1: Confirm · …" string.
+      function buildSmartSummaryLine() {
+        if (snapshot?.ended) return "Simulation complete.";
+        if (isPreStart) return "Simulation ready. Press Play or Next to start.";
+        if (!summaries.length) return "Agents held their positions this step.";
+        if (stepEvents.length < 3) return summaries.join(" · ");
+        const types = stepEvents.map((e) => normalizeBackendEventType(e?.type)).filter(Boolean);
+        const uniqueTypes = [...new Set(types)];
+        if (uniqueTypes.length === 1) {
+          const actors = stepEvents.map((e) => agentMap[e.actor]?.name || e.actor).filter(Boolean);
+          const uniqueActors = [...new Set(actors)];
+          if (uniqueActors.length >= 2) {
+            const label = backendEventLabel(stepEvents[0].type, uniqueTypes[0]);
+            const last = uniqueActors[uniqueActors.length - 1];
+            const rest = uniqueActors.slice(0, -1);
+            return label + " by " + rest.join(", ") + " and " + last;
+          }
+        }
+        return summaries.join(" · ");
+      }
+
       // A step is "meaningful" for the Run Timeline if and only if it reflects a real
       // backend-observable moment: an actual event was emitted, a task was completed,
       // the run ended, or progress moved. Passive snapshots (no event, no task change,
@@ -1180,16 +1246,12 @@ const SCENARIOS = {
         isMeaningful,
         hasBackendEvent,
         effectBullets: effectList,
-        summaryLine: summaries.join(" · ") || (snapshot?.ended
-          ? "Simulation complete."
-          : isPreStart
-            ? "Simulation ready. Press Play or Next to start."
-            : "Agents held their positions this step."),
+        summaryLine: buildSmartSummaryLine(),
         eventLines: summaries,
         eventsRaw: stepEvents,
         whyTitle: whyTitle(eventType, actor, target, completedTasks, snapshot?.ended, scenarioDisplay, primaryEvent),
         whyTrigger: whyTrigger(blockerAfter, primaryEvent, eventContext, snapshot?.ended, scenarioDisplay, isPreStart),
-        whyReasoning: whyReasoning(primaryEvent, eventContext, actor, target, isPreStart, agentMap),
+        whyReasoning: whyReasoning(primaryEvent, eventContext, actor, target, isPreStart, agentMap, Boolean(snapshot?.ended), scenarioKey),
         whyImpact: whyImpact(previousMetrics, metrics, completedTasks, snapshot?.ended, snapshot?.end_reason, hasBackendEvent),
         ended: Boolean(snapshot?.ended),
         endReason: snapshot?.end_reason || "",
@@ -1283,10 +1345,14 @@ const SCENARIOS = {
     function rebuildRun(options = {}) {
       if (!rawRunState) return;
       const previousTick = RUN?.steps?.[currentIndex]?.tick;
+      const previousRunId = RUN?.runId || "";
       const previousResults = RUN?.personalityTestResults || null;
       const previousResultsKey = RUN?.personalityResultsKey || "";
       RUN = buildRunFromBackendStatus(rawRunState);
       if (!RUN?.steps?.length) return;
+      if (_savedRunSummary && previousRunId && RUN.runId && String(previousRunId) !== String(RUN.runId)) {
+        _savedRunSummary = null;
+      }
       RUN.personalityTestResults = previousResults;
       RUN.personalityResultsKey = previousResultsKey;
 
@@ -1437,6 +1503,18 @@ const SCENARIOS = {
       };
     }
 
+    // Cached saved-run summary — set when loading a replay so showCompletionModal
+    // can display memory_summary and emotion_summary without a second fetch.
+    let _savedRunSummary = null;
+
+    function cachedSummaryMatchesRun(activeRunId) {
+      return Boolean(
+        _savedRunSummary
+        && activeRunId
+        && String(_savedRunSummary.run_id || "") === String(activeRunId)
+      );
+    }
+
     async function fetchLiveOrSavedRunStatus(activeRunId) {
       try {
         return await fetchRunStatus(activeRunId);
@@ -1449,6 +1527,7 @@ const SCENARIOS = {
           fetchSavedRunSummary(activeRunId),
           fetchSavedRunReplay(activeRunId).catch(() => ({ history: [] }))
         ]);
+        _savedRunSummary = summary;   // cache for completion modal
         return adaptSavedRunToStatus(summary, replayPayload);
       }
     }
@@ -1476,6 +1555,7 @@ const SCENARIOS = {
       }
 
       const data = await response.json();
+      _savedRunSummary = null;
       runId = data.run_id;
       const nextUrl = new URL(window.location.href);
       nextUrl.searchParams.set("run_id", runId);
@@ -1566,7 +1646,7 @@ const SCENARIOS = {
         if (step.blockerAfter === "Complete") {
           return "That clears the last dependency and finishes the run.";
         }
-        return "That clears this dependency and unlocks " + step.blockerAfter + ".";
+        return "That resolves this step and unlocks " + step.blockerAfter + ".";
       }
 
       if (step.event.type === "confirm") {
@@ -1574,6 +1654,31 @@ const SCENARIOS = {
       }
 
       return "Progress is waiting on " + step.blockerAfter + ".";
+    }
+
+    function currentEventHeadline(step) {
+      if (!step) return "Waiting for the next step.";
+      if (step.ended || step.event.type === "wrap") return "✓ Simulation complete";
+      return step.whyTitle || step.summaryLine || step.event.label;
+    }
+
+    function currentEventSupportLine(step) {
+      if (!step) return "";
+      if (step.ended || step.event.type === "wrap") return currentActionSupport(step);
+      if (step.hasBackendEvent) return step.whyReasoning || currentActionSupport(step);
+      return currentActionSupport(step);
+    }
+
+    function currentEventSecondaryLine(step) {
+      if (!step || step.ended || step.event.type === "wrap") return "";
+      // Show the full event list for the step so users can see everything that
+      // happened, not just the primary (highlighted) interaction in the bubble.
+      // Only shown when there are 2+ events — single-event steps need no list.
+      const allLines = (step.eventsRaw || [])
+        .map((event) => summarizeEvent(event, step.agents || {}))
+        .filter(Boolean);
+      if (allLines.length < 2) return "";
+      return "Full step events: " + allLines.join(" · ");
     }
 
     function recentEventNote(step) {
@@ -1624,6 +1729,7 @@ const SCENARIOS = {
     const eventType = document.getElementById("eventType");
     const eventMessage = document.getElementById("eventMessage");
     const eventEffects = document.getElementById("eventEffects");
+    const currentEventCard = document.querySelector(".current-event");
     const whyTag = document.getElementById("whyTag");
     const whyTitleEl = document.getElementById("whyTitle");
     const whyTriggerEl = document.getElementById("whyTrigger");
@@ -1663,7 +1769,11 @@ const SCENARIOS = {
     const viewSwitch = document.getElementById("viewSwitch");
     const viewLive = document.getElementById("viewLive");
     const viewLog = document.getElementById("viewLog");
+    const resetBtn = document.getElementById("resetBtn");
+    const prevBtn = document.getElementById("prevBtn");
     const playBtn = document.getElementById("playBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
     const exportResultsBtn = document.getElementById("exportResultsBtn");
     const doneExportBtn = document.getElementById("doneExportBtn");
     const historyLink = document.getElementById("historyLink");
@@ -1691,6 +1801,19 @@ const SCENARIOS = {
       runDetailsBtn.setAttribute("aria-expanded", String(runDetailsOpen));
       historyLink.href = `history.html?run=${encodeURIComponent(RUN.runId)}`;
       doneHistoryBtn.disabled = !RUN.savedToHistory;
+    }
+
+    function syncControlPriority() {
+      if (!playBtn || !nextBtn || !resetBtn || !pauseBtn) return;
+      playBtn.classList.remove("primary");
+      nextBtn.classList.remove("primary");
+      resetBtn.classList.add("utility");
+
+      if (playing) {
+        playBtn.classList.add("primary");
+      } else {
+        nextBtn.classList.add("primary");
+      }
     }
 
     function buildRunExportPayload() {
@@ -1744,13 +1867,284 @@ const SCENARIOS = {
       };
     }
 
+    /**
+     * Safe label helper for PDF payload builders.
+     * Accepts either a plain string key OR an object with a label-like property.
+     * Never throws — always returns a non-empty string.
+     */
+    function getSafeItemLabel(item, index = 0) {
+      if (!item) return `Item ${index + 1}`;
+      if (typeof item === "string") return prettifyKey(item) || `Item ${index + 1}`;
+      return (
+        item.label ||
+        item.name  ||
+        item.title ||
+        item.item  ||
+        item.task  ||
+        item.blocker ||
+        item.blockerName ||
+        item.clue  ||
+        item.key   ||
+        `Item ${index + 1}`
+      );
+    }
+
+    /**
+     * Build the structured data object consumed by SimuVersePDF.generate().
+     * Extracts agents, tasks, per-step metric history, and interventions from RUN.
+     */
+    function buildPdfPayload() {
+      if (!RUN) return null;
+      // Defensive aliases — RUN.scenario / RUN.team may be missing on edge-case runs
+      const scenario = RUN.scenario || {};
+      const team     = RUN.team     || {};
+      const steps = Array.isArray(RUN.steps) ? RUN.steps : [];
+      const finalStep = steps[steps.length - 1];
+      if (!finalStep || !finalStep.metrics) return null;
+      const fm = finalStep.metrics;
+      const finalAgentMap = finalStep.agents || {};
+      const firstStepAgentMap = steps.find((step) => step?.agents && Object.keys(step.agents).length)?.agents || {};
+      const topLevelAgents = Array.isArray(rawRunState?.agents) ? rawRunState.agents : [];
+
+      function normalizeProgressForPdf(value) {
+        const n = Number(value || 0);
+        return n > 1 ? n / 100 : n;
+      }
+
+      /* ── Metrics history — one point per recorded step ── */
+      const metricsHistory = steps
+        .map((s) => ({
+          tick:     s.tick,
+          progress: normalizeProgressForPdf(s.metrics.progress),
+          trust:    s.metrics.averageTrust,
+          stress:   s.metrics.averageStress ?? s.metrics.peakStress,
+          conflict: s.metrics.conflict,
+          cohesion: s.metrics.cohesion,
+        }));
+
+      /* ── Agent list from scenario template + final step ── */
+      const scenarioAgents = Array.isArray(scenario.agents) && scenario.agents.length
+        ? scenario.agents
+        : topLevelAgents.length
+          ? topLevelAgents
+        : Object.values(Object.keys(finalAgentMap).length ? finalAgentMap : firstStepAgentMap).map((agent) => ({
+            id: agent.id,
+            name: agent.name || agent.id,
+            role: agent.role || "Agent",
+            personality: agent.personality || agent.strategy || "",
+            color: agent.color || null,
+          }));
+
+      const agents = scenarioAgents.map((a) => {
+        const finalAgent = finalAgentMap[a.id] || firstStepAgentMap[a.id] || {};
+        const knownItems = Array.isArray(finalAgent.known_items) && finalAgent.known_items.length
+          ? finalAgent.known_items
+          : (Array.isArray(a.known_items) ? a.known_items : []);
+        const heldItem = knownItems.length
+          ? getSafeItemLabel(knownItems[0])
+          : ((scenario.tasks || []).find((task) => task.owner === a.id)?.label || "—");
+        return {
+          id:          a.id,
+          name:        a.id, // always the agent ID (A1–A4), never a human name field
+          role:        a.role || "Agent",
+          personality: finalAgent.personality || a.personality || finalAgent.strategy || a.strategy || "",
+          color:       a.color || null,
+          holds:       heldItem,
+          finalStress: typeof finalAgent.stress === "number"
+            ? finalAgent.stress
+            : (typeof a.final_stress === "number" ? a.final_stress : (typeof a.stress === "number" ? a.stress : null)),
+        };
+      });
+
+      /* ── Tasks: final done/not-done state ── */
+      const finalTasks = Array.isArray(finalStep.tasks)
+        ? finalStep.tasks.map((t) => ({ label: t.label, done: !!t.done }))
+        : [];
+
+      /* ── Timeline — one entry per meaningful step ── */
+      const timeline = steps
+        .filter((s) => Number(s.tick || 0) > 0)
+        .map((s) => {
+          const actor  = s.agents?.[s.event?.actorId];
+          const target = s.agents?.[s.event?.targetId];
+          const actionDetails = Array.isArray(s.eventLines) ? s.eventLines : [];
+          return {
+            tick:        s.tick,
+            title:       s.whyTitle || s.event?.label || s.event?.type || "Interaction",
+            eventType:   s.event?.label || s.event?.type || "",
+            actorName:   actor  ? actor.name  : (s.event?.actorId  || ""),
+            targetName:  target ? target.name : (s.event?.targetId || ""),
+            summary:     s.summaryLine || (s.eventsRaw?.length ? "Interaction recorded." : "No agent message recorded for this step."),
+            message:     s.event?.message || s.summaryLine || "",
+            actionDetails,
+            effects:     (s.effectBullets || []).map((e) => (typeof e === "string" ? e : (e.text || ""))),
+            whyTrigger:  s.whyTrigger   || "",
+            whyReasoning:s.whyReasoning || "",
+            whyImpact:   s.whyImpact    || "",
+            hasEvent:    Boolean((s.eventsRaw || []).length),
+          };
+        });
+
+      /* ── Interventions — steps where a user/intervention event appears ── */
+      const interventions = [];
+      steps.forEach((s) => {
+        const raw = s.eventsRaw || [];
+        raw.forEach((ev) => {
+          const t = String(ev?.type || "").toLowerCase();
+          if (
+            t.includes("intervention") || t.includes("inject") ||
+            t.includes("reveal") || t.includes("force") ||
+            t.includes("user_") || t === "user"
+          ) {
+            const prev = s.previousMetrics || {};
+            const curr = s.metrics || {};
+            interventions.push({
+              tick:            s.tick,
+              label:           ev.label || ev.type || "Intervention",
+              type:            ev.type || "",
+              stressChange:    curr.averageStress  != null && prev.averageStress  != null
+                                 ? +(curr.averageStress  - prev.averageStress ).toFixed(3) : null,
+              trustChange:     curr.averageTrust   != null && prev.averageTrust   != null
+                                 ? +(curr.averageTrust   - prev.averageTrust  ).toFixed(3) : null,
+              conflictChange:  curr.conflict       != null && prev.conflict       != null
+                                 ? +(curr.conflict       - prev.conflict      ).toFixed(3) : null,
+            });
+          }
+        });
+      });
+
+      /* ── Auto-generate outcome summary ── */
+      const doneTasks = finalTasks.filter((t) => t.done).length;
+      const pct = finalTasks.length ? Math.round((doneTasks / finalTasks.length) * 100) : 0;
+      const outcomeSummary =
+        `The ${scenario.label || "simulation"} scenario ran for ${finalStep.tick} steps using the ` +
+        `${team.label || "unknown"} preset. ` +
+        `${doneTasks} of ${finalTasks.length} tasks were completed (${pct}%). ` +
+        `Final trust was ${Number(fm.averageTrust || 0).toFixed(2)} and stress was ` +
+        `${Number(fm.averageStress ?? fm.peakStress ?? 0).toFixed(2)}. ` +
+        (interventions.length
+          ? `${interventions.length} user intervention${interventions.length !== 1 ? "s" : ""} were applied during the run.`
+          : "No user interventions were applied — this was a fully autonomous run.");
+
+      return {
+        runId:         RUN.runId,
+        seed:          RUN.seed,
+        exportedAt:    new Date().toLocaleString("en-GB", {
+                         day: "2-digit", month: "short", year: "numeric",
+                         hour: "2-digit", minute: "2-digit"
+                       }),
+        scenario:      { id: scenario.key || "", label: scenario.label || "", title: scenario.sceneTitle || "" },
+        team:          { key: team.key || "", label: team.label || "" },
+        mode:          RUN.mode,
+        outcome:       outcomeLabel(),
+        totalSteps:    finalStep.tick,
+        agents,
+        tasks:         finalTasks,
+        finalMetrics: {
+          progress: normalizeProgressForPdf(fm.progress),
+          trust:    fm.averageTrust,
+          stress:   fm.averageStress ?? fm.peakStress,
+          conflict: fm.conflict,
+          cohesion: fm.cohesion ?? 0,
+        },
+        metricsHistory,
+        timeline,
+        interventions,
+        outcomeSummary,
+      };
+    }
+
+    function buildSafePdfReportData(report) {
+      const source = report && typeof report === "object" ? report : {};
+      const steps = Array.isArray(source.timeline) ? source.timeline : [];
+      const metricsHistory = Array.isArray(source.metricsHistory) ? source.metricsHistory : [];
+      const agents = Array.isArray(source.agents) ? source.agents : [];
+      const tasks = Array.isArray(source.tasks) ? source.tasks : [];
+      const interventions = Array.isArray(source.interventions) ? source.interventions : [];
+
+      const safe = {
+        runId: source.runId || RUN?.runId || "unknown-run",
+        seed: source.seed ?? RUN?.seed ?? "Not recorded",
+        exportedAt: source.exportedAt || new Date().toLocaleString("en-GB", {
+          day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+        }),
+        scenario: {
+          id: source.scenario?.id || RUN?.scenario?.key || "unknown-scenario",
+          label: source.scenario?.label || RUN?.scenario?.label || "Unknown scenario",
+          title: source.scenario?.title || RUN?.scenario?.sceneTitle || "Simulation run",
+        },
+        team: {
+          key: source.team?.key || RUN?.team?.key || "",
+          label: source.team?.label || RUN?.team?.label || "Unknown team",
+        },
+        mode: source.mode || RUN?.mode || "Unknown mode",
+        outcome: source.outcome || outcomeLabel() || "Incomplete",
+        totalSteps: Number.isFinite(Number(source.totalSteps))
+          ? Number(source.totalSteps)
+          : (steps.length || metricsHistory.length || RUN?.steps?.length || 0),
+        agents,
+        tasks,
+        finalMetrics: {
+          progress: Number.isFinite(Number(source.finalMetrics?.progress)) ? Number(source.finalMetrics.progress) : 0,
+          trust: Number.isFinite(Number(source.finalMetrics?.trust)) ? Number(source.finalMetrics.trust) : 0,
+          stress: Number.isFinite(Number(source.finalMetrics?.stress)) ? Number(source.finalMetrics.stress) : 0,
+          conflict: Number.isFinite(Number(source.finalMetrics?.conflict)) ? Number(source.finalMetrics.conflict) : 0,
+          cohesion: Number.isFinite(Number(source.finalMetrics?.cohesion)) ? Number(source.finalMetrics.cohesion) : 0,
+        },
+        metricsHistory,
+        timeline: steps,
+        interventions,
+        outcomeSummary: source.outcomeSummary || "",
+      };
+
+      const warnings = [];
+      if (!agents.length) warnings.push("No agents recorded");
+      if (!steps.length) warnings.push("No step timeline recorded");
+      if (!metricsHistory.length) warnings.push("No metric history recorded");
+      safe._warnings = warnings;
+      return safe;
+    }
+
     function exportCurrentRun() {
       if (!RUN) return;
-      const payload = buildRunExportPayload();
-      window.SimuVerseExport.downloadJson(
-        `simuverse-run-${window.SimuVerseExport.slugify(RUN.scenario.label)}-${window.SimuVerseExport.timestamp()}.json`,
-        payload
-      );
+
+      /* Prefer the structured jsPDF export to avoid cropped screenshot-style output. */
+      if (window.SimuVersePDF) {
+        try {
+          const pdfData = buildSafePdfReportData(buildPdfPayload());
+          if (pdfData) {
+            const result = window.SimuVersePDF.generate(pdfData);
+            if (result?.mode === "error") {
+              setFooterMessage("PDF export is unavailable because the PDF library did not load correctly.");
+            } else if (result?.mode === "fallback") {
+              setFooterMessage("PDF exported with fallback formatting because the full report renderer hit an error.");
+            } else if (pdfData._warnings?.length) {
+              setFooterMessage("PDF exported. Some missing fields were replaced with fallback values.");
+            } else {
+              setFooterMessage("PDF exported successfully.");
+            }
+            return;
+          }
+          alert("PDF export could not be generated because this run is missing required report data.");
+          return;
+        } catch (error) {
+          console.error("[Dashboard] Structured PDF export failed:", error);
+        }
+      }
+
+      if (window.SimuVerseReport) {
+        try {
+          const payload = buildSafePdfReportData(buildPdfPayload());
+          if (payload) {
+            window.SimuVerseReport.generate(payload);
+            return;
+          }
+        } catch (err) {
+          console.error("[Dashboard] HTML PDF fallback failed:", err);
+        }
+      }
+
+      alert("PDF export is unavailable. The structured PDF generator did not load on this page.");
     }
 
     function currentStep() {
@@ -1781,16 +2175,23 @@ const SCENARIOS = {
         ? average(agents.map((agent) => agent.stress || 0))
         : (step.metrics?.averageStress || 0);
 
-      const peakStress = agents.length
-        ? agents.reduce((maxSeen, agent) => Math.max(maxSeen, agent.stress || 0), 0)
-        : (step.metrics?.peakStress || 0);
+      // peakStress: prefer the pre-computed running-max from displayMetricsForSnapshot
+      // (stored in step.metrics.peakStress) which correctly accumulates across all ticks
+      // up to this step.  Recomputing from agents here would give only the current-tick
+      // maximum, which is always <= the true peak and breaks the metric strip.
+      const peakStress = typeof step.metrics?.peakStress === "number"
+        ? step.metrics.peakStress
+        : (agents.length
+            ? agents.reduce((maxSeen, agent) => Math.max(maxSeen, agent.stress || 0), 0)
+            : 0);
 
       return {
         progress,
         averageTrust,
         averageStress,
         peakStress,
-        conflict: typeof step.metrics?.conflict === "number" ? step.metrics.conflict : 0
+        conflict: typeof step.metrics?.conflict === "number" ? step.metrics.conflict : 0,
+        cohesion: typeof step.metrics?.cohesion === "number" ? step.metrics.cohesion : 0
       };
     }
 
@@ -1815,12 +2216,25 @@ const SCENARIOS = {
 
       const pauseEl = document.getElementById("pauseBtn");
       if (RUN.ended) {
-        if (!playing) playBtn.textContent = "Replay";
+        if (!playing) {
+          playBtn.textContent = "Replay Run";
+          playBtn.title = "Replay the run from the beginning";
+        }
         if (pauseEl) pauseEl.style.display = "none";
       } else {
-        if (!playing) playBtn.textContent = "Play";
+        if (!playing) {
+          playBtn.textContent = "Play";
+          playBtn.title = "Auto-play through all steps";
+        }
         if (pauseEl) pauseEl.style.display = "";
       }
+      if (nextBtn) {
+        nextBtn.textContent = (RUN.ended && currentIndex >= RUN.steps.length - 1) ? "View Results" : "Next →";
+        nextBtn.title = (RUN.ended && currentIndex >= RUN.steps.length - 1)
+          ? "Open the final run results"
+          : "Advance one step";
+      }
+      syncControlPriority();
       modePill.textContent = "Mode: " + modeLabel(RUN.mode);
       sceneHeading.textContent = RUN.scenario.sceneTitle;
       sceneIntro.textContent = RUN.scenario.intro;
@@ -1838,7 +2252,7 @@ const SCENARIOS = {
       if (progressHeroCount) {
         progressHeroCount.textContent =
           totalTasks > 0
-            ? `${doneTasks} of ${totalTasks} ${totalTasks === 1 ? "task" : "tasks"}`
+            ? `${doneTasks} / ${totalTasks} complete`
             : "No tasks yet";
       }
       taskList.innerHTML = step.tasks.map((task) => {
@@ -1847,9 +2261,15 @@ const SCENARIOS = {
         const taskName = taskDisplayLabel(task);
         const meta = taskStatusMeta(task, step);
 
+        // Use a ✓ checkmark for completed tasks, ● dot for active blocker, ○ for locked
+        const bulletIcon = task.done
+          ? `<svg class="task-bullet is-check" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="8.5" fill="var(--green,#15a06b)" stroke="none"/><path d="M5 9l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+          : (blockerClass
+            ? `<svg class="task-bullet is-active" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="8.5" fill="var(--amber,#d08a2c)" stroke="none"/><circle cx="9" cy="9" r="3" fill="#fff"/></svg>`
+            : `<svg class="task-bullet is-locked" viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="8.5" stroke="rgba(15,34,56,0.18)" stroke-width="1.5" fill="none"/></svg>`);
         return `
           <div class="task-row ${doneClass} ${blockerClass}">
-            <div class="task-bullet"></div>
+            ${bulletIcon}
             <div>
               <div class="task-topline">
                 <div class="task-name">${taskName}</div>
@@ -1865,52 +2285,63 @@ const SCENARIOS = {
         const key = RUN.scenario.key;
         if (key === "escape") {
           blockerTitle.textContent = "All Clues Confirmed";
-          blockerCopy.textContent = "Every required clue is complete, so the team can escape the room.";
+          blockerCopy.textContent = "Every required clue is confirmed — the team can escape the room.";
         } else if (key === "cafe") {
           blockerTitle.textContent = "All Plans Set";
-          blockerCopy.textContent = "Every plan detail is confirmed, so the cafe is ready to open.";
+          blockerCopy.textContent = "Every plan detail is confirmed — the café is ready to open.";
         } else {
           blockerTitle.textContent = "All Tasks Complete";
-          blockerCopy.textContent = "Every required task is done, so the project can ship.";
+          blockerCopy.textContent = "Every required task is done — the project can ship.";
         }
+        logicLineA.style.display = "none";
+        logicLineB.style.display = "none";
       } else {
         const activeTask = step.tasks.find((task) => task.label === step.blockerAfter);
-        // Find who needs to ACT NEXT: look at the latest event for this blocker
+        // Find who needs to act next: inspect the latest event for this blocker
         const blockerEvents = (step.eventsRaw || []).filter((event) => event?.item === activeTask?.key);
         const latestEvent = blockerEvents.length ? blockerEvents[blockerEvents.length - 1] : null;
         let nextActor = null;
-        let actionVerb = "resolve";
+        let actionPhrase;
 
         if (latestEvent?.type === "share_info") {
           nextActor = step.agents?.[latestEvent.target];
-          actionVerb = "confirm";
+          actionPhrase = (nextActor ? nextActor.name : "Someone") + " needs to confirm " + step.blockerAfter + ".";
         } else if (latestEvent?.type === "ask_info") {
           nextActor = step.agents?.[latestEvent.actor];
-          actionVerb = "provide";
+          actionPhrase = (nextActor ? nextActor.name : "Someone") + " has been asked to provide " + step.blockerAfter + ".";
         } else {
           nextActor = activeTask ? step.agents?.[activeTask.owner] : null;
+          actionPhrase = "Waiting for " + (nextActor ? nextActor.name : "the team") + " to resolve " + step.blockerAfter + ".";
         }
 
-        const nextActorName = nextActor ? nextActor.name : "the team";
-        blockerTitle.textContent = "NEXT REQUIRED ACTION";
-        blockerCopy.textContent = nextActorName + " must " + actionVerb + " " + step.blockerAfter;
+        // When a task was just completed this step, show that context so
+        // the "Up Next" label doesn't look like it contradicts the centre panel.
+        if (step.taskCompleted) {
+          blockerTitle.textContent = "Up Next";
+        } else {
+          blockerTitle.textContent = "Waiting On";
+        }
+        blockerCopy.textContent = actionPhrase;
+
+        // Show which task unlocks after the current one completes
+        const nextLocked = step.tasks.find((t) => !t.done && t.label !== step.blockerAfter);
+        if (nextLocked) {
+          logicLineA.textContent = "Completing this will unlock: " + nextLocked.label;
+          logicLineA.style.display = "";
+        } else {
+          logicLineA.style.display = "none";
+        }
+
+        // Show step metrics delta as a brief summary
+        const previousMetrics = step.previousMetrics;
+        const progressDelta = previousMetrics ? currentMetrics.progress - previousMetrics.progress : 0;
+        if (previousMetrics && progressDelta !== 0) {
+          logicLineB.textContent = "Progress moved " + (progressDelta > 0 ? "+" : "") + progressDelta + "% this step.";
+          logicLineB.style.display = "";
+        } else {
+          logicLineB.style.display = "none";
+        }
       }
-
-      const previousMetrics = step.previousMetrics;
-      const progressDelta = previousMetrics ? currentMetrics.progress - previousMetrics.progress : currentMetrics.progress;
-      const trustDelta = previousMetrics ? currentMetrics.averageTrust - previousMetrics.averageTrust : 0;
-      const stressDelta = previousMetrics ? currentMetrics.peakStress - previousMetrics.peakStress : 0;
-
-      logicLineA.textContent = "Progress is " + currentMetrics.progress + "% with "
-        + doneTasks + " of " + totalTasks + " "
-        + (totalTasks === 1 ? "task" : "tasks")
-        + " complete"
-        + (previousMetrics
-          ? " (" + (progressDelta >= 0 ? "+" : "") + progressDelta + "% this step)."
-          : ".");
-      logicLineB.textContent = "This step left trust at " + currentMetrics.averageTrust.toFixed(2)
-        + " (" + formatDelta(trustDelta) + ") and peak stress at " + currentMetrics.peakStress.toFixed(2)
-        + " (" + formatDelta(stressDelta) + ").";
     }
 
     function scenePosition(agent) {
@@ -1953,7 +2384,7 @@ const SCENARIOS = {
         actionLabel = type === "share" || type === "confirm" ? itemLabel + " shared"
           : type === "ask" ? itemLabel + " requested"
           : type === "challenge" ? itemLabel + " checked"
-          : "Interaction on " + itemLabel;
+          : "Exchange on " + itemLabel;
       }
 
       const lineLabel = itemLabel ? (agentLabel + ": " + actionLabel) : agentLabel;
@@ -2049,11 +2480,11 @@ const SCENARIOS = {
               : "dimmed";
         const receivingAction = event.type === "share" || event.type === "confirm" || event.type === "brainstorm" || event.type === "say" || event.type === "wrap";
         const stateChip = isWrap
-          ? (isActor ? `<div class="agent-state-chip speaker">Team-wide</div>` : "")
+          ? (isActor ? `<div class="agent-state-chip speaker">${agent.role || agent.name}</div>` : "")
           : isActor
-            ? `<div class="agent-state-chip speaker">${agent.id} sends</div>`
+            ? `<div class="agent-state-chip speaker">${agent.name} speaks</div>`
             : isTarget
-              ? `<div class="agent-state-chip ${receivingAction ? "receiver" : "waiting"}">${agent.id} receives</div>`
+              ? `<div class="agent-state-chip ${receivingAction ? "receiver" : "waiting"}">${agent.name} receives</div>`
               : "";
         const bubble = (sceneHasAction && agent.id === event.actorId && event.message) ? `
           <div class="speech-bubble" style="left: ${bubbleLeft}%; top: ${bubbleTop}px; --bubble-tail:${bubbleTail}%;">
@@ -2181,42 +2612,49 @@ const SCENARIOS = {
       if (!step) return;
       const sceneHasAction = Boolean(step.hasBackendEvent) || step.event.type === "wrap";
       const actionLabel = step.event.type === "wrap" ? scenarioCompletionLabel(step.scenario) : step.event.label;
+      const isCompleteStep = step.ended || step.event.type === "wrap";
+      const supportLine = currentEventSupportLine(step);
+      const secondaryLine = currentEventSecondaryLine(step);
+      const totalEvents = (step.eventsRaw || []).length;
 
       // Header: "CURRENT STEP — Step N of M"
       eventStep.textContent = "CURRENT STEP — " + stepPositionLabel(step);
 
       // Action type badge + explanation
       if (sceneHasAction) {
-        eventSummary.textContent = actionLabel;
-        eventType.textContent = actionLabel;
-        eventType.className = "event-type " + step.event.type;
-
-        // Build rich event description
-        let eventDesc = renderEventMessageHtml(step);
-        const primaryEvent = step.eventsRaw?.[0];
-        const actor = step.agents?.[primaryEvent?.actor];
-        const target = step.agents?.[primaryEvent?.target];
-
-        // If no raw event text, construct description from event type + item
-        if (!primaryEvent?.text && actor && target && primaryEvent?.item) {
-          const itemLabel = prettifyKey(primaryEvent.item);
-          if (primaryEvent.type === "share_info") {
-            eventDesc = `<div class="event-message-text">${actor.name} shares the ${itemLabel} with ${target.name}. The information has been delivered, but progress will only advance once ${target.name} confirms it.</div>`;
-          } else if (primaryEvent.type === "ask_info") {
-            eventDesc = `<div class="event-message-text">${actor.name} requests the ${itemLabel} from ${target.name}. The team is waiting for the missing detail needed to continue.</div>`;
-          } else if (primaryEvent.type === "agree") {
-            eventDesc = `<div class="event-message-text">${actor.name} confirms the ${itemLabel} with ${target.name}. This locks in the clue and moves progress forward.</div>`;
-          } else if (primaryEvent.type === "challenge") {
-            eventDesc = `<div class="event-message-text">${actor.name} questions the ${itemLabel} with ${target.name}. The team is testing whether the current answer is reliable enough.</div>`;
-          }
-        }
-
-        eventMessage.innerHTML = eventDesc;
+        eventSummary.textContent = currentEventHeadline(step);
+        eventType.textContent = isCompleteStep ? "COMPLETE" : actionLabel;
+        eventType.className = "event-type " + (isCompleteStep ? "complete" : step.event.type);
+        // Clarify that the animation bubble shows one highlighted interaction, not the
+        // full step.  Only shown for active (non-complete) steps that have real events.
+        const metaNote = !isCompleteStep && totalEvents > 0
+          ? `<div class="event-watch-note">Showing highlighted interaction for this step${totalEvents > 1 ? " · " + totalEvents + " interactions recorded" : ""}</div>`
+          : "";
+        eventMessage.innerHTML = `
+          <div class="event-message-primary">${escapeHtml(supportLine)}</div>
+          ${metaNote}
+          ${secondaryLine ? `<div class="event-message-secondary">${escapeHtml(secondaryLine)}</div>` : ""}
+        `;
       } else {
-        eventSummary.textContent = "Holding";
+        // HOLD: no backend events this step.
+        // Distinguish the very first tick (truly "waiting on first response") from a
+        // quiet mid-run step where events have already happened in earlier ticks.
+        const isFirstTick = !step.tick || step.tick <= 0;
+        eventSummary.textContent = isFirstTick
+          ? "Waiting on first response"
+          : "Quiet step — no new interaction";
         eventType.textContent = "HOLD";
         eventType.className = "event-type hold";
-        eventMessage.innerHTML = `<div class="event-message-text">No new interaction this step — team alignment remained steady.</div>`;
+        eventMessage.innerHTML = isFirstTick ? `
+          <div class="event-message-primary">Agents are processing the scenario — first interaction expected soon.</div>
+          <div class="event-message-secondary">No events have been recorded yet.</div>
+        ` : `
+          <div class="event-message-primary">The team has started discussing this focus, but no new exchange was recorded this step.</div>
+          <div class="event-message-secondary">Waiting for confirmation on the current focus.</div>
+        `;
+      }
+      if (currentEventCard) {
+        currentEventCard.classList.toggle("is-complete", isCompleteStep);
       }
 
       // Effect badges showing what changed
@@ -2258,11 +2696,14 @@ const SCENARIOS = {
 
       const liveWhyTitle = whyTitle(eventType, actor, target, completedTasks, step.ended, step.scenario, primaryEvent);
       const liveWhyTrigger = whyTrigger(step.blockerAfter, primaryEvent, eventContext, step.ended, step.scenario, step.tick === 0);
-      const liveWhyReasoning = whyReasoning(primaryEvent, eventContext, actor, target, step.tick === 0, step.agents || {});
+      const liveWhyReasoning = whyReasoning(primaryEvent, eventContext, actor, target, step.tick === 0, step.agents || {}, Boolean(step.ended), step.scenario?.key || RUN?.scenario?.key || "");
       const liveWhyImpact = whyImpact(previousMetrics, currentMetrics, completedTasks, step.ended, step.endReason, step.hasBackendEvent);
       const liveEffects = effectBullets(previousMetrics, currentMetrics, completedTasks, step.ended, step.endReason);
 
-      if (whyTag) whyTag.textContent = stepPositionLabel(step) + " · " + ((step.event && step.event.label) || "");
+      if (whyTag) {
+        whyTag.textContent = stepPositionLabel(step) + " · " + ((step.event && step.event.label) || "");
+        whyTag.className = "why-kicker" + (eventType ? " " + eventType : "");
+      }
       if (whyTitleEl) whyTitleEl.textContent = liveWhyTitle || "";
       if (whyTriggerEl) whyTriggerEl.textContent = liveWhyTrigger || "";
       if (whyReasoningEl) whyReasoningEl.textContent = liveWhyReasoning || "";
@@ -2329,14 +2770,14 @@ const SCENARIOS = {
       metricProgressValue.textContent = currentMetrics.progress + "%";
       metricProgressState.textContent = progressInfo.label;
       metricProgressBar.style.width = currentMetrics.progress + "%";
-      metricProgressCopy.textContent = previousMetrics
+      if (metricProgressCopy) metricProgressCopy.textContent = previousMetrics
         ? `Progress ${progressDelta === 0 ? "held steady" : `changed by ${(progressDelta >= 0 ? "+" : "") + progressDelta}%`} this step.`
         : "Tasks completed so far in this run.";
 
       metricTrustValue.textContent = currentMetrics.averageTrust.toFixed(2);
       metricTrustState.textContent = trustInfo.label;
       metricTrustBar.style.width = (currentMetrics.averageTrust * 100).toFixed(1) + "%";
-      metricTrustCopy.textContent = previousMetrics
+      if (metricTrustCopy) metricTrustCopy.textContent = previousMetrics
         ? `Team trust ${Math.abs(trustDelta) > 0.005 ? `changed ${formatDelta(trustDelta)}` : "held steady"} this step.`
         : "Average trust across all agents at this step.";
 
@@ -2347,10 +2788,10 @@ const SCENARIOS = {
         ? `Team stress ${Math.abs(avgStressDelta) > 0.005 ? `changed ${formatDelta(avgStressDelta)}` : "held steady"} this step.`
         : "Average emotional load across all agents at this step.";
 
-      metricStressValue.textContent = currentMetrics.peakStress.toFixed(2);
-      metricStressState.textContent = peakStressInfo.label;
-      metricStressBar.style.width = (currentMetrics.peakStress * 100).toFixed(1) + "%";
-      metricStressCopy.textContent = previousMetrics
+      if (metricStressValue) metricStressValue.textContent = currentMetrics.peakStress.toFixed(2);
+      if (metricStressState) metricStressState.textContent = peakStressInfo.label;
+      if (metricStressBar) metricStressBar.style.width = (currentMetrics.peakStress * 100).toFixed(1) + "%";
+      if (metricStressCopy) metricStressCopy.textContent = previousMetrics
         ? `Peak stress ${Math.abs(peakStressDelta) > 0.005 ? `changed ${formatDelta(peakStressDelta)}` : "held steady"} this step.`
         : "Highest individual stress reached so far.";
 
@@ -2361,21 +2802,18 @@ const SCENARIOS = {
         ? `Friction ${Math.abs(conflictDelta) > 0.005 ? `changed ${formatDelta(conflictDelta)}` : "held steady"} this step.`
         : "Team friction and coordination pressure at this step.";
 
-      metricTicksValue.textContent = step.tick === 0 && totalRunTicks() === 0 ? "Ready" : step.tick + "/" + totalTicks;
-      metricTicksState.textContent = ticksInfo.label;
-      metricTicksBar.style.width = ((step.tick / totalTicks) * 100).toFixed(1) + "%";
-      metricTicksCopy.textContent = "Current step out of the full run.";
+      if (metricTicksValue) metricTicksValue.textContent = step.tick === 0 && totalRunTicks() === 0 ? "Ready" : step.tick + "/" + totalTicks;
+      if (metricTicksState) metricTicksState.textContent = ticksInfo.label;
+      if (metricTicksBar) metricTicksBar.style.width = ((step.tick / totalTicks) * 100).toFixed(1) + "%";
+      if (metricTicksCopy) metricTicksCopy.textContent = "Current step out of the full run.";
     }
 
     function renderLog(stepIndex) {
       if (!RUN) return;
-      // Run Timeline shows only meaningful steps (real backend events, task changes,
-      // progress changes, or the final outcome). Passive snapshots are filtered so the
-      // timeline reads as a faithful inspection of the backend run rather than a frame
-      // dump. RUN.steps itself is untouched so playback controls still traverse every
-      // tick the backend actually produced.
+      // Keep the full meaningful timeline visible at all times so the layout stays
+      // stable while the selected step moves. We only change the active card, not the
+      // number of rendered cards, when stepping forward/backward.
       const visibleSteps = RUN.steps
-        .slice(0, stepIndex + 1)
         .map((step, originalIndex) => ({ step, originalIndex }))
         .filter(({ step }) => step.isMeaningful);
 
@@ -2395,12 +2833,6 @@ const SCENARIOS = {
 
       logTimeline.innerHTML = visibleSteps.map(({ step, originalIndex }) => {
         const isActive = originalIndex === activeOriginalIndex;
-        // Render the real backend event text verbatim. Only fall back when the backend
-        // genuinely produced no event for this step (meaningful steps may still have an
-        // empty event array if e.g. a task completed as a side-effect of a prior tick —
-        // rare, but handled explicitly rather than silently).
-        const hasBackendText = Boolean(step.hasBackendEvent && step.event.message);
-        const quoteText = hasBackendText ? step.event.message : "";
 
         // Speaker → receiver attribution, pulled from the same maps the export uses.
         // Falls back to raw IDs if an agent is missing (defensive).
@@ -2415,14 +2847,10 @@ const SCENARIOS = {
             </div>`
           : "";
 
-        // Hero content: prefer the real dialogue verbatim; fall back to the
-        // pre-formatted eventLines (which include the "actor -> target:" prefix).
-        let heroBlock = "";
-        if (quoteText) {
-          heroBlock = `<p class="log-hero">${quoteText}</p>`;
-        } else if (step.eventLines.length) {
-          heroBlock = step.eventLines.map((line) => `<div class="log-line">${line}</div>`).join("");
-        }
+        const logTitle = step.whyTitle || currentEventHeadline(step);
+        const interactionSummary = step.eventLines.length
+          ? `Interaction: ${step.eventLines.join(" · ")}`
+          : currentEventSupportLine(step);
 
         const kind = (step.event.type || "").toLowerCase();
 
@@ -2432,8 +2860,9 @@ const SCENARIOS = {
               <div class="log-tick">${stepPositionLabel(step)}</div>
               <div class="event-type ${step.event.type}">${step.event.label}</div>
             </div>
+            <div class="log-title">${escapeHtml(logTitle)}</div>
             ${attributionBlock}
-            ${heroBlock}
+            <div class="log-line is-secondary">${escapeHtml(interactionSummary)}</div>
             <div class="log-effects">
               ${step.effectBullets.map((bullet) => `<div class="log-effect ${bullet.tone}">${bullet.text}</div>`).join("")}
             </div>
@@ -2445,11 +2874,10 @@ const SCENARIOS = {
       // Update the "Step N of M" counter using the MEANINGFUL step count,
       // not the raw tick index — this is what the user actually sees on screen.
       if (timelineCounter) {
-        const activeVisibleIndex = visibleSteps.findIndex(
-          (entry) => entry.originalIndex === activeOriginalIndex
-        );
-        const shown = activeVisibleIndex >= 0 ? activeVisibleIndex + 1 : visibleSteps.length;
-        timelineCounter.textContent = `Step ${shown} of ${visibleSteps.length}`;
+        const activeStep = RUN.steps[activeOriginalIndex];
+        timelineCounter.textContent = activeStep
+          ? `Selected · ${stepPositionLabel(activeStep)}`
+          : `Run timeline · ${visibleSteps.length} key steps`;
       }
 
       // Keep the active card in view so the timeline always reveals "where we are"
@@ -2459,7 +2887,13 @@ const SCENARIOS = {
         const activeEl = logTimeline.querySelector(".log-card.active");
         if (activeEl) {
           requestAnimationFrame(() => {
-            activeEl.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+            const cardLeft = activeEl.offsetLeft;
+            const cardWidth = activeEl.offsetWidth;
+            const targetLeft = Math.max(
+              0,
+              cardLeft - ((logTimeline.clientWidth - cardWidth) / 2)
+            );
+            logTimeline.scrollTo({ left: targetLeft, behavior: "smooth" });
             updateTimelineNavState();
           });
         } else {
@@ -2526,6 +2960,7 @@ const SCENARIOS = {
       if (wasBackendAuto) {
         ws.send(JSON.stringify({ cmd: "auto_stop" }));
       }
+      syncControlPriority();
       renderContext(currentStep());
       return Promise.resolve();
     }
@@ -2558,6 +2993,7 @@ const SCENARIOS = {
       playing = false;
       playbackMode = "idle";
       playBtn.textContent = RUN.ended ? "Replay" : "Play";
+      syncControlPriority();
       renderStep(currentIndex - 1);
     }
 
@@ -2567,6 +3003,7 @@ const SCENARIOS = {
       playing = true;
       playbackMode = "local-replay";
       playBtn.textContent = "Playing";
+      syncControlPriority();
       renderContext(currentStep());
       timer = window.setInterval(() => {
         if (currentIndex >= RUN.steps.length - 1) {
@@ -2603,6 +3040,7 @@ const SCENARIOS = {
       playing = true;
       playbackMode = "backend-auto";
       playBtn.textContent = "Playing";
+      syncControlPriority();
       renderContext(currentStep());
       socket.send(JSON.stringify({ cmd: "auto", tick_hz: 1.5 }));
     }
@@ -2617,6 +3055,7 @@ const SCENARIOS = {
       playing = false;
       playbackMode = "idle";
       playBtn.textContent = RUN.ended ? "Replay" : "Play";
+      syncControlPriority();
       renderStep(0);
     }
 
@@ -2626,14 +3065,19 @@ const SCENARIOS = {
       setView(button.dataset.view);
     });
 
-    document.getElementById("playBtn").addEventListener("click", playPlayback);
-    document.getElementById("pauseBtn").addEventListener("click", pausePlayback);
-    document.getElementById("nextBtn").addEventListener("click", async () => {
+    playBtn.addEventListener("click", playPlayback);
+    pauseBtn.addEventListener("click", pausePlayback);
+    nextBtn.addEventListener("click", async () => {
+      if (RUN?.ended && currentIndex >= RUN.steps.length - 1) {
+        await pausePlayback();
+        showCompletionModal();
+        return;
+      }
       await pausePlayback();
       await nextStep();
     });
-    document.getElementById("prevBtn").addEventListener("click", previousStep);
-    document.getElementById("resetBtn").addEventListener("click", resetPlayback);
+    prevBtn.addEventListener("click", previousStep);
+    resetBtn.addEventListener("click", resetPlayback);
     runDetailsBtn.addEventListener("click", () => {
       runDetailsOpen = !runDetailsOpen;
       syncRunDetails();
@@ -2658,6 +3102,14 @@ const SCENARIOS = {
     }
     if (logTimeline) {
       logTimeline.addEventListener("scroll", () => updateTimelineNavState(), { passive: true });
+      logTimeline.addEventListener("click", (event) => {
+        const card = event.target.closest(".log-card");
+        if (!card) return;
+        const nextIndex = Number(card.dataset.stepIndex);
+        if (!Number.isFinite(nextIndex)) return;
+        currentIndex = nextIndex;
+        pausePlayback().then(() => renderStep(currentIndex));
+      });
     }
 
     window.addEventListener("resize", () => {
@@ -2680,9 +3132,226 @@ const SCENARIOS = {
       return "Low cooperation";
     }
     function stressBand(v) {
-      if (v > 0.55) return "High pressure";
-      if (v > 0.25) return "Moderate pressure";
+      // Thresholds must match buildInsight pressure word and _renderMetricMovement
+      // colour so the card sub-label, insight text, and metric row all agree.
+      // 0.00–0.30 = low, 0.31–0.49 = moderate, 0.50+ = high
+      if (v >= 0.50) return "High pressure";
+      if (v > 0.30) return "Moderate pressure";
       return "Low pressure";
+    }
+
+    function frictionEventPhrase(count, refusalCount = 0, options = {}) {
+      const total = Number(count || 0);
+      const refusals = Number(refusalCount || 0);
+      const singular = Boolean(options.singular);
+      const capitalized = Boolean(options.capitalized);
+      if (total <= 0) return capitalized ? "No friction events" : "no friction events";
+
+      let phrase = "";
+      if (total === 1) {
+        if (refusals >= 1) phrase = singular ? "single refusal event" : "one refusal event";
+        else phrase = singular ? "single challenge event" : "one challenge event";
+      } else if (refusals === 0) {
+        phrase = `${total} challenge events`;
+      } else if (refusals >= total) {
+        phrase = `${total} refusal events`;
+      } else {
+        phrase = `${total} challenge/refusal events`;
+      }
+      return capitalized ? phrase.charAt(0).toUpperCase() + phrase.slice(1) : phrase;
+    }
+
+    function teamPresetResultLine(teamKey, details = {}) {
+      const key = String(teamKey || "").toLowerCase();
+      const challengeCount = typeof details === "number" ? details : (details.challengeCount || 0);
+      const refusalCount = typeof details === "object" ? (details.refusalCount || 0) : 0;
+      const cluesShared = typeof details === "object" ? (details.cluesShared || 0) : 0;
+      const agreements = typeof details === "object" ? (details.agreements || 0) : 0;
+      const blockersTotal = typeof details === "object" ? details.blockersTotal : null;
+      const ticks = typeof details === "object" ? details.ticks : null;
+      const stressRecovered = typeof details === "object" ? Boolean(details.stressRecovered) : false;
+      const pressureWord = typeof details === "object" ? details.pressureWord : "";
+      const context = typeof details === "object" ? (details.context || "intro") : "intro";
+      const scenarioKey = typeof details === "object" ? (details.scenarioKey || "") : "";
+      const trustStart = typeof details === "object" ? details.trustStart : null;
+      const trustEnd = typeof details === "object" ? details.trustEnd : null;
+      const challengeWord = challengeCount === 1 ? "One" : challengeCount === 2 ? "Two" : challengeCount === 3 ? "Three" : String(challengeCount);
+      if (key === "smooth") {
+        if (scenarioKey === "office") {
+          if (challengeCount > 0) {
+            return context === "behaviour"
+              ? `${frictionEventPhrase(challengeCount, refusalCount, { capitalized: true })} ${challengeCount === 1 ? "was" : "were"} recorded, but cooperation still dominated. This mostly matches the Smooth Team preset because agents shared project information, confirmed decisions, and resolved the budget item without resistance escalating.`
+              : "This mostly matches the Smooth Team preset: agents shared project information, confirmed decisions, and resolved the budget item without resistance escalating.";
+          }
+          return context === "behaviour"
+            ? "No challenge or refusal events were recorded. This matches the Smooth Team preset: agents shared project information, confirmed decisions, and resolved the budget item without resistance."
+            : "This matches the Smooth Team preset: agents shared project information, confirmed decisions, and resolved the budget item without resistance.";
+        }
+        if (scenarioKey === "cafe") {
+          const cafeBlockerText = blockersTotal != null ? `all ${blockersTotal} required items` : "all active items";
+          if (challengeCount > 0) {
+            return context === "behaviour"
+              ? `${frictionEventPhrase(challengeCount, refusalCount, { capitalized: true })} ${challengeCount === 1 ? "was" : "were"} recorded, but cooperation still dominated. This mostly matches the Smooth Team preset because agents shared preferences, confirmed restaurant options, and resolved ${cafeBlockerText} without resistance escalating.`
+              : `This mostly matches the Smooth Team preset: agents shared preferences, confirmed restaurant options, and resolved ${cafeBlockerText} without resistance escalating.`;
+          }
+          return context === "behaviour"
+            ? `No challenge or refusal events were recorded. This matches the Smooth Team preset: agents shared preferences, confirmed the restaurant options, and resolved ${cafeBlockerText} without resistance.`
+            : `This matches the Smooth Team preset: agents shared preferences, confirmed the restaurant options, and resolved ${cafeBlockerText} without resistance.`;
+        }
+        return context === "behaviour"
+          ? "No challenge or refusal events were recorded. This matches the Smooth Team preset: agents shared clues, confirmed decisions, and resolved all 5 required steps without resistance."
+          : "This matches the Smooth Team preset: agents shared clues, confirmed decisions, and resolved all required steps without resistance.";
+      }
+      if (key === "tension") {
+        if (challengeCount > 0) {
+          const blockerText = blockersTotal != null ? `all ${blockersTotal} required item${blockersTotal === 1 ? "" : "s"}` : "all required items";
+          const verb = challengeCount === 1 ? "reflects" : "reflect";
+          const escapeIntro = `This matches the Tension Team preset. Stress rose through the clue-solving sequence and peaked during the Final Unlock, the longest step. ${frictionEventPhrase(challengeCount, refusalCount, { capitalized: true })} showed friction under pressure, but cooperation still outweighed conflict.`;
+          const cafeBlockerText = blockersTotal === 2
+            ? "both active items"
+            : blockersTotal != null
+              ? `all ${blockersTotal} required items`
+              : "the active items";
+          const cafeIntro = `${frictionEventPhrase(challengeCount, refusalCount, { capitalized: true })} ${challengeCount === 1 ? "appeared" : "appeared"} during the cafe decision process, but stress remained controlled and cooperation outweighed conflict. The team resolved ${cafeBlockerText} without intervention.`;
+          if (context === "behaviour") {
+            if (scenarioKey === "escape") {
+              return `The ${frictionEventPhrase(challengeCount, refusalCount, { singular: challengeCount === 1 })} ${verb} contained tension rather than breakdown. This matches the Tension Team preset: stress peaked during the Final Unlock, but ${cluesShared} clue share${cluesShared === 1 ? "" : "s"} and ${agreements} agreement${agreements === 1 ? "" : "s"} allowed ${blockerText} to be resolved without intervention.`;
+            }
+            if (scenarioKey === "office") {
+              if (challengeCount === 1) {
+                return `The ${frictionEventPhrase(challengeCount, refusalCount, { singular: true })} reflects contained tension rather than breakdown. This matches the Tension Team preset: stress rose while the budget item remained active, but ${cluesShared} information-sharing event${cluesShared === 1 ? "" : "s"} and ${agreements} agreement${agreements === 1 ? "" : "s"} allowed it to be resolved without intervention.`;
+              }
+              return `The ${frictionEventPhrase(challengeCount, refusalCount)} reflect contained tension rather than breakdown. This matches the Tension Team preset: stress rose while the budget item remained active, but ${cluesShared} information-sharing event${cluesShared === 1 ? "" : "s"} and ${agreements} agreement${agreements === 1 ? "" : "s"} allowed it to be resolved without intervention.`;
+            }
+            if (scenarioKey === "cafe") {
+              return cafeIntro;
+            }
+            return `The ${frictionEventPhrase(challengeCount, refusalCount, { singular: challengeCount === 1 })} ${verb} contained tension rather than breakdown. This matches the Tension Team preset: stress rose under pressure, but ${cluesShared} clue share${cluesShared === 1 ? "" : "s"} and ${agreements} agreement${agreements === 1 ? "" : "s"} allowed ${blockerText} to be resolved without intervention.`;
+          }
+          if (scenarioKey === "escape") return escapeIntro;
+          if (scenarioKey === "cafe") return cafeIntro;
+          if (scenarioKey === "office") {
+            return "This matches the Tension Team preset. Stress rose while the budget item remained active, but cooperation still outweighed conflict.";
+          }
+          return "This matches the Tension Team preset. Stress rose under pressure, but cooperation still outweighed conflict.";
+        }
+        return scenarioKey === "escape"
+          ? "Although this was a Tension Team run, no explicit challenge or refusal events occurred. The tension appeared through higher stress, slower clue resolution, and elevated final pressure rather than open conflict."
+          : scenarioKey === "cafe"
+            ? `No challenge events occurred. This was a low-intensity Tension Team run: ${pressureWord === "moderate" ? "stress rose into the moderate-pressure range while the final decision remained active" : "stress stayed low"}, but the team resolved ${blockersTotal != null ? `all ${blockersTotal} required items` : "the active items"} through steady preference-sharing rather than conflict.`
+          : scenarioKey === "office"
+            ? "No challenge events were recorded. This was a low-intensity Tension Team run: stress rose moderately while the budget item remained active, but the team resolved it through cooperation rather than conflict."
+            : "This matches the Tension Team preset. Stress rose under pressure, but cooperation still outweighed conflict.";
+      }
+      if (key === "creative") {
+        if (context === "behaviour" && challengeCount > 0) {
+          if (scenarioKey === "office") {
+            return `This matches the Creative Team preset: agents used flexible coordination, confirmation, and collaborative problem-solving to complete the project tasks. Although ${frictionEventPhrase(challengeCount, refusalCount)} occurred, cooperation still outweighed conflict.`;
+          }
+          if (scenarioKey === "cafe") {
+            if (challengeCount === 1) {
+              return `The ${frictionEventPhrase(challengeCount, refusalCount, { singular: true })} reflects light disagreement during the restaurant decision rather than breakdown. This still matches the Creative Team preset because agents continued using preference-sharing, confirmation, and flexible coordination to reach a decision.`;
+            }
+            return `The ${frictionEventPhrase(challengeCount, refusalCount)} reflect light disagreement during the restaurant decision rather than breakdown. This still matches the Creative Team preset because agents continued using preference-sharing, confirmation, and flexible coordination to reach a decision.`;
+          }
+          return `The ${frictionEventPhrase(challengeCount, refusalCount, { singular: challengeCount === 1 })} reflects light pressure rather than conflict. This still matches the Creative Team preset: agents mainly used clue-sharing, confirmation, and flexible coordination, with cooperation outweighing friction events.`;
+        }
+        if (scenarioKey === "office") {
+          return context === "behaviour"
+            ? "This matches the Creative Team preset: agents used flexible coordination, confirmation, and collaborative problem-solving to complete the project tasks."
+            : "This matches the Creative Team preset: agents used flexible coordination, confirmation, and collaborative problem-solving to complete the project tasks.";
+        }
+        if (scenarioKey === "cafe") {
+          if (context === "intro") {
+            const trustClause = (typeof trustStart === "number" && typeof trustEnd === "number")
+              ? ` Stress stayed low, and trust grew from ${trustStart.toFixed(2)} to ${trustEnd.toFixed(2)}.`
+              : " Stress stayed low, and trust grew steadily.";
+            if (challengeCount === 0) {
+              return `No challenge events occurred. This matches the Creative Team preset because agents used preference-sharing, confirmation, and flexible coordination rather than conflict.${trustClause}`;
+            }
+            const _ccBlockerText = blockersTotal != null ? `all ${blockersTotal} required items` : "all active items";
+            const challengeClause = challengeCount === 1
+              ? `Although ${frictionEventPhrase(challengeCount, refusalCount)} occurred, cooperation still outweighed conflict and ${_ccBlockerText} were resolved.`
+              : `Although ${frictionEventPhrase(challengeCount, refusalCount)} occurred, cooperation still outweighed conflict and ${_ccBlockerText} were resolved.`;
+            return `This matches the Creative Team preset: agents used preference-sharing, confirmation, and flexible coordination around the restaurant decision.${trustClause} ${challengeClause}`;
+          }
+          return "No challenge or refusal events were recorded. This matches the Creative Team preset: agents used preference-sharing, confirmation, and flexible coordination around the restaurant decision rather than conflict.";
+        }
+        return context === "behaviour"
+          ? "No challenge or refusal events were recorded. This matches the Creative Team preset: agents used clue-sharing, confirmation, and flexible coordination rather than conflict."
+          : "This matches the Creative Team preset: agents used clue-sharing, confirmation, and flexible coordination rather than conflict.";
+      }
+      if (key === "pressure") {
+        const stepText = ticks != null ? `${ticks} step${ticks === 1 ? "" : "s"}` : "the run";
+        if (scenarioKey === "office" && context === "intro") {
+          if (challengeCount > 0) {
+            const trustSentence = (typeof trustStart === "number" && typeof trustEnd === "number")
+              ? ` Trust grew from ${trustStart.toFixed(2)} to ${trustEnd.toFixed(2)}, and`
+              : " Trust grew steadily, and";
+            const chalWord = challengeCount === 1
+              ? `the ${frictionEventPhrase(challengeCount, refusalCount)}`
+              : `the ${frictionEventPhrase(challengeCount, refusalCount)}`;
+            return `For a Pressure Team, this run shows controlled urgency rather than breakdown. Agents resolved the budget item in ${stepText}, with stress rising into the moderate-pressure range before recovering.${trustSentence} cooperation still outweighed ${chalWord}.`;
+          }
+          const trustClause = (typeof trustStart === "number" && typeof trustEnd === "number")
+            ? ` Trust grew from ${trustStart.toFixed(2)} to ${trustEnd.toFixed(2)},`
+            : " Trust grew steadily,";
+          return `For a Pressure Team, this run shows controlled urgency rather than conflict. Agents resolved the budget item in ${stepText}, with stress staying within the low-pressure range.${trustClause} and cooperation dominated without challenge events.`;
+        }
+        if (scenarioKey === "cafe" && context === "intro") {
+          const trustClause = (typeof trustStart === "number" && typeof trustEnd === "number")
+            ? ` Trust grew from ${trustStart.toFixed(2)} to ${trustEnd.toFixed(2)},`
+            : " Trust remained strong,";
+          if (ticks != null && ticks >= 15) {
+            const cafeBlockerText15 = blockersTotal != null ? `all ${blockersTotal} required items` : "all active items";
+            return `For a Pressure Team, this run shows controlled urgency rather than conflict. The team took ${ticks} steps because the final Decision was the longest step at 6 steps, while the Budget Constraint remained active for 5 steps.${trustClause} and the team resolved ${cafeBlockerText15} without escalation.`;
+          }
+          const cafeBlockerText = blockersTotal === 2
+            ? "both active items"
+            : blockersTotal != null
+              ? `all ${blockersTotal} required items`
+              : "the active items";
+          if (challengeCount === 2) {
+            return `For a Pressure Team, this run shows controlled urgency rather than breakdown. Agents moved through the cafe decision process in ${stepText}, with stress remaining within the low-pressure range.${trustClause} and ${cafeBlockerText} were resolved despite ${frictionEventPhrase(challengeCount, refusalCount)}.`;
+          }
+          if (challengeCount === 1) {
+            return `For a Pressure Team, this run shows controlled urgency rather than conflict. Agents moved through the cafe decision process in ${stepText}, with stress remaining within the low-pressure range.${trustClause} and ${cafeBlockerText} were resolved with only ${frictionEventPhrase(challengeCount, refusalCount)}.`;
+          }
+          return `For a Pressure Team, this run shows controlled urgency rather than conflict. Agents moved through the cafe decision process in ${stepText}, with stress remaining within the low-pressure range.${trustClause} and ${cafeBlockerText} were resolved without challenge events.`;
+        }
+        const pressurePhrase = pressureWord === "high"
+          ? "into the high-pressure range"
+          : pressureWord === "moderate"
+            ? "into the moderate-pressure range"
+            : "within the low-pressure range";
+        const recoveryText = stressRecovered ? " before recovering" : "";
+        const scenarioLine = scenarioKey === "escape"
+          ? "The team completed the escape room under pressure while maintaining cooperation."
+          : "The team completed the run under pressure while maintaining cooperation.";
+        if (context === "behaviour") {
+          if (challengeCount === 0) {
+            if (scenarioKey === "cafe") {
+              return "No challenge events occurred. For a Pressure Team, this suggests urgency was handled through direct preference-sharing and coordination rather than conflict. Stress stayed within the low-pressure range, showing controlled urgency rather than breakdown.";
+            }
+            return `No challenge events were recorded. For a Pressure Team, this suggests urgency was handled through fast coordination rather than conflict. Stress still rose ${pressurePhrase}, showing controlled urgency rather than breakdown.`;
+          }
+          if (scenarioKey === "office") {
+            if (challengeCount === 1) {
+              return `The ${frictionEventPhrase(challengeCount, refusalCount, { singular: true })} reflects pressure-driven urgency rather than breakdown. For a Pressure Team, stress rose into the moderate-pressure range during the project item, while ${cluesShared} information-sharing event${cluesShared === 1 ? "" : "s"} and ${agreements} agreement${agreements === 1 ? "" : "s"} kept the team moving.`;
+            }
+            return `The ${frictionEventPhrase(challengeCount, refusalCount)} reflect pressure-driven urgency rather than breakdown. For a Pressure Team, stress rose into the moderate-pressure range during the project item, while ${cluesShared} information-sharing event${cluesShared === 1 ? "" : "s"} and ${agreements} agreement${agreements === 1 ? "" : "s"} kept the team moving.`;
+          }
+          if (scenarioKey === "cafe") {
+            if (challengeCount === 1) {
+              return `The ${frictionEventPhrase(challengeCount, refusalCount, { singular: true })} reflects controlled urgency rather than breakdown. For a Pressure Team, stress stayed within the low-pressure range during the decision process, while preference-sharing and coordination kept the team moving.`;
+            }
+            return `The ${frictionEventPhrase(challengeCount, refusalCount)} reflect controlled urgency rather than breakdown. For a Pressure Team, stress stayed within the low-pressure range during the decision process, while ${cluesShared} preference-sharing event${cluesShared === 1 ? "" : "s"} and ${agreements} agreement${agreements === 1 ? "" : "s"} kept the team moving.`;
+          }
+          return `The ${challengeCount === 1 ? `${frictionEventPhrase(challengeCount, refusalCount, { singular: true })} reflects` : `${frictionEventPhrase(challengeCount, refusalCount)} reflect`} controlled urgency rather than breakdown. For a Pressure Team, stress rose ${pressurePhrase} during the final stage, but cooperation still dominated: ${cluesShared} clue share${cluesShared === 1 ? "" : "s"} and ${agreements} agreement${agreements === 1 ? "" : "s"} kept the team moving.`;
+        }
+        return `For a Pressure Team, this run shows controlled urgency rather than conflict. Agents moved through the required sequence efficiently in ${stepText}, with stress rising ${pressurePhrase}${recoveryText}. ${scenarioLine}`;
+      }
+      return "";
     }
     function outcomeLabel() {
       if (!RUN) return "Unknown";
@@ -2691,20 +3360,173 @@ const SCENARIOS = {
       return titleCase(endReason);
     }
 
-    function buildInsight(finalStep) {
-      const m = finalStep.metrics;
-      const scenLabel = RUN.scenario.key === "cafe" ? "the cafe plan"
+    function buildInsight(finalStep, summary) {
+      // summary is _savedRunSummary if available; falls back to finalStep.metrics only
+      const m   = finalStep.metrics;
+      const mt  = summary?.metric_trajectory;
+      const ec  = summary?.event_counts;
+      const bt  = summary?.blocker_timeline;
+      const fp  = summary?.final_progress ?? (m.progress / 100);
+      const refusalCount = summary?.metrics?.total_refusals || 0;
+      const finalTicks = finalStep?.tick ?? totalRunTicks();
+
+      const scenLabel = RUN.scenario.key === "cafe"   ? "the cafe plan"
                       : RUN.scenario.key === "escape" ? "the escape room"
                       : "the office project";
-      const trustPart = m.averageTrust >= 0.50
-        ? "trust stayed stable"
-        : "trust remained guarded";
-      const stressPart = m.peakStress >= 0.45
-        ? "Stress rose during the hardest requests"
-        : m.peakStress >= 0.25
-          ? "Stress rose while missing details were being requested"
-          : "Stress stayed calm throughout";
-      return `The team completed ${scenLabel}. ${stressPart}, and ${trustPart}.`;
+
+      const isEscape  = RUN.scenario.key === "escape";
+
+      // Resolve team preset key — prefer the saved summary over
+      // the live RUN object so replayed runs also get the correct context.
+      const _rawPreset = summary?.team_preset ?? "";
+      const teamKey = _rawPreset
+        ? _rawPreset.replace(/_team$/i, "").toLowerCase()
+        : (typeof RUN !== "undefined" ? (RUN.teamKey || "") : "");
+      const introBlockersTotal = (bt && bt.length > 0) ? bt.length : (ec?.blockers_total ?? null);
+
+      // One-sentence team-preset context — explains what to expect from this run
+      // so readers don't mistake "low conflict on Smooth Team" as a bug.
+      const teamContext = teamPresetResultLine(teamKey, {
+        challengeCount: ec?.challenges || 0,
+        refusalCount,
+        cluesShared: ec?.clues_shared || 0,
+        agreements: ec?.agreements || 0,
+        blockersTotal: introBlockersTotal,
+        ticks: finalTicks,
+        pressureWord: mt?.stress_peak != null
+          ? (mt.stress_peak >= 0.50 ? "high" : mt.stress_peak > 0.30 ? "moderate" : "low")
+          : "",
+        stressRecovered: mt ? mt.stress_end < mt.stress_peak - 0.06 : false,
+        scenarioKey: RUN?.scenario?.key || "",
+        trustStart: mt?.trust_start,
+        trustEnd: mt?.trust_end,
+        context: "intro",
+      });
+      // Without the summary we don't have a reliable peak stress value.
+      // Show "—" for stress in the initial render; it is replaced once the
+      // summary loads and buildInsight is called again with the full summary.
+      const peakStr   = mt ? mt.stress_peak.toFixed(2) : "—";
+      const trustEnd  = mt ? mt.trust_end.toFixed(2)   : m.averageTrust.toFixed(2);
+      const peakTick  = mt?.stress_peak_tick;
+
+      // Stress narrative — thresholds MUST match stressBand() exactly:
+      //   0.00–0.30 → low, 0.31–0.49 → moderate, 0.50+ → high
+      const peakVal   = mt?.stress_peak;   // only defined once summary loads
+      let stressPart;
+      if (peakVal == null) {
+        stressPart = "Stress data loading…";
+      } else if (peakVal >= 0.50) {
+        stressPart = `Stress peaked at ${peakStr}${peakTick ? ` (step ${peakTick})` : ""}`;
+      } else if (peakVal > 0.30) {
+        stressPart = `Stress reached a moderate peak of ${peakStr}`;
+      } else {
+        stressPart = `Stress stayed low (peak ${peakStr})`;
+      }
+
+      // Trust narrative
+      const trustVal = mt?.trust_end ?? m.averageTrust;
+      let trustPart;
+      if (mt && mt.trust_delta > 0.05) {
+        trustPart = `trust grew from ${mt.trust_start.toFixed(2)} to ${trustEnd}`;
+      } else if (mt && mt.trust_delta < -0.05) {
+        trustPart = `trust slipped from ${mt.trust_start.toFixed(2)} to ${trustEnd}`;
+      } else if (trustVal >= 0.50) {
+        trustPart = `trust held steady at ${trustEnd}`;
+      } else {
+        trustPart = `trust stayed guarded at ${trustEnd}`;
+      }
+
+      // Cooperation vs conflict narrative
+      let coopPart = "";
+      if (ec) {
+        const coop = (ec.agreements || 0) + (ec.clues_shared || 0);
+        const conf = ec.challenges || 0;
+
+        // Derive blocker counts from the timeline when available — it always
+        // matches what _renderBlockerTimeline shows, so the counts stay in sync.
+        // Only fall back to ec.blockers_* if no timeline was recorded.
+        let blkRes = null;
+        let blkTot = null;
+        if (bt && bt.length > 0 && summary?.tasks) {
+          blkTot = bt.length;
+          blkRes = bt.filter(b => summary.tasks[b.item] === true).length;
+        } else {
+          blkRes = ec.blockers_resolved ?? null;
+          blkTot = ec.blockers_total   ?? null;
+        }
+
+        if (coop > 0 && conf === 0) {
+          coopPart = `Agents cooperated without conflict — ${coop} cooperative events drove the run.`;
+        } else if (coop > 0 && conf > 0 && coop >= conf * 2) {
+          coopPart = `Cooperation dominated (${coop} cooperative vs ${frictionEventPhrase(conf, refusalCount)}).`;
+        } else if (conf > coop) {
+          coopPart = `Conflict was high — ${frictionEventPhrase(conf, refusalCount)} vs ${coop} cooperative events.`;
+        }
+        if (blkRes != null && blkTot != null && blkRes === blkTot) {
+          coopPart += ` All ${blkTot} item${blkTot === 1 ? "" : "s"} resolved${isEscape ? " before the door opened" : ""}.`;
+        } else if (blkRes != null && blkTot != null) {
+          coopPart += ` ${blkRes} of ${blkTot} items resolved.`;
+        }
+      }
+
+      // Blocker context: name the hardest or most recent blocker
+      let blockerPart = "";
+      if (bt && bt.length > 0 && isEscape) {
+        const longest = bt.reduce((a, b) => (b.duration > a.duration ? b : a), bt[0]);
+        const blockLabel = _itemLabel(longest.item);
+        if (longest.duration >= 2) {
+          blockerPart = ` The team spent ${longest.duration} step${longest.duration === 1 ? "" : "s"} on the ${blockLabel} — the longest single step.`;
+        }
+      }
+
+      const outcome = fp >= 1.0 ? `completed ${scenLabel}` : `reached ${Math.round(fp * 100)}% on ${scenLabel}`;
+
+      // Pressure word — MUST match stressBand() thresholds so the card sub-label
+      // and the insight sentence always agree (0.00–0.30 → low, 0.31–0.49 → moderate,
+      // 0.50+ → high).  No team-specific overrides: Smooth Team with a 0.40 peak
+      // correctly says "moderate pressure" rather than "light pressure".
+      const pressureWord = (peakVal == null) ? "—"
+        : peakVal >= 0.50 ? "high"
+        : peakVal > 0.30 ? "moderate"
+        : "low";
+
+      // If the summary hasn't loaded yet (peakVal is null), only show what we
+      // know: progress, trust from the final step, and cooperation counts.
+      // Stress and pressure are omitted until the canonical mt.stress_peak arrives.
+      if (peakVal == null) {
+        const basicLine = `The team ${outcome}. Trust ended at ${trustEnd}.${blockerPart} ${coopPart}`.trim();
+        return teamContext ? `${teamContext} ${basicLine}` : basicLine;
+      }
+
+      if (teamKey === "pressure" && RUN?.scenario?.key === "office") {
+        return teamContext;
+      }
+
+      if (teamKey === "pressure" && RUN?.scenario?.key === "cafe") {
+        return teamContext;
+      }
+
+      if (teamKey === "creative" && RUN?.scenario?.key === "cafe") {
+        return teamContext;
+      }
+
+      const metricLine = `The team ${outcome} with ${pressureWord} pressure. ${stressPart}, and ${trustPart}.${blockerPart} ${coopPart}`.trim();
+      return teamContext ? `${teamContext} ${metricLine}` : metricLine;
+    }
+
+    function _itemLabel(key) {
+      // Human-readable names for scenario item keys
+      const labels = {
+        map: "Room Map", lock: "Lock Pattern", key: "Key Location",
+        door: "Door Code", unlock: "Final Unlock",
+        digit_1: "Door Digit 1", digit_2: "Door Digit 2",
+        digit_3: "Door Digit 3", order: "Digit Order",
+        // office/cafe
+        report: "Report", budget: "Budget", schedule: "Schedule",
+        approval: "Approval", venue: "Venue", catering: "Catering",
+        guest_list: "Guest List", equipment: "Equipment",
+      };
+      return labels[key] ?? key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
     }
 
     function completionSubtitle(finalStep) {
@@ -2717,7 +3539,493 @@ const SCENARIOS = {
       return `The office project was completed in ${finalStep.tick} step${finalStep.tick === 1 ? "" : "s"}.`;
     }
 
-    function showCompletionModal() {
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function _evidenceBullets(evidence) {
+      if (!evidence || !evidence.length) return "";
+      const bullets = evidence.map(ev => {
+        const step = ev.tick != null ? `Step ${ev.tick}` : "";
+        const text = ev.text || "";
+        return `<li style="margin:3px 0;">${step ? `<strong>${step}:</strong> ` : ""}${escapeHtml(text)}</li>`;
+      }).join("");
+      return `<ul style="margin:6px 0 6px 18px;padding:0;font-size:0.84rem;color:#3a5068;">${bullets}</ul>`;
+    }
+
+    function _renderMemorySection(mem) {
+      const el = document.getElementById("doneMemory");
+      if (!el) return;
+      if (!mem || mem.total_impressions == null) {
+        el.textContent = "Memory data will appear on the next run.";
+        return;
+      }
+      if (mem.total_impressions === 0) {
+        el.textContent = mem.no_impression_reason || "No memory signals were detected during this run.";
+        return;
+      }
+
+      const _impList = [mem.strongest_positive, mem.strongest_conflict].filter(Boolean);
+      const _shownCount = _impList.length;
+      const _totalCount = mem.total_impressions;
+      // Memory wording is driven by what is actually shown, not by hidden totals.
+      // 1 interaction = early coordination signal
+      // 2 interactions = emerging coordination pattern
+      // 3+ interactions = strong memory impression
+      function _impStrengthLabel(evLen) {
+        if (evLen <= 1) return "early coordination signal";
+        if (evLen <= 2) return "emerging coordination pattern";
+        return "strong memory impression";
+      }
+
+      let html = "";
+      const _signalWord = _totalCount === 1 ? "signal was" : "signals were";
+      if (_shownCount === 1 && _totalCount > 1) {
+        html = `<p style="margin:0 0 10px;">${_totalCount} coordination ${_signalWord} recorded. The strongest example is shown below.</p>`;
+      } else if (_shownCount === 1) {
+        const hasEvidence = Boolean(_impList[0]?.evidence?.length);
+        html = hasEvidence
+          ? `<p style="margin:0 0 10px;">Representative coordination pattern shown below.</p>`
+          : `<p style="margin:0 0 10px;">1 coordination signal was recorded, but no representative example was available for display.</p>`;
+      } else if (_shownCount < _totalCount) {
+        html = `<p style="margin:0 0 10px;">${_totalCount} coordination ${_signalWord} recorded. Representative patterns are shown below.</p>`;
+      } else {
+        html = `<p style="margin:0 0 10px;">Representative coordination patterns are shown below.</p>`;
+      }
+
+      for (const imp of _impList) {
+        if (!imp) continue;
+        const evLen = imp.evidence?.length || 0;
+        const _label = _impStrengthLabel(evLen);
+        if (imp.narrative) {
+          // Backend narrative already carries the strength wording.
+          html += `<p style="margin:0 0 4px;font-weight:600;">${escapeHtml(imp.narrative)}</p>`;
+          html += _evidenceBullets(imp.evidence);
+        } else {
+          // Fallback for older run data without a narrative field.
+          const label = "positive" in (imp.patterns || {}) ? "positive" : "conflict-prone";
+          const relation = evLen >= 3
+            ? `formed a ${label} ${_label}`
+            : `showed a ${label} ${_label}`;
+          html += `<p style="margin:0 0 4px;font-weight:600;">`
+               + `${escapeHtml(imp.observer)} ${relation}`
+               + ` with ${escapeHtml(imp.target)}`
+               + (evLen ? ` (${evLen} evidence event${evLen === 1 ? "" : "s"})` : "") + `:</p>`;
+          html += _evidenceBullets(imp.evidence);
+          if (imp.effect) {
+            html += `<p style="margin:4px 0 12px;font-size:0.84rem;color:#617387;font-style:italic;">Effect: ${escapeHtml(imp.effect)}</p>`;
+          }
+        }
+      }
+      el.innerHTML = html;
+    }
+
+    function _renderEmotionSection(emo) {
+      const el = document.getElementById("doneEmotion");
+      if (!el) return;
+      if (!emo || emo.emotion_inputs == null) {
+        el.textContent = "Emotion data will appear on the next run.";
+        return;
+      }
+
+      let html = "";
+
+      // ── Agent emotional memory (NLP-derived from STM) ──────────────────────
+      const aem = emo.agent_emotional_memory;
+      if (aem) {
+        const pressurePct = Math.round((aem.avg_pressure   || 0) * 100);
+        const positPct    = Math.round((aem.avg_positivity || 0) * 100);
+        const hasSignal   = pressurePct > 5 || positPct > 5;
+
+        html += `<div style="margin-bottom:14px;">`;
+        html += `<div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8a96a8;margin-bottom:6px;">Agent Emotional Memory</div>`;
+
+        if (!hasSignal) {
+          // No meaningful emotional signal — just show the interpretation text
+          html += `<p style="margin:0;font-size:0.84rem;color:#617387;font-style:italic;">${escapeHtml(aem.interpretation || "Agent emotional memory remained neutral throughout the run. No memories were classified as strongly negative or positive, so emotional memory did not significantly influence trust or stress.")}</p>`;
+        } else {
+          // Show stats only when there's actual signal
+          const barColor = pressurePct > 40 ? "#e83030"
+                         : pressurePct > 22 ? "#f5a623"
+                         : "#1ec466";
+          html += `<div style="display:flex;gap:10px;margin-bottom:8px;">`;
+          html += `<div style="flex:1;background:#f7f9fc;border-radius:8px;padding:8px 10px;text-align:center;">` +
+                  `<div style="font-size:1.1rem;font-weight:900;color:${barColor};">${pressurePct}%</div>` +
+                  `<div style="font-size:0.72rem;color:#8a96a8;margin-top:1px;">Negative</div></div>`;
+          html += `<div style="flex:1;background:#f7f9fc;border-radius:8px;padding:8px 10px;text-align:center;">` +
+                  `<div style="font-size:1.1rem;font-weight:900;color:#1a7a4a;">${positPct}%</div>` +
+                  `<div style="font-size:0.72rem;color:#8a96a8;margin-top:1px;">Positive</div></div>`;
+          if (aem.peak_pressure_tick != null && aem.peak_pressure > 0.05) {
+            html += `<div style="flex:1;background:#f7f9fc;border-radius:8px;padding:8px 10px;text-align:center;">` +
+                    `<div style="font-size:1.1rem;font-weight:900;color:#1667f5;">${aem.peak_pressure_tick}</div>` +
+                    `<div style="font-size:0.72rem;color:#8a96a8;margin-top:1px;">Peak step</div></div>`;
+          }
+          html += `</div>`;
+          if (aem.dominant_negative || aem.dominant_positive) {
+            html += `<div style="font-size:0.82rem;color:#617387;margin-bottom:6px;">`;
+            if (aem.dominant_negative) html += `Most negative: <strong>${escapeHtml(aem.dominant_negative)}</strong>`;
+            if (aem.dominant_negative && aem.dominant_positive) html += ` · `;
+            if (aem.dominant_positive) html += `Most positive: <strong>${escapeHtml(aem.dominant_positive)}</strong>`;
+            html += `</div>`;
+          }
+          if (aem.interpretation) {
+            html += `<p style="margin:0;font-size:0.82rem;color:#617387;font-style:italic;">${escapeHtml(aem.interpretation)}</p>`;
+          }
+        }
+        html += `</div>`;
+      }
+
+      // ── User emotion injection section ─────────────────────────────────────
+      if (!emo.emotion_inputs) {
+        html += `<p style="margin:0;font-size:0.82rem;color:#8a96a8;">No user emotion input was applied during this run.</p>`;
+        el.innerHTML = html;
+        return;
+      }
+
+      const dominant = emo.dominant_emotion || "neutral";
+      const valence  = emo.valence_label  || (emo.average_valence > 0.1 ? "mildly positive" : emo.average_valence < -0.1 ? "mildly negative" : "neutral");
+      const arousal  = emo.arousal_label  || (emo.average_arousal > 0.5 ? "high" : "low");
+      const effect   = emo.effect_label   || "minimal";
+
+      html += `<div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#8a96a8;margin-bottom:6px;">User Emotion Input</div>`;
+      html += `<p style="margin:0 0 6px;"><strong>Detected:</strong> ${escapeHtml(dominant)}</p>`;
+      html += `<p style="margin:0 0 4px;font-size:0.84rem;color:#617387;">Valence: ${escapeHtml(valence)} · Arousal: ${escapeHtml(arousal)} · Effect: ${escapeHtml(effect)}</p>`;
+
+      if (effect === "minimal" && emo.zero_reason) {
+        html += `<p style="margin:8px 0 4px;font-size:0.84rem;color:#617387;font-style:italic;"><strong>Reason:</strong> ${escapeHtml(emo.zero_reason)}</p>`;
+      } else if (effect !== "minimal") {
+        html += `<p style="margin:6px 0 0;font-size:0.84rem;color:#617387;">`;
+        html += `Stress impact: <strong>${emo.stress_impact}</strong> · `;
+        html += `Trust impact: <strong>${emo.trust_impact}</strong></p>`;
+      }
+      el.innerHTML = html;
+    }
+
+    function _renderEventCounts(ec, summary) {
+      const el = document.getElementById("doneEventCounts");
+      if (!el || !ec) return;
+
+      // Pull blocker counts from blocker_timeline so this section stays in sync
+      // with the blocker timeline panel below it.
+      const bt = summary?.blocker_timeline;
+      const isEscape = (typeof RUN !== "undefined") && RUN?.scenario?.key === "escape";
+      let blkRes = ec.blockers_resolved ?? null;
+      let blkTot = ec.blockers_total   ?? null;
+      if (bt && bt.length > 0 && summary?.tasks) {
+        blkTot = bt.length;
+        blkRes = bt.filter(b => summary.tasks[b.item] === true).length;
+      }
+
+      const rows = [
+        ["Messages exchanged",    ec.messages_exchanged],
+        [isEscape ? "Clues shared" : ((typeof RUN !== "undefined") && RUN?.scenario?.key === "cafe" ? "Preferences / constraints shared" : "Information shared"), ec.clues_shared],
+        ["Questions asked",       ec.questions_asked],
+        ["Agreements",            ec.agreements],
+        ["Challenges / refusals", ec.challenges],
+        [isEscape ? "Clues resolved" : "Items resolved", blkRes != null && blkTot != null ? `${blkRes}/${blkTot}` : "—"],
+        ["Interventions used",    ec.interventions_used],
+      ];
+      let html = rows.map(([label, val]) =>
+        `<div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(17,32,51,0.06);padding:3px 0;">` +
+        `<span style="color:#617387;">${label}</span>` +
+        `<strong style="color:#112033;">${val ?? "—"}</strong></div>`
+      ).join("");
+
+      // Interpretation sentence — escape-room-aware
+      const coop = (ec.agreements || 0) + (ec.clues_shared || 0);
+      const conf = ec.challenges || 0;
+      const refusalCount = summary?.metrics?.total_refusals || 0;
+      const finalTicks = RUN?.steps?.length ? (RUN.steps[RUN.steps.length - 1]?.tick || 0) : (summary?.ticks || null);
+      let interp = "";
+
+      // blkRes/blkTot already derived from timeline above — reuse them.
+      const blkStr = (blkRes != null && blkTot != null)
+        ? ` with ${blkRes} of ${blkTot} item${blkTot === 1 ? "" : "s"} resolved` : "";
+
+      // Resolve team preset from summary or live RUN
+      const _rawPresetEC = summary?.team_preset ?? "";
+      const _teamKeyEC   = _rawPresetEC
+        ? _rawPresetEC.replace(/_team$/i, "").toLowerCase()
+        : (typeof RUN !== "undefined" ? (RUN.teamKey || "") : "");
+
+      if (isEscape) {
+        // In escape rooms, challenge events are expected — they reflect urgency,
+        // not dysfunction.  No challenges at all is the unusual case.
+        if (conf === 0 && coop > 0) {
+          const _zeroConfExplain = teamPresetResultLine(_teamKeyEC, {
+            challengeCount: conf,
+            refusalCount,
+            cluesShared: ec.clues_shared || 0,
+            agreements: ec.agreements || 0,
+            blockersTotal: blkTot,
+            ticks: finalTicks,
+            pressureWord: summary?.metric_trajectory?.stress_peak != null
+              ? (summary.metric_trajectory.stress_peak >= 0.50 ? "high" : summary.metric_trajectory.stress_peak > 0.30 ? "moderate" : "low")
+              : "",
+            stressRecovered: summary?.metric_trajectory
+              ? summary.metric_trajectory.stress_end < summary.metric_trajectory.stress_peak - 0.06
+              : false,
+            scenarioKey: RUN?.scenario?.key || "",
+            context: "behaviour",
+          })
+            || `Every clue owner released their information without resistance — a high-trust cooperative run.`;
+          interp = _zeroConfExplain;
+        } else if (conf > 0 && coop >= conf * 2) {
+          const shares = ec.clues_shared || 0;
+          const agrees = ec.agreements   || 0;
+          const _confContext = teamPresetResultLine(_teamKeyEC, {
+            challengeCount: conf,
+            refusalCount,
+            cluesShared: shares,
+            agreements: agrees,
+            blockersTotal: blkTot,
+            ticks: finalTicks,
+            pressureWord: summary?.metric_trajectory?.stress_peak != null
+              ? (summary.metric_trajectory.stress_peak >= 0.50 ? "high" : summary.metric_trajectory.stress_peak > 0.30 ? "moderate" : "low")
+              : "",
+            stressRecovered: summary?.metric_trajectory
+              ? summary.metric_trajectory.stress_end < summary.metric_trajectory.stress_peak - 0.06
+              : false,
+            scenarioKey: RUN?.scenario?.key || "",
+            context: "behaviour",
+          })
+            || "Friction events reflected pressure around the final step, but the team kept moving.";
+          interp = _confContext;
+        } else if (conf > 0 && conf > coop) {
+          interp = `High friction run: ${frictionEventPhrase(conf, refusalCount, { capitalized: false })} outpaced ${coop} cooperative events${blkStr}. `
+                 + `Held clues and time pressure drove significant conflict between agents.`;
+        } else if (conf > 0) {
+          interp = `Friction and cooperation were roughly balanced (${frictionEventPhrase(conf, refusalCount)} vs ${coop} cooperative events)${blkStr}. `
+                 + `Typical for a pressured escape room where clue owners needed repeated prompting.`;
+        }
+      } else {
+        const scenKey = (typeof RUN !== "undefined") && RUN?.scenario?.key;
+        if (conf === 0 && coop > 0) {
+          const _offExplain = teamPresetResultLine(_teamKeyEC, {
+            challengeCount: conf,
+            refusalCount,
+            cluesShared: ec.clues_shared || 0,
+            agreements: ec.agreements || 0,
+            blockersTotal: blkTot,
+            ticks: finalTicks,
+            pressureWord: summary?.metric_trajectory?.stress_peak != null
+              ? (summary.metric_trajectory.stress_peak >= 0.50 ? "high" : summary.metric_trajectory.stress_peak > 0.30 ? "moderate" : "low")
+              : "",
+            stressRecovered: summary?.metric_trajectory
+              ? summary.metric_trajectory.stress_end < summary.metric_trajectory.stress_peak - 0.06
+              : false,
+            scenarioKey: RUN?.scenario?.key || "",
+            context: "behaviour",
+          })
+            || (scenKey === "cafe"
+              ? `No challenge events occurred. The run followed the expected café pattern: low stress, steady preference-sharing, and cooperative decision-making.`
+              : `Agents cooperated throughout without friction.`);
+          interp = _offExplain;
+        } else if (coop > 0 && conf > 0) {
+          if (coop >= conf * 2) {
+            const teamLine = teamPresetResultLine(_teamKeyEC, {
+              challengeCount: conf,
+              refusalCount,
+              cluesShared: ec.clues_shared || 0,
+              agreements: ec.agreements || 0,
+              blockersTotal: blkTot,
+              ticks: finalTicks,
+              pressureWord: summary?.metric_trajectory?.stress_peak != null
+                ? (summary.metric_trajectory.stress_peak >= 0.50 ? "high" : summary.metric_trajectory.stress_peak > 0.30 ? "moderate" : "low")
+                : "",
+              stressRecovered: summary?.metric_trajectory
+                ? summary.metric_trajectory.stress_end < summary.metric_trajectory.stress_peak - 0.06
+                : false,
+              scenarioKey: RUN?.scenario?.key || "",
+              context: "behaviour",
+            });
+            interp = teamLine || `Cooperation outweighed conflict (${coop} vs ${conf}) — trust stayed stable as a result.`;
+          } else if (conf > coop) {
+            interp = `Conflict outweighed cooperation (${conf} vs ${coop}) — this is why trust came under pressure.`;
+          } else {
+            interp = `Cooperation and conflict were roughly balanced (${coop} cooperative, ${conf} conflict events).`;
+          }
+        }
+      }
+
+      if (interp) {
+        html += `<p style="margin:8px 0 0;font-size:0.82rem;color:#617387;font-style:italic;">${interp}</p>`;
+      }
+
+      // Explain zero questions in escape rooms — otherwise a marker will wonder
+      // why a timed clue-solving scenario shows 0 questions asked.
+      if (isEscape && (ec.questions_asked === 0 || ec.questions_asked == null)) {
+        html += `<p style="margin:6px 0 0;font-size:0.82rem;color:#617387;font-style:italic;">` +
+          `No direct question events were recorded because agents mostly shared and confirmed ` +
+          `clues proactively rather than repeatedly requesting information.</p>`;
+      }
+
+      el.innerHTML = html;
+    }
+
+    function _renderMetricMovement(mt, summary) {
+      const el = document.getElementById("doneMetricMovement");
+      if (!el) return;
+
+      if (!mt || mt.stress_start == null) {
+        el.innerHTML = `<p style="margin:0;font-size:0.84rem;color:#8a96a8;font-style:italic;">` +
+          `Per-step metric history is not yet available — run a simulation to populate this section.</p>`;
+        return;
+      }
+
+      const row = (label, content) =>
+        `<div style="display:flex;justify-content:space-between;align-items:baseline;` +
+        `padding:5px 0;border-bottom:1px solid rgba(17,32,51,0.06);">` +
+        `<span style="color:#617387;font-size:0.84rem;white-space:nowrap;margin-right:12px;">${label}</span>` +
+        `<span style="color:#112033;font-size:0.84rem;text-align:right;">${content}</span></div>`;
+
+      const trustDelta = mt.trust_delta ?? 0;
+      const trustDir   = trustDelta >  0.03 ? "↑ grew"
+                       : trustDelta < -0.03 ? "↓ fell"
+                       : "→ held steady";
+      const trustColor = trustDelta >  0.03 ? "#1a7a4a"
+                       : trustDelta < -0.03 ? "#b94040"
+                       : "#617387";
+      const deltaSign  = trustDelta >= 0 ? "+" : "";
+
+      // Stress "recovered" only when the end value dropped meaningfully below the peak.
+      // A gap of less than 0.06 means the run finished under sustained pressure.
+      const stressRecovered = mt.stress_end < mt.stress_peak - 0.06;
+      const stressStillHigh = mt.stress_end >= 0.50;
+      const stressStayedHigh = !stressRecovered && mt.stress_end >= 0.45;
+
+      // Progress row from saved summary
+      const fp = summary?.final_progress;
+      const ticks = RUN?.steps?.length ? (RUN.steps[RUN.steps.length - 1]?.tick || 0) : (summary?.ticks || 0);
+      const scenKey = (typeof RUN !== "undefined") && RUN?.scenario?.key;
+
+      let html = "";
+
+      if (fp != null) {
+        html += row("Progress",
+          `0% → <strong>${Math.round(fp * 100)}%</strong>` +
+          (ticks != null ? ` <span style="color:#617387;">in ${ticks} step${ticks === 1 ? "" : "s"}</span>` : ""));
+      }
+
+      html += row("Team trust",
+        `${mt.trust_start.toFixed(2)} → <strong>${mt.trust_end.toFixed(2)}</strong> ` +
+        `<span style="color:${trustColor};font-weight:700;">${trustDir} (${deltaSign}${trustDelta.toFixed(2)})</span>`);
+
+      let stressContent = `${mt.stress_start.toFixed(2)} start · ` +
+        `peak <strong style="color:${mt.stress_peak >= 0.50 ? "#e83030" : mt.stress_peak > 0.30 ? "#f5a623" : "#1a7a4a"};">${mt.stress_peak.toFixed(2)}</strong>` +
+        ` at step ${mt.stress_peak_tick}`;
+      if (stressStillHigh) {
+        stressContent += ` · <span style="color:#b94040;">remained elevated at ${mt.stress_end.toFixed(2)}</span>`;
+      } else if (stressRecovered) {
+        stressContent += ` · <span style="color:#1a7a4a;">recovered to ${mt.stress_end.toFixed(2)}</span>`;
+      } else {
+        stressContent += ` · ended ${mt.stress_end.toFixed(2)}`;
+      }
+      html += row("Peak team stress", stressContent);
+
+      // When stress stayed high and barely recovered, add a plain-English note so
+      // the reader doesn't wonder why it didn't drop — they can see it's because
+      // the final blocker sustained pressure all the way to the end.
+      if (stressStayedHigh) {
+        const pressureNote = scenKey === "escape"
+          ? "Stress remained high near completion because the final step created continued escape-room pressure."
+          : "Stress remained elevated at the end of the run — the final required item was not resolved early enough for recovery.";
+        html += `<p style="margin:6px 0 0;font-size:0.81rem;color:#8a96a8;font-style:italic;">${pressureNote}</p>`;
+      }
+
+      el.innerHTML = html;
+    }
+
+    function _renderBlockerTimeline(blockers, summary) {
+      const el = document.getElementById("doneBlockerTimeline");
+      if (!el) return;
+
+      if (!blockers || blockers.length === 0) {
+        // If tasks exist but no timeline was recorded, explain why
+        const tasks = summary?.tasks;
+        if (tasks && Object.keys(tasks).length > 0) {
+          const resolved = Object.values(tasks).filter(v => v === true).length;
+          const total    = Object.keys(tasks).length;
+          el.innerHTML = `<p style="margin:0;font-size:0.84rem;color:#617387;">` +
+            `${resolved} of ${total} items resolved — step-level progress data was ` +
+            `not captured for this run (requires metric_history to be populated per tick).</p>`;
+        } else {
+          el.innerHTML = `<p style="margin:0;font-size:0.84rem;color:#8a96a8;font-style:italic;">` +
+            `No progress timeline data available for this run.</p>`;
+        }
+        return;
+      }
+
+      // tasks dict: item → true (resolved) or false (open)
+      const tasks = summary?.tasks ?? {};
+      // completion_order: items in the order they were resolved
+      const completionOrder = summary?.completion_order ?? [];
+
+      const html = blockers.map((b, i) => {
+        const label    = _itemLabel(b.item);
+        const resolved = tasks[b.item] === true;
+        const dur      = b.duration === 1 ? "1 step" : `${b.duration} steps`;
+        const range    = b.start_tick === b.end_tick
+          ? `Step ${b.start_tick}`
+          : `Steps ${b.start_tick}–${b.end_tick}`;
+
+        // Position in completion order
+        const orderIdx = completionOrder.indexOf(b.item);
+        const orderTag = orderIdx >= 0
+          ? `<span style="font-size:0.76rem;color:#8a96a8;margin-left:4px;">#${orderIdx + 1} resolved</span>`
+          : "";
+
+        const statusDot = resolved
+          ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1ec466;margin-right:7px;flex-shrink:0;"></span>`
+          : `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#e83030;margin-right:7px;flex-shrink:0;"></span>`;
+        const durColor  = b.duration >= 4 ? "#e83030" : b.duration >= 2 ? "#f5a623" : "#617387";
+
+        return (
+          `<div style="display:flex;justify-content:space-between;align-items:center;` +
+          `padding:7px 0;border-bottom:1px solid rgba(17,32,51,0.06);">` +
+          `<span style="display:flex;align-items:center;font-size:0.84rem;color:#112033;">` +
+          `${statusDot}<strong>${escapeHtml(label)}</strong>${orderTag}</span>` +
+          `<span style="font-size:0.84rem;text-align:right;white-space:nowrap;">` +
+          `${range} <span style="color:${durColor};">(${dur})</span></span></div>`
+        );
+      }).join("");
+
+      // Summary line
+      const resolvedCount = blockers.filter(b => tasks[b.item] === true).length;
+      const totalCount    = blockers.length;
+      const longestB      = blockers.reduce((a, b) => (b.duration > a.duration ? b : a), blockers[0]);
+      const longestLabel  = _itemLabel(longestB.item);
+      const tiedLongest   = blockers.filter(b => b.duration === longestB.duration);
+      const isEscape = (typeof RUN !== "undefined") && RUN?.scenario?.key === "escape";
+      const mapPreShared = isEscape && totalCount === 4 && tasks.map === true && !blockers.some((b) => b.item === "map");
+
+      let summary_line = `<p style="margin:8px 0 6px;font-size:0.82rem;color:#617387;font-style:italic;">`;
+      if (mapPreShared && resolvedCount === totalCount) {
+        summary_line += `All 4 active steps were resolved. Room Map was pre-shared at the start, so it was not counted as an active step.`;
+      } else if (resolvedCount === totalCount) {
+        summary_line += `All ${totalCount} item${totalCount === 1 ? "" : "s"} resolved.`;
+      } else {
+        summary_line += `${resolvedCount} of ${totalCount} item${totalCount === 1 ? "" : "s"} resolved.`;
+      }
+      if (longestB.duration >= 2) {
+        if (tiedLongest.length > 1) {
+          const _tiedLabels = tiedLongest.map(b => escapeHtml(_itemLabel(b.item)));
+          const tiedNames = _tiedLabels.length > 2
+            ? _tiedLabels.slice(0, -1).join(", ") + ", and " + _tiedLabels[_tiedLabels.length - 1]
+            : _tiedLabels.join(" and ");
+          summary_line += ` ${tiedNames} were joint-longest at ${longestB.duration} step${longestB.duration === 1 ? "" : "s"} each.`;
+        } else {
+          summary_line += ` ${escapeHtml(longestLabel)} was the longest step at ${longestB.duration} step${longestB.duration === 1 ? "" : "s"}.`;
+        }
+      }
+      summary_line += `</p>`;
+
+      el.innerHTML = summary_line + html;
+    }
+
+    async function showCompletionModal() {
       if (completionShown) return;
       completionShown = true;
 
@@ -2733,12 +4041,69 @@ const SCENARIOS = {
       document.getElementById("doneTrustValue").textContent = fmtNum(m.averageTrust);
       document.getElementById("doneTrustSub").textContent = trustBand(m.averageTrust);
 
-      document.getElementById("doneStressValue").textContent = fmtNum(m.peakStress);
-      document.getElementById("doneStressSub").textContent = stressBand(m.peakStress);
+      // Stress card: always use the server-computed peak team stress from
+      // metric_trajectory.stress_peak so the card matches insight and movement.
+      // Never fall back to m.peakStress (a client-side estimate that can differ
+      // from the backend avg-based peak). Show "—" until the summary loads.
+      document.getElementById("doneStressValue").textContent = "—";
+      document.getElementById("doneStressSub").textContent = "Loading…";
 
-      document.getElementById("doneInsight").textContent = buildInsight(finalStep);
+      // Set a basic insight immediately (no stress peak yet)
+      document.getElementById("doneInsight").textContent = buildInsight(finalStep, null);
 
       document.getElementById("doneOverlay").classList.add("is-open");
+
+      // Fetch saved run summary for all detail sections.
+      // Live runs are saved to disk when the model ends (before the WS diff is sent),
+      // but we retry once after 800 ms to handle any edge-case delay.
+      const summaryRunId = RUN?.runId;
+      if (_savedRunSummary && !cachedSummaryMatchesRun(summaryRunId)) {
+        _savedRunSummary = null;
+      }
+      if (summaryRunId && !_savedRunSummary) {
+        try {
+          _savedRunSummary = await fetchSavedRunSummary(summaryRunId);
+        } catch (_) {
+          // First attempt failed — wait and retry once
+          await new Promise(r => setTimeout(r, 800));
+          try { _savedRunSummary = await fetchSavedRunSummary(summaryRunId); } catch (_2) {}
+        }
+      }
+      if (_savedRunSummary) {
+        const sectionsEl = document.getElementById("doneSections");
+        if (sectionsEl) sectionsEl.style.display = "flex";
+
+        // Update insight with richer data now that the summary is loaded
+        document.getElementById("doneInsight").textContent =
+          buildInsight(finalStep, _savedRunSummary);
+
+        // Update outcome sub-label with classify_run_outcome result if available
+        const outcomeDescEl = document.getElementById("doneOutcomeSub");
+        if (outcomeDescEl && _savedRunSummary.outcome_label) {
+          outcomeDescEl.textContent = _savedRunSummary.outcome_label;
+        }
+
+        // Re-sync the stress card to the trajectory peak now that we have it.
+        // The initial render used m.peakStress (live-step value); the trajectory
+        // peak is more accurate and is what the insight and metric panel show.
+        const mt = _savedRunSummary.metric_trajectory;
+        if (mt?.stress_peak != null) {
+          document.getElementById("doneStressValue").textContent = fmtNum(mt.stress_peak);
+          document.getElementById("doneStressSub").textContent = stressBand(mt.stress_peak);
+        }
+
+        _renderMetricMovement(_savedRunSummary.metric_trajectory, _savedRunSummary);
+        _renderBlockerTimeline(_savedRunSummary.blocker_timeline, _savedRunSummary);
+        _renderMemorySection(_savedRunSummary.memory_summary);
+        _renderEmotionSection(_savedRunSummary.emotion_summary);
+        _renderEventCounts(_savedRunSummary.event_counts, _savedRunSummary);
+      } else {
+        // No summary loaded — show graceful fallbacks so sections aren't blank dashes
+        const sectionsEl = document.getElementById("doneSections");
+        if (sectionsEl) sectionsEl.style.display = "flex";
+        _renderMetricMovement(null, null);
+        _renderBlockerTimeline(null, null);
+      }
     }
 
     function hideCompletionModal() {
@@ -2811,10 +4176,29 @@ const SCENARIOS = {
         rawRunState = await fetchLiveOrSavedRunStatus(runId);
         rebuildRun({ forceLatest: true });
 
+        // Apply replay-mode labels to the header and browser title so the user
+        // can immediately see whether they are reviewing a Watch Mode or a Live
+        // Interactive run.  This does not affect any simulation or metric logic.
+        if (CONFIG.mode === "watch_replay" || CONFIG.mode === "interactive_replay") {
+          const replayLabel = CONFIG.mode === "watch_replay"
+            ? "Watch Mode Replay"
+            : "Live Interactive Replay";
+          document.title = replayLabel + " — SimuVerse";
+          const svSub = document.querySelector(".sv-sub");
+          if (svSub) svSub.textContent = replayLabel;
+          if (footerNote) {
+            footerNote.textContent = replayLabel
+              + " — reviewing a saved run. No new simulation is running.";
+          }
+        }
+
         if (!RUN?.ended) {
           await ensureSocket(runId);
         }
 
+        // Auto-start only for live Watch Mode runs that haven't begun yet.
+        // Replay modes (watch_replay / interactive_replay) always arrive with
+        // RUN.ended = true and must NOT auto-start a new backend run.
         if (RUN?.mode === "auto" && !RUN.ended && totalRunTicks() === 0) {
           window.setTimeout(() => {
             playPlayback();

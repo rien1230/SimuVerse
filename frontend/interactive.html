@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script src="consent-guard.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SimuVerse — Live Interactive</title>
 
@@ -11,35 +12,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="interaction.css">
+  <link rel="stylesheet" href="interaction.css?v=13">
+  <link rel="stylesheet" href="nav.css">
 </head>
 
 <body>
   <!-- Top navigation -->
-  <header class="topbar">
-    <div class="brand-block">
-      <a class="brand-mark" href="index.html" aria-label="SimuVerse home">
-        <span>SV</span>
-      </a>
-
-      <div class="brand-title-wrap">
-        <span class="brand-title">SimuVerse</span>
-      </div>
-
-      <span class="brand-divider"></span>
-
+  <header class="sv-topbar">
+    <div class="sv-brand">
+      <a class="sv-mark" href="index.html" aria-label="SimuVerse home">SV</a>
+      <span class="sv-name">SimuVerse</span>
+      <span class="sv-divider"></span>
       <span class="mode-pill" id="modePill">
         <span class="mode-dot" id="modeDot"></span>
         <span id="modeLabel">Live Interactive</span>
       </span>
     </div>
-
-    <nav class="top-links" aria-label="Main navigation">
-      <a class="nav-link" href="index.html">Home</a>
-      <a class="nav-link" href="setup.html">Setup</a>
-      <a class="nav-link" href="history.html">History</a>
+    <span class="sv-spacer"></span>
+    <nav class="sv-nav" aria-label="Main navigation">
+      <a href="index.html">Home</a>
+      <a href="setup.html">Setup</a>
+      <a href="history.html">History</a>
+      <a href="experiment.html">Experiments</a>
     </nav>
-    <a class="hidden" id="dashboardLink" href="dashboard.html">Dashboard</a>
+    <!-- Hidden link for JS-built dashboard URL — not part of visible nav -->
+    <a class="hidden" id="dashboardLink" href="dashboard.html" aria-hidden="true">Dashboard</a>
   </header>
 
   <!-- Fallback: no run -->
@@ -71,60 +68,65 @@
 
       <!-- Status strip -->
       <section class="status-strip" aria-label="Simulation status summary">
+        <div class="status-group status-group-run">
+          <article class="sc-card sc-card-step">
+            <div class="sc-label" id="sTickLabel">Next Step</div>
+            <div class="sc-value status-value" id="sTick">0</div>
+          </article>
 
-        <article class="sc-card sc-card-step">
-          <div class="sc-label">Step</div>
-          <div class="sc-value status-value" id="sTick">0</div>
-        </article>
+          <article class="sc-card sc-card-status">
+            <div class="sc-label">Status</div>
+            <div class="sc-value status-value" id="sStatus">Ready</div>
+          </article>
 
-        <article class="sc-card">
-          <div class="sc-label">Status</div>
-          <div class="sc-value status-value" id="sStatus">Ready</div>
-        </article>
+          <article class="sc-card sc-card-scenario">
+            <div class="sc-label">Scenario</div>
+            <div class="sc-value status-value" id="sEnv">—</div>
+            <div class="sc-sub" id="sTeam">—</div>
+          </article>
+        </div>
 
-        <article class="sc-card sc-card-wide">
-          <div class="sc-label">Environment</div>
-          <div class="sc-value status-value" id="sEnv">—</div>
-          <div class="sc-sub" id="sTeam">—</div>
-        </article>
+        <div class="status-group status-group-blocker">
+          <article class="sc-card sc-card-blocker">
+            <div class="sc-label" id="blockerStripLabel">Current focus</div>
+            <div class="sc-blocker" id="blockerBadge">
+              <span class="blocker-dot"></span>
+              <span class="sc-value" id="sBlocker">—</span>
+            </div>
+            <div class="sc-sub" id="blockerStripSub">In progress</div>
+          </article>
+        </div>
 
-        <article class="sc-card sc-card-wide">
-          <div class="sc-label" id="blockerStripLabel">Blocked By</div>
-          <div class="sc-blocker" id="blockerBadge">
-            <span class="blocker-dot"></span>
-            <span class="sc-value" id="sBlocker">—</span>
-          </div>
-          <div class="sc-sub" id="blockerStripSub">In progress</div>
-        </article>
+        <div class="status-group status-group-metrics">
+          <article class="sc-card sc-card-urgency">
+            <div class="sc-label" id="sUrgencyLabel">Pressure</div>
+            <div class="sc-level" id="sUrgencyLevel">—</div>
+            <div class="sc-value status-value" id="sUrgency">—</div>
+            <div class="sc-sub metric-delta" id="sUrgencyDelta"></div>
+          </article>
 
-        <article class="sc-card sc-card-urgency">
-          <div class="sc-label">Urgency</div>
-          <div class="sc-value status-value" id="sUrgency">1.00</div>
-        </article>
+          <article class="sc-card sc-card-tension">
+            <div class="sc-label" id="sTensionLabel">Tension</div>
+            <div class="sc-level" id="sTensionLevel">—</div>
+            <div class="sc-value status-value" id="sTension">0.00</div>
+            <div class="sc-sub metric-delta" id="sTensionDelta"></div>
+          </article>
 
-        <article class="sc-card sc-card-tension">
-          <div class="sc-label">Tension</div>
-          <div class="sc-value status-value" id="sTension">0.00</div>
-        </article>
-
-        <article class="sc-card sc-card-cohesion">
-          <div class="sc-label">Cohesion</div>
-          <div class="sc-value status-value" id="sCohesion">0.00</div>
-        </article>
+          <article class="sc-card sc-card-cohesion">
+            <div class="sc-label" id="sCohesionLabel">Cohesion</div>
+            <div class="sc-level" id="sCohesionLevel">—</div>
+            <div class="sc-value status-value" id="sCohesion">0.00</div>
+            <div class="sc-sub metric-delta" id="sCohesionDelta"></div>
+          </article>
+        </div>
 
       </section>
 
       <!-- View toggle -->
       <nav class="view-toggle" id="viewToggle" aria-label="Page views">
-        <button class="view-tab is-active" data-view="live">
-          <span class="vt-icon">⬡</span> Live Simulation
-        </button>
-        <button class="view-tab" data-view="metrics">
-          <span class="vt-icon">◈</span> Metrics &amp; Analysis
-        </button>
-        <button class="view-tab" data-view="impact">
-          <span class="vt-icon">⇄</span> Intervention Impact
-        </button>
+        <button class="view-tab is-active" data-view="live">Live Simulation</button>
+        <button class="view-tab" data-view="metrics">Metrics &amp; Analysis</button>
+        <button class="view-tab" data-view="impact">Intervention Impact</button>
       </nav>
 
       <!-- View container -->
@@ -137,8 +139,10 @@
             <!-- Left agents panel -->
             <aside class="col-panel panel-agents">
               <div class="panel-head">
-                <h2>Agents</h2>
-                <span class="panel-head-icon">♙</span>
+                <div>
+                  <h2>Agents</h2>
+                  <p id="agentPanelSub">Private knowledge and starting stress</p>
+                </div>
               </div>
 
               <div class="panel-scroll">
@@ -150,46 +154,47 @@
 
             <!-- Main log panel -->
             <main class="col-panel panel-log">
-              <div class="panel-head log-head">
-                <div class="log-head-copy">
-                  <div class="log-title-row">
-                    <div class="log-title-block">
-                      <h2>Live Simulation Log</h2>
-                      <p>Who acted, why it happened, and what changed.</p>
-                    </div>
-                    <div class="log-inline-status">
-                      <span class="log-inline-label">Current Situation</span>
-                      <h1 id="currentProblemText">Waiting for simulation state…</h1>
-                      <p id="objectiveText">The live run will explain what the agents are trying to solve.</p>
-                      <p class="suggest-line" id="suggestText">Press Next Step to begin the simulation.</p>
-                    </div>
+              <div class="log-head">
+
+                <div class="log-head-top">
+                  <div class="log-title-block">
+                    <h2>Live Simulation Log</h2>
+                    <p>Who acted, why it happened, and what changed.</p>
+                  </div>
+                  <div class="log-head-controls" id="logHeadActions">
+                    <button class="btn-reset" id="btnReset" disabled>Reset</button>
+                    <button class="btn-step" id="btnStep" disabled>
+                      <span class="btn-step-label" id="btnStepLabel">Start First Step</span>
+                      <span class="btn-step-arrow">›</span>
+                    </button>
                   </div>
                 </div>
 
-                <div class="log-head-actions" id="logHeadActions">
-                  <div class="step-control-panel">
-                    <span class="step-control-label">Step Control</span>
-                    <div class="step-control-actions">
-                      <button class="btn-reset" id="btnReset" disabled>Reset</button>
-                      <button class="btn-step primary" id="btnStep" disabled>
-                        Next Step
-                        <span>›</span>
-                      </button>
-                    </div>
-                  </div>
+                <div class="log-situation">
+                  <span class="log-situation-label">Current Situation</span>
+                  <div class="log-situation-headline" id="currentProblemText">Waiting for simulation state…</div>
+                  <div class="log-situation-sub" id="objectiveText">The live run will explain what the agents are trying to solve.</div>
+                  <p class="suggest-line" id="suggestText">Start the first step or apply an intervention to advance the run.</p>
                 </div>
+
               </div>
 
               <div class="panel-scroll log-scroll" id="eventLogScroll">
                 <div class="log conversation-stream" id="eventLog">
                   <div data-placeholder class="empty-state">
                     <div class="empty-trace-card">
-                      <div class="empty-trace-title">Simulation ready</div>
+                      <div class="empty-trace-step">Step 0</div>
+                      <div class="empty-trace-title">Ready to simulate</div>
                       <div class="empty-trace-copy">
-                        Press <strong>Next Step</strong> to generate the first agent interaction.
+                        The team is ready. Press <strong>Start First Step</strong> to generate the first agent interaction.
                       </div>
-                      <div class="empty-trace-points">Who acted · What changed · Why it happened · Effect on the team</div>
-                      <button class="btn-empty-start" id="btnStepInline" type="button">Start first step</button>
+                      <div class="empty-trace-hint">This log will explain:</div>
+                      <div class="empty-trace-points">
+                        <span>Who acted</span>
+                        <span>What changed</span>
+                        <span>Why it happened</span>
+                        <span>Effect on team</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -198,24 +203,23 @@
 
             <!-- Right interventions panel -->
             <aside class="col-panel panel-interventions">
-              <div class="panel-head">
-                <h2>Intervention Lab</h2>
-                <span class="panel-head-icon">⚗</span>
-              </div>
-
-              <div class="panel-scroll">
+              <div class="panel-scroll" id="ivPanelScroll">
                 <div class="iv-console" id="ivConsole">
 
+                  <div class="iv-section-label" id="ivSectionLabel">Suggested</div>
                   <div class="iv-recommend hidden" id="ivRecommend">—</div>
-                  <button class="hidden" id="ivMoreToggle" type="button" aria-expanded="true">All interventions ▾</button>
+                  <div class="iv-complete-note hidden" id="ivCompleteNote">
+                    <strong>Run completed</strong>
+                    <span>Interventions are disabled because the simulation has ended. Start a new run to apply more interventions.</span>
+                    <a class="iv-complete-action" href="setup.html">Start New Run</a>
+                  </div>
                   <div id="ivMore">
 
                   <article class="iv-card iv-green">
                     <div class="iv-head">
-                      <div class="iv-icon">♙</div>
                       <div>
                         <h3>Force Meeting</h3>
-                        <p class="iv-desc">Rallies two agents to discuss the current blocker directly.</p>
+                        <p class="iv-desc">Rallies two agents to discuss the current focus directly.</p>
                       </div>
                     </div>
 
@@ -224,11 +228,12 @@
                       <select id="forceAgentB"></select>
                       <button class="btn-iv iv-green" data-iv="force_meeting" disabled>Apply</button>
                     </div>
+                    <p class="iv-inline-error hidden" id="ivErrorForce"></p>
+                    <p class="iv-inline-note hidden" id="ivNoteForce"></p>
                   </article>
 
-                  <article class="iv-card iv-blue">
+                  <article class="iv-card iv-blue" id="revealInfoCard">
                     <div class="iv-head">
-                      <div class="iv-icon">ⓘ</div>
                       <div>
                         <h3>Reveal Info</h3>
                         <p class="iv-desc">Gives one agent missing knowledge so it can affect the next turn.</p>
@@ -240,11 +245,11 @@
                       <select id="revealItem"></select>
                       <button class="btn-iv iv-blue" data-iv="reveal_info" disabled>Apply</button>
                     </div>
+                    <p class="iv-inline-note hidden" id="revealEmptyMsg">No revealable clue is available right now.</p>
                   </article>
 
                   <article class="iv-card iv-purple">
                     <div class="iv-head">
-                      <div class="iv-icon">♙</div>
                       <div>
                         <h3>Nudge Cooperation</h3>
                         <p class="iv-desc">Encourages supportive behaviour from one agent.</p>
@@ -255,49 +260,74 @@
                       <select id="nudgeAgent"></select>
                       <button class="btn-iv iv-purple" data-iv="nudge_strategy" disabled>Apply</button>
                     </div>
+                    <p class="iv-inline-note hidden" id="ivNoteNudge"></p>
                   </article>
 
                   <article class="iv-card iv-red">
                     <div class="iv-head">
-                      <div class="iv-icon">∿</div>
                       <div>
                         <h3>Inject Tension</h3>
-                        <p class="iv-desc">Introduces mild conflict to test how the team reacts.</p>
+                        <p class="iv-desc">Increase tension around the current focus.</p>
                       </div>
                     </div>
 
                     <div class="iv-item-controls">
-                      <select id="tensionAmt">
-                        <option value="0.15">Small +0.15</option>
-                        <option value="0.25" selected>Medium +0.25</option>
-                        <option value="0.40">Strong +0.40</option>
-                      </select>
                       <button class="btn-iv iv-red" data-iv="inject_tension" disabled>Apply</button>
                     </div>
                   </article>
 
                   <article class="iv-card iv-orange">
                     <div class="iv-head">
-                      <div class="iv-icon">ϟ</div>
                       <div>
                         <h3>Boost Urgency</h3>
-                        <p class="iv-desc">Increases time pressure to push the team toward action.</p>
+                        <p class="iv-desc">Increase time pressure around the current focus.</p>
                       </div>
                     </div>
 
                     <div class="iv-item-controls">
-                      <select id="pressureAmt">
-                        <option value="0.15">Small +0.15</option>
-                        <option value="0.25" selected>Medium +0.25</option>
-                        <option value="0.40">Strong +0.40</option>
-                      </select>
                       <button class="btn-iv iv-orange" data-iv="boost_urgency" disabled>Apply</button>
+                    </div>
+                    <p class="iv-inline-note hidden" id="ivNoteBoostPressure"></p>
+                  </article>
+
+                  <article class="iv-card iv-blue">
+                    <div class="iv-head">
+                      <div>
+                        <h3>Ease Pressure</h3>
+                        <p class="iv-desc">Reduce time pressure around the current focus.</p>
+                      </div>
+                    </div>
+
+                    <div class="iv-item-controls">
+                      <button class="btn-iv iv-blue" data-iv="ease_pressure" disabled>Apply Ease Pressure</button>
+                    </div>
+                    <p class="iv-inline-note hidden" id="ivNoteEasePressure"></p>
+                  </article>
+
+                  <article class="iv-card iv-teal">
+                    <div class="iv-head">
+                      <div>
+                        <h3>Inject Mood</h3>
+                        <p class="iv-desc">Describe the team's mood in plain language, and the system will apply it immediately.</p>
+                      </div>
+                    </div>
+                    <div class="iv-item-controls">
+                      <textarea class="iv-textarea" id="emotionText" rows="2" placeholder="e.g. The team feels anxious about the deadline…"></textarea>
+                      <!-- Live NLP chip -->
+                      <div class="iv-emotion-preview" id="ivEmotionPreview" style="display:none;">
+                        <span class="iv-emotion-badge" id="ivEmotionBadge">NLP</span>
+                        <span class="iv-emotion-label" id="ivEmotionLabel">—</span>
+                        <span class="iv-emotion-conf" id="ivEmotionConf"></span>
+                        <span class="iv-emotion-effect" id="ivEmotionEffect"></span>
+                      </div>
+                      <button class="btn-iv iv-teal" data-iv="inject_emotion" id="injectEmotionBtn" disabled>Apply</button>
                     </div>
                   </article>
 
                   </div>
                 </div>
               </div>
+              <div class="iv-scroll-hint" id="ivScrollHint" aria-hidden="true">↓ scroll for more</div>
             </aside>
           </div>
         </section>
@@ -322,15 +352,20 @@
                 <div class="mv-stat-sub">Current group alignment</div>
               </article>
               <article class="mv-stat-card">
-                <div class="mv-stat-label">Conflict Rate</div>
+                <div class="mv-stat-label">Agent Conflict Events</div>
                 <div class="mv-stat-value is-conflict" id="mvConflict">—</div>
-                <div class="mv-stat-sub">Refusals &amp; friction</div>
+                <div class="mv-stat-sub">Agent challenge, refusal, and doubt events</div>
               </article>
               <article class="mv-stat-card">
                 <div class="mv-stat-label">Steps Taken</div>
                 <div class="mv-stat-value is-ticks" id="mvTicks">0</div>
-                <div class="mv-stat-sub">Simulation ticks completed</div>
+                <div class="mv-stat-sub" id="mvTicksSub">Simulation steps completed</div>
               </article>
+            </div>
+
+            <div class="mv-interpretation">
+              <div class="mv-interpretation-label">Run interpretation</div>
+              <p class="mv-interpretation-copy" id="mvRunInterpretation">A short interpretation will appear once the run has enough history.</p>
             </div>
 
             <div class="mv-chart-panel">
@@ -338,6 +373,12 @@
                 <div>
                   <h3>Stress, Trust &amp; Cohesion over time</h3>
                   <p>Each line tracks a metric value at every simulation step.</p>
+                  <div class="mv-chart-insight" id="mvChartInsight">Insight will appear once the run has enough history.</div>
+                </div>
+                <div class="mv-chart-legend">
+                  <span class="mv-legend-item"><span class="mv-legend-dot" style="background:#e84040"></span>Stress</span>
+                  <span class="mv-legend-item"><span class="mv-legend-dot" style="background:#0fa554"></span>Trust</span>
+                  <span class="mv-legend-item"><span class="mv-legend-dot" style="background:#1667f5"></span>Cohesion</span>
                 </div>
               </div>
               <div class="mv-chart-wrap">
@@ -346,7 +387,21 @@
             </div>
 
             <div class="mv-note">
-              These metrics are generated from backend simulation state at each step. <strong>Stress</strong> measures agent emotional load (lower is better), <strong>Trust</strong> reflects cooperation quality (higher is better), and <strong>Cohesion</strong> indicates group alignment. All values are normalised 0–1.
+              <span class="mv-note-item">
+                <span class="mv-note-dot" style="background:var(--red)"></span>
+                <strong>Stress</strong>Emotional load &mdash; lower is better
+              </span>
+              <span class="mv-note-sep"></span>
+              <span class="mv-note-item">
+                <span class="mv-note-dot" style="background:var(--green)"></span>
+                <strong>Trust</strong>Cooperation quality &mdash; higher is better
+              </span>
+              <span class="mv-note-sep"></span>
+              <span class="mv-note-item">
+                <span class="mv-note-dot" style="background:var(--blue)"></span>
+                <strong>Cohesion</strong>Group alignment score
+              </span>
+              <span class="mv-note-tail">Displayed metrics use a 0–1 scale</span>
             </div>
           </div>
         </section>
@@ -354,6 +409,14 @@
         <!-- ③ Intervention Impact view -->
         <section id="impactView" class="view-section hidden">
           <div class="iv-impact-inner">
+            <div class="iv-impact-headline">
+              <h3>Observed Intervention Impact</h3>
+              <p>Metrics measured after the next simulation step — agent responses and task progress may also contribute to the change.</p>
+              <div class="iv-impact-meta" id="ivImpactMeta">No interventions applied yet.</div>
+            </div>
+            <div class="iv-impact-note">
+              <strong>How to read this:</strong> ↓ Pressure/Stress/Tension is better · ↑ Trust/Cohesion is better
+            </div>
             <div class="iv-impact-empty" id="ivImpactEmpty">
               <div class="iv-impact-empty-icon">⇄</div>
               <strong>No intervention applied yet.</strong>
@@ -395,10 +458,11 @@
   <div class="end-modal hidden" id="endRunModal">
     <div class="end-modal-card">
       <div class="end-modal-badge">Run complete</div>
-      <h2 id="endRunTitle">This run has ended.</h2>
-      <p id="endRunText">Interventions are disabled. Start a new live run from Setup.</p>
+      <h2 id="endRunTitle">Run complete</h2>
+      <p id="endRunText">Interventions are disabled. Start a new live run from Setup, or keep reviewing the full log from this page.</p>
       <div class="end-modal-actions">
         <button class="btn-complete" id="btnDismissEndModal" type="button">Keep viewing log</button>
+        <button class="btn-complete" id="btnExportPdf" type="button">Export PDF</button>
         <a class="btn-complete is-primary" id="endRunDashboardLink" href="dashboard.html">Open Dashboard</a>
         <a class="btn-complete is-primary" href="setup.html">Start New Run</a>
       </div>
@@ -406,6 +470,12 @@
   </div>
 
   <div class="hidden" id="banner"></div>
+
+  <!-- PDF export libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="pdf-report.js"></script>
+  <script src="report-generator.js"></script>
 
   <script src="api.js"></script>
   <script src="interaction.js" defer></script>

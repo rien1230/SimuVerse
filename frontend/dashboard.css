@@ -1,5 +1,12 @@
+/*
+ * dashboard.css — import manifest
+ *
+ * The stylesheet has been split into four focused modules for maintainability.
+ * Load order matters: base → agents → timeline → panels (each layer may
+ * override the previous, intentionally).
+ */
 
-@import url("dashboard-base.css");
-@import url("dashboard-agents.css");
-@import url("dashboard-timeline.css");
-@import url("dashboard-panels.css");
+@import url("dashboard-base.css?v=20260504b");
+@import url("dashboard-agents.css?v=20260504b");
+@import url("dashboard-timeline.css?v=20260504b");
+@import url("dashboard-panels.css?v=20260504b");

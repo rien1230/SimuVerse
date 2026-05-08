@@ -3,8 +3,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <script src="consent-guard.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SimuVerse — History</title>
+<title>SimuVerse — Run History</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,13 +18,14 @@
       <a class="sv-mark" href="index.html">SV</a>
       <span class="sv-name">SimuVerse</span>
       <span class="sv-divider"></span>
-      <span class="sv-sub">Run history &amp; replay</span>
+      <span class="sv-sub">Run history &amp; replay library</span>
     </div>
     <span class="sv-spacer"></span>
     <nav class="sv-nav">
       <a href="index.html">Home</a>
       <a href="setup.html">Setup</a>
       <a href="history.html" class="active">History</a>
+      <a href="experiment.html">Experiments</a>
     </nav>
   </header>
   <div id="offlineBanner" class="offline-banner" role="alert" aria-live="polite" style="margin:10px 24px 0;">
@@ -33,8 +35,10 @@
   <div class="page">
 
     <section class="hero">
-      <h2>History</h2>
-      <p>View previous simulation runs and reopen a replay.</p>
+      <div class="hero-left">
+        <h2>Run History</h2>
+        <p>Browse every saved simulation. Replay runs, inspect outcomes, and compare results side by side.</p>
+      </div>
     </section>
 
     <section class="stat-grid">
@@ -48,15 +52,23 @@
       <article class="stat-card">
         <div class="stat-icon green">⌘</div>
         <div>
-          <div class="stat-label">Last Scenario</div>
-          <div class="stat-value large" id="statLastScenario">—</div>
+          <div class="stat-label">Success Rate</div>
+          <div class="stat-value" id="statSuccessRate">—</div>
+          <div class="stat-sub">Across all saved runs</div>
         </div>
       </article>
       <article class="stat-card">
         <div class="stat-icon purple">▷</div>
         <div>
-          <div class="stat-label">Saved Replays</div>
-          <div class="stat-value" id="statSavedReplays">0</div>
+          <div class="stat-label">Latest Scenario</div>
+          <div class="stat-value large" id="statLastScenario">—</div>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon blue">#</div>
+        <div>
+          <div class="stat-label">Average Steps</div>
+          <div class="stat-value" id="statAverageSteps">—</div>
         </div>
       </article>
     </section>
@@ -74,6 +86,9 @@
           <div class="filter-box">
             <select id="teamFilter"></select>
           </div>
+          <div class="filter-box">
+            <select id="outcomeFilter"></select>
+          </div>
           <div class="date-box">
             <div class="date-field">
               <label for="dateFrom">From</label>
@@ -87,32 +102,36 @@
         </div>
 
         <div class="selection-bar">
-          <div class="selection-status" id="selectionStatus">No runs selected.</div>
-          <div class="selection-actions">
-            <button class="clear-history-btn" id="clearHistoryBtn" type="button">Clear History</button>
-            <button class="bulk-delete-btn" id="deleteSelectedBtn" type="button" disabled>Delete Selected</button>
-          </div>
+        <div class="selection-status" id="selectionStatus">No runs selected.</div>
+        <div class="selection-actions">
+          <button class="compare-selected-btn" id="compareSelectedBtn" type="button" disabled>Compare Selected</button>
+          <button class="clear-history-btn" id="clearHistoryBtn" type="button">Clear History</button>
+          <button class="bulk-delete-btn" id="deleteSelectedBtn" type="button" disabled>Delete Selected</button>
         </div>
+      </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th class="select-col">
-                <input id="selectAllRuns" type="checkbox" aria-label="Select all visible runs" />
-              </th>
-              <th>Run ID</th>
-              <th>Scenario</th>
-              <th>Team</th>
-              <th>Steps</th>
-              <th>Outcome</th>
-              <th>Date</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="runsTableBody">
-            <tr><td colspan="8" class="empty-table">Loading saved runs…</td></tr>
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="select-col">
+                  <input id="selectAllRuns" type="checkbox" aria-label="Select all visible runs" />
+                </th>
+                <th>Run ID</th>
+                <th>Scenario</th>
+                <th>Team</th>
+                <th>Mode</th>
+                <th><button class="sort-btn" id="sortStepsBtn" type="button">Steps <span class="sort-indicator" id="sortStepsIndicator">↕</span></button></th>
+                <th><button class="sort-btn" id="sortOutcomeBtn" type="button">Outcome <span class="sort-indicator" id="sortOutcomeIndicator">↕</span></button></th>
+                <th><button class="sort-btn" id="sortDateBtn" type="button">Date <span class="sort-indicator" id="sortDateIndicator">↓</span></button></th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="runsTableBody">
+              <tr><td colspan="9" class="empty-table">Loading saved runs…</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="pager">
           <button class="page-btn" id="prevBtn">‹ Previous</button>
@@ -127,16 +146,19 @@
     <div class="history-dialog" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle">
       <div class="history-dialog-head">
         <div class="history-dialog-title">
-          <h3 id="historyModalTitle">Interactive Run Summary</h3>
-          <p id="historyModalSubtitle">Conversation log and what happened in this intervention-driven run.</p>
+          <h3 id="historyModalTitle">Run Summary</h3>
+          <p id="historyModalSubtitle">Replay context, run summary, and what happened in this simulation.</p>
         </div>
         <button class="modal-close" id="historyModalClose" type="button" aria-label="Close summary">×</button>
       </div>
-      <div class="history-dialog-summary" id="historyModalSummary"></div>
-      <div class="history-dialog-log" id="historyModalLog"></div>
+      <div class="history-dialog-body" id="historyModalBody"></div>
     </div>
   </div>
   <script src="api.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="pdf-report.js"></script>
+  <script src="report-generator.js"></script>
   <script src="history.js"></script>
 </body>
 </html>

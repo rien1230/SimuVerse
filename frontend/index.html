@@ -252,12 +252,24 @@
     }
 
     .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.13em;
       text-transform: uppercase;
       color: var(--blue);
       margin-bottom: 10px;
+    }
+
+    .section-kicker::before {
+      content: "";
+      width: 18px;
+      height: 2px;
+      background: var(--blue);
+      border-radius: 2px;
+      flex-shrink: 0;
     }
 
     .section-title {
@@ -286,13 +298,13 @@
     }
 
     .feature-card {
-      background: var(--surface);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
       border: 1px solid var(--border);
       border-radius: var(--r-xl);
-      padding: 28px 26px;
+      padding: 28px 26px 26px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 16px;
       box-shadow: var(--shadow-sm);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
@@ -303,18 +315,28 @@
     }
 
     .feature-icon {
-      width: 48px;
-      height: 48px;
+      width: 54px;
+      height: 54px;
       border-radius: var(--r-md);
       display: grid;
       place-items: center;
-      font-size: 1.3rem;
+      font-size: 1.45rem;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
     }
+
+    .feature-card:hover .feature-icon { transform: scale(1.08); }
 
     .feature-icon.blue   { background: var(--blue-soft);   color: var(--blue); }
     .feature-icon.teal   { background: var(--teal-soft);   color: var(--teal); }
     .feature-icon.amber  { background: var(--amber-soft);  color: var(--amber); }
     .feature-icon.violet { background: var(--violet-soft); color: var(--violet); }
+
+    /* Top accent borders */
+    .feature-card.accent-blue  { border-top: 3px solid var(--blue); }
+    .feature-card.accent-teal  { border-top: 3px solid var(--teal); }
+    .feature-card.accent-amber { border-top: 3px solid var(--amber); }
+    .feature-card.accent-violet{ border-top: 3px solid var(--violet); }
 
     .feature-card h3 {
       margin: 0;
@@ -349,7 +371,7 @@
       border-radius: var(--r-xl);
       overflow: hidden;
       position: relative;
-      min-height: 320px;
+      min-height: 360px;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -460,7 +482,8 @@
       left: calc(10% + 11px);
       right: calc(10% + 11px);
       height: 2px;
-      background: linear-gradient(90deg, var(--blue-soft), var(--blue-soft));
+      background: linear-gradient(90deg, #c5dcf7 0%, var(--blue) 40%, var(--blue) 60%, #c5dcf7 100%);
+      opacity: 0.55;
     }
 
     .step {
@@ -477,7 +500,7 @@
       height: 44px;
       border-radius: 50%;
       background: var(--surface);
-      border: 2px solid var(--blue-soft);
+      border: 2px solid #c8dff6;
       display: grid;
       place-items: center;
       font-size: 0.8rem;
@@ -492,7 +515,7 @@
       background: var(--blue);
       border-color: var(--blue);
       color: #fff;
-      box-shadow: 0 4px 14px rgba(31, 111, 212, 0.35);
+      box-shadow: 0 4px 14px rgba(31, 111, 212, 0.40), 0 0 0 5px rgba(31, 111, 212, 0.12);
     }
 
     .step h4 {
@@ -675,6 +698,123 @@
       .container   { padding: 0 18px; }
       .footer-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
     }
+
+    /* ── Consent modal ─────────────────────────────────────────── */
+    .consent-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 22, 45, 0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9000;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    .consent-backdrop.is-open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .consent-card {
+      background: #ffffff;
+      border-radius: var(--r-xl);
+      box-shadow: 0 32px 80px rgba(10, 22, 45, 0.22), 0 0 0 1px rgba(10, 22, 45, 0.06);
+      max-width: 480px;
+      width: 100%;
+      padding: 36px 36px 32px;
+      transform: translateY(12px) scale(0.98);
+      transition: transform 0.22s ease;
+    }
+    .consent-backdrop.is-open .consent-card {
+      transform: translateY(0) scale(1);
+    }
+    .consent-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue);
+      background: var(--blue-soft);
+      border-radius: 100px;
+      padding: 5px 12px 5px 8px;
+      margin-bottom: 20px;
+    }
+    .consent-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+    .consent-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 0 0 12px;
+      line-height: 1.25;
+    }
+    .consent-card p {
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-2);
+      line-height: 1.65;
+      margin: 0 0 10px;
+    }
+    .consent-card p:last-of-type { margin-bottom: 28px; }
+    .consent-note {
+      font-size: 0.8rem !important;
+      font-weight: 500 !important;
+      color: var(--muted) !important;
+    }
+    .consent-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn-consent-primary {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--blue);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--r-md);
+      padding: 13px 22px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-consent-primary:hover { background: var(--blue-mid); transform: translateY(-1px); }
+    .btn-consent-primary:active { transform: translateY(0); }
+    .btn-consent-cancel {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: var(--muted);
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-consent-cancel:hover { border-color: var(--text-2); color: var(--text); }
   </style>
 </head>
 <body>
@@ -693,6 +833,7 @@
       <a href="index.html" class="active">Home</a>
       <a href="setup.html">Setup</a>
       <a href="history.html">History</a>
+      <a href="experiment.html">Experiments</a>
     </nav>
   </header>
 
@@ -707,12 +848,12 @@
             Multi-Agent Behavioural Simulation
           </div>
 
-          <h1>How teams <em>behave</em><br>under pressure</h1>
+          <h1>How team <em>behaviour</em><br>changes under pressure</h1>
 
           <p class="hero-lead">
-            SimuVerse runs controlled experiments with personality-parameterised agents
-            working through shared tasks. Watch stress, trust, tension and cohesion evolve
-            in real time — then intervene and see what changes.
+            SimuVerse runs controlled simulations with personality-driven agents
+            working through shared tasks. Watch trust, stress, cooperation, and challenge
+            behaviour evolve over time, then compare outcomes through repeatable experiment runs.
           </p>
 
           <div class="hero-actions">
@@ -727,26 +868,23 @@
 
         <div class="hero-stats">
           <div class="stat-pill">
-            <div class="stat-pill-icon">♙</div>
             <div>
               <div class="stat-pill-label">Agents</div>
-              <div class="stat-pill-value">Four personality types interact across every run — Easygoing, Driven, Creative, and Tense.</div>
+              <div class="stat-pill-value">Agents follow team-style presets — Smooth, Tension, Creative, and Pressure — which affect trust, cooperation, stress, and challenge behaviour.</div>
             </div>
           </div>
 
           <div class="stat-pill">
-            <div class="stat-pill-icon">▰</div>
             <div>
               <div class="stat-pill-label">Scenarios</div>
-              <div class="stat-pill-value">Office coordination, café negotiation, and escape-room problem solving.</div>
+              <div class="stat-pill-value">Office coordination, café negotiation, and escape-room problem solving create different social pressures and blocker patterns.</div>
             </div>
           </div>
 
           <div class="stat-pill">
-            <div class="stat-pill-icon">∿</div>
             <div>
               <div class="stat-pill-label">Live metrics</div>
-              <div class="stat-pill-value">Stress, trust, tension, cohesion and progress tracked every step.</div>
+              <div class="stat-pill-value">Stress, trust, cooperation, challenge events, progress, and blocker resolution are tracked throughout each run.</div>
             </div>
           </div>
         </div>
@@ -767,18 +905,18 @@
 
       <div class="feature-grid">
 
-        <article class="feature-card">
-          <div class="feature-icon blue">♙</div>
+        <article class="feature-card accent-blue">
+          <div class="feature-icon blue">🧠</div>
           <h3>Personality-driven agents</h3>
           <p>
-            Every agent carries a personality type that shapes how it responds to pressure,
-            conflict and requests. Traits like stress tolerance, agreeableness and neuroticism
-            shift behaviour tick-by-tick.
+            Team-style presets shape how agents respond to pressure, requests, and disagreement.
+            Smooth, Tension, Creative, and Pressure each produce different trust, cooperation,
+            stress, and challenge patterns across a run.
           </p>
         </article>
 
-        <article class="feature-card">
-          <div class="feature-icon teal">↺</div>
+        <article class="feature-card accent-teal">
+          <div class="feature-icon teal">🗺️</div>
           <h3>Scenario progression</h3>
           <p>
             Tasks unlock in dependency order. Agents share information, refuse requests,
@@ -787,12 +925,13 @@
           </p>
         </article>
 
-        <article class="feature-card">
-          <div class="feature-icon amber">Δ</div>
+        <article class="feature-card accent-amber">
+          <div class="feature-icon amber">📊</div>
           <h3>Quantified team dynamics</h3>
           <p>
-            Stress, trust, tension, cohesion, urgency and task progress all update every step.
-            The metrics make individual runs easy to inspect, and saved runs easy to compare.
+            Stress, trust, cooperation, challenge events, progress, and blocker resolution
+            update throughout each run. The metrics make individual runs easy to inspect,
+            and repeatable experiments easy to compare.
           </p>
         </article>
 
@@ -871,8 +1010,8 @@
 
         <div class="step">
           <div class="step-num">4</div>
-          <h4>Intervene live</h4>
-          <p>Apply interventions — inject tension, reveal information, force meetings — and observe the effect.</p>
+          <h4>Inspect behaviour</h4>
+          <p>Pause, step through, and inspect how trust, stress, cooperation, and conflict change during the run.</p>
         </div>
 
         <div class="step">
@@ -918,5 +1057,104 @@
   </footer>
 
 </div>
+
+<!-- ── Consent modal ────────────────────────────────────────────── -->
+<div class="consent-backdrop" id="consentBackdrop" role="dialog" aria-modal="true" aria-labelledby="consentTitle">
+  <div class="consent-card">
+    <div class="consent-badge">
+      <span class="consent-badge-dot"></span>
+      Research tool
+    </div>
+    <h2 id="consentTitle">Before you continue</h2>
+    <p>
+      SimuVerse is an academic multi-agent simulation platform. Data generated
+      here — agent decisions, metrics, and run histories — is used for research
+      purposes only and is stored locally in your browser.
+    </p>
+    <p>
+      No personal data is collected. Runs are identified by anonymous IDs.
+      You can delete all data at any time from the History page.
+    </p>
+    <p class="consent-note">
+      By continuing you acknowledge you understand the nature of this simulation tool.
+    </p>
+    <div class="consent-actions">
+      <button class="btn-consent-primary" id="btnConsentAgree" type="button">
+        I understand — continue ›
+      </button>
+      <button class="btn-consent-cancel" id="btnConsentCancel" type="button">
+        Stay here
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const CONSENT_KEY = "sv_consent_v1";
+    const backdrop    = document.getElementById("consentBackdrop");
+    const btnAgree    = document.getElementById("btnConsentAgree");
+    const btnCancel   = document.getElementById("btnConsentCancel");
+    let   pendingHref = null;
+
+    function hasConsented() {
+      return localStorage.getItem(CONSENT_KEY) === "1";
+    }
+
+    function grantConsent() {
+      localStorage.setItem(CONSENT_KEY, "1");
+    }
+
+    function openModal(href) {
+      pendingHref = href;
+      backdrop.classList.add("is-open");
+      btnAgree.focus();
+    }
+
+    function closeModal() {
+      backdrop.classList.remove("is-open");
+      pendingHref = null;
+    }
+
+    function navigate(href) {
+      window.location.href = href;
+    }
+
+    // Intercept all link clicks on this page
+    document.addEventListener("click", function (e) {
+      const link = e.target.closest("a[href]");
+      if (!link) return;
+
+      const href = link.getAttribute("href");
+      // Ignore same-page anchors, external links, or links back to index itself
+      if (!href || href.startsWith("#") || href === "index.html" || href.startsWith("http")) return;
+
+      // If already consented, let it pass
+      if (hasConsented()) return;
+
+      // Otherwise intercept and show the modal
+      e.preventDefault();
+      openModal(href);
+    });
+
+    btnAgree.addEventListener("click", function () {
+      grantConsent();
+      closeModal();
+      if (pendingHref) navigate(pendingHref);
+    });
+
+    btnCancel.addEventListener("click", closeModal);
+
+    // Close on backdrop click (outside card)
+    backdrop.addEventListener("click", function (e) {
+      if (e.target === backdrop) closeModal();
+    });
+
+    // Close on Escape key
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && backdrop.classList.contains("is-open")) closeModal();
+    });
+  })();
+</script>
 </body>
 </html>

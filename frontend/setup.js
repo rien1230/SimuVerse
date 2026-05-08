@@ -5,7 +5,8 @@ const SCENARIOS = {
   office: {
     label: "Office Project",
     tag: "Structured",
-    description: "Share project information and clear task dependencies.",
+    icon: "🏢",
+    description: "A project team shares information and clears task dependencies to complete a proposal.",
     summary: "A project team must clear information dependencies before the work can move.",
     request: {
       environment: "office",
@@ -15,7 +16,8 @@ const SCENARIOS = {
   cafe: {
     label: "Cafe Planning",
     tag: "Social",
-    description: "Agree on food, timing, and budget.",
+    icon: "☕",
+    description: "Agents coordinate food, timing, and budget to agree on a restaurant choice.",
     summary: "A low-stakes planning task shows how social coordination changes behaviour.",
     request: {
       environment: "cafe",
@@ -25,7 +27,8 @@ const SCENARIOS = {
   escape: {
     label: "Escape Room",
     tag: "High pressure",
-    description: "Share clues before using the final code.",
+    icon: "🔐",
+    description: "Agents share clues under time pressure before using the final exit code.",
     summary: "A time-sensitive puzzle highlights pressure, urgency, and dependency handling.",
     request: {
       environment: "escape",
@@ -38,25 +41,29 @@ const TEAMS = {
   smooth: {
     label: "Smooth Team",
     tag: "Cooperative",
-    description: "Cooperative and steady.",
+    icon: "🤝",
+    description: "Agents trust each other from the start, share quickly, and keep friction low.",
     summary: "Cooperative personalities tend to share quickly and keep trust stable."
   },
   tension: {
     label: "Tension Team",
     tag: "Guarded",
-    description: "More doubt, stress, and hesitation.",
+    icon: "⚡",
+    description: "Lower initial trust means delay and refusal become clearly visible.",
     summary: "Lower initial trust makes delay and refusal more visible."
   },
   creative: {
     label: "Creative Team",
     tag: "Exploratory",
-    description: "More ideas and exploration.",
+    icon: "💡",
+    description: "Curious personalities question the first answer and explore alternatives.",
     summary: "Curious personalities question the first answer and explore alternatives."
   },
   pressure: {
     label: "Pressure Team",
     tag: "Urgent",
-    description: "Faster, more urgent decisions.",
+    icon: "⏱",
+    description: "Agents move fast and make urgent decisions — but the speed itself raises stress.",
     summary: "Urgent personalities move fast, but the speed itself raises pressure."
   }
 };
@@ -65,13 +72,15 @@ const MODES = {
   step: {
     label: "Watch Mode",
     tag: "Observe",
-    description: "Step through the simulation automatically and observe how the team navigates the scenario.",
+    icon: "👁",
+    description: "Step through the run automatically and observe how every agent decision unfolds.",
     summary: "The workspace will step through the backend run so you can observe each decision."
   },
   live: {
     label: "Live Interactive",
     tag: "Intervene",
-    description: "Open a live run you can steer one tick at a time. Reveal clues, nudge cooperation, raise urgency, or force meetings.",
+    icon: "🎮",
+    description: "Steer the run one tick at a time. Reveal clues, nudge cooperation, or raise urgency.",
     summary: "The workspace opens a manual live console attached to the backend run you just created."
   }
 };
@@ -271,11 +280,15 @@ function renderStepper() {
 function renderOptionGrid(container, options, group, selectedValue) {
   container.innerHTML = Object.entries(options).map(([key, option]) => `
     <button type="button" class="option-card ${selectedValue === key ? "is-selected" : ""}" data-group="${group}" data-value="${key}">
-      <div class="option-top">
-        <div class="option-name">${option.label}</div>
-        <div class="option-tag">${option.tag}</div>
+      <div class="option-icon-row">
+        <span class="option-icon">${option.icon || ""}</span>
+        <span class="option-tag">${option.tag}</span>
       </div>
-      <p>${option.description}</p>
+      <div class="option-name">${option.label}</div>
+      <p class="option-desc">${option.description}</p>
+      <div class="option-check" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" fill="currentColor" opacity="0.12"/><path d="M5 8l2.5 2.5L11 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
     </button>
   `).join("");
 }
@@ -368,7 +381,10 @@ async function launchSimulation() {
       body: JSON.stringify({
         environment: scenario.request.environment,
         goal: scenario.request.goal,
-        team_type: state.team
+        team_type: state.team,
+        // Tell the backend which mode launched this run so History can label it correctly.
+        // "step" = Watch Mode (dashboard); "live" = Live Interactive (interaction page).
+        run_mode: state.mode
       }),
       signal: controller.signal
     });

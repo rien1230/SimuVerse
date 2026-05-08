@@ -3,48 +3,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script src="consent-guard.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SimuVerse Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="nav.css">
-  <link rel="stylesheet" href="dashboard.css?v=20260425d">
+  <link rel="stylesheet" href="dashboard.css?v=20260504b">
 </head>
 <body>
   <header class="topbar sv-topbar">
     <div class="sv-brand">
-      <a class="sv-mark brand-mark" href="setup.html">SV</a>
+      <a class="sv-mark brand-mark" href="index.html">SV</a>
       <span class="sv-name">SimuVerse</span>
       <span class="sv-divider"></span>
       <span class="sv-sub">Dashboard</span>
     </div>
-    <nav class="sv-nav">
-      <a href="index.html">Home</a>
-      <a href="setup.html">Setup</a>
-      <a href="history.html">History</a>
-    </nav>
 
     <div class="context-wrap">
       <div class="context-line" id="contextLine">
-        <span class="context-item"><span class="context-label">Scenario</span><strong id="contextScenario">Office Project</strong></span>
+        <span class="context-item"><span class="context-label">Scenario</span><strong id="contextScenario">—</strong></span>
         <span class="context-sep">|</span>
-        <span class="context-item"><span class="context-label">Team</span><strong id="contextTeam">Smooth Team</strong></span>
+        <span class="context-item"><span class="context-label">Team</span><strong id="contextTeam">—</strong></span>
         <span class="context-sep">|</span>
-        <span class="context-item"><span class="context-label">Step</span><strong id="contextTick">1 of 1</strong></span>
+        <span class="context-item"><span class="context-label">Step</span><strong id="contextTick">—</strong></span>
         <span class="context-sep">|</span>
-        <span class="context-item"><span class="context-label">Status</span><strong id="contextStatus">Running</strong></span>
+        <span class="context-item"><span class="context-label">Status</span><strong id="contextStatus">—</strong></span>
       </div>
       <div class="context-note" id="contextNote" style="display:none"></div>
     </div>
 
+    <nav class="sv-nav" id="dashNav">
+      <a href="index.html">Home</a>
+      <a href="setup.html">Setup</a>
+      <a href="history.html">History</a>
+      <a href="experiment.html">Experiments</a>
+    </nav>
+
     <div class="top-actions">
-      <div class="mode-pill" id="modePill">Mode: Watch Mode</div>
       <button class="details-btn" id="exportResultsBtn" type="button">Export Results</button>
-      <button class="details-btn" id="runDetailsBtn" type="button" aria-expanded="false">Run details</button>
-      <a class="ghost-link" id="historyLink" href="history.html">History</a>
-      <a class="ghost-link" href="setup.html">New Setup</a>
     </div>
+
+    <!-- Required by JS — kept hidden from the UI -->
+    <div class="mode-pill" id="modePill" style="display:none"></div>
+    <button id="runDetailsBtn" style="display:none" aria-expanded="false"></button>
+    <a id="historyLink" href="history.html" style="display:none"></a>
   </header>
   <div class="fit-shell">
   <div class="shell">
@@ -53,29 +57,30 @@
         <section class="panel left-panel panel-strong">
           <div class="panel-head">
             <h2 class="panel-title">Mission Progress</h2>
-            <p class="panel-copy">Track which tasks are complete.</p>
+            <p class="panel-copy">Track complete, waiting, and locked tasks.</p>
           </div>
+          <div class="sidebar-label">Overview</div>
           <div class="progress-hero">
             <div class="progress-hero-figure">
               <span class="progress-hero-value" id="progressHeroValue">0</span>
               <span class="progress-hero-unit">%</span>
             </div>
             <div class="progress-hero-meta">
-              <div class="progress-hero-count" id="progressHeroCount">0 of 0 tasks</div>
-              <div class="progress-hero-label">complete</div>
+              <div class="progress-hero-count" id="progressHeroCount">0 / 0 complete</div>
+              <div class="task-progress-track">
+                <div class="task-progress-fill" id="taskProgressFill"></div>
+              </div>
             </div>
           </div>
-          <div class="task-progress-track">
-            <div class="task-progress-fill" id="taskProgressFill"></div>
-          </div>
+          <div class="sidebar-label">Current action</div>
+          <section class="logic-card logic-card-inline">
+            <h3 id="blockerTitle">Current action</h3>
+            <div class="logic-item" id="blockerCopy">The run begins with a single unresolved dependency.</div>
+            <div class="logic-item" id="logicLineA" style="display:none"></div>
+            <div class="logic-item" id="logicLineB" style="display:none"></div>
+          </section>
+          <div class="sidebar-label">Task flow</div>
           <div class="task-list" id="taskList"></div>
-        </section>
-
-        <section class="logic-card">
-          <h3 id="blockerTitle">What's Holding Progress?</h3>
-          <div class="logic-item" id="blockerCopy">The run begins with a single unresolved dependency.</div>
-          <div class="logic-item" id="logicLineA" style="display:none"></div>
-          <div class="logic-item" id="logicLineB" style="display:none"></div>
         </section>
       </aside>
 
@@ -95,11 +100,15 @@
             </div>
 
             <div class="control-group">
-              <button class="control-btn" id="resetBtn">Reset</button>
-              <button class="control-btn" id="prevBtn">Previous</button>
-              <button class="control-btn primary" id="playBtn">Play</button>
-              <button class="control-btn" id="nextBtn">Next</button>
-              <button class="control-btn accent" id="pauseBtn">Pause</button>
+              <div class="control-cluster utility-cluster">
+                <button class="control-btn ghost utility-btn" id="resetBtn" title="Return to the first step">↺ Reset</button>
+              </div>
+              <div class="control-cluster step-cluster">
+                <button class="control-btn nav-btn" id="prevBtn" title="Go back one step">← Prev</button>
+                <button class="control-btn replay-btn" id="playBtn" title="Auto-play through all steps">Play</button>
+                <button class="control-btn accent" id="pauseBtn" title="Pause auto-play">Pause</button>
+                <button class="control-btn nav-btn" id="nextBtn" title="Advance one step">Next →</button>
+              </div>
             </div>
           </div>
         </div>
@@ -116,7 +125,7 @@
                 </div>
                 <div class="event-type ask" id="eventType">ASK</div>
               </div>
-              <div class="event-message" id="eventMessage">The live view turns each step into a clear team moment with visible cause and effect.</div>
+              <div class="event-message" id="eventMessage">The speech bubble shows the dialogue. This card keeps the bigger picture short and readable.</div>
               <div class="effect-row" id="eventEffects"></div>
             </section>
 
@@ -140,8 +149,8 @@
           <div class="view" id="viewLog">
             <div class="timeline-wrap">
               <div class="timeline-head">
-                <p class="timeline-intro">Each card is one step of the run. Scroll sideways or use the arrows to move through the story.</p>
-                <div class="timeline-counter" id="timelineCounter" aria-live="polite">Step 1 of 1</div>
+                <p class="timeline-intro">Run timeline overview. Scroll sideways or use the arrows, then click a step card to inspect that moment.</p>
+                <div class="timeline-counter" id="timelineCounter" aria-live="polite">Run timeline</div>
               </div>
               <div class="timeline-track">
                 <button class="timeline-nav prev" id="timelinePrev" aria-label="Scroll to previous steps" type="button">
@@ -189,13 +198,12 @@
       </aside>
     </div>
 
-    <section class="metrics-grid">
+    <section class="metrics-grid" aria-label="Live metrics">
       <article class="panel metric-card panel-strong is-hero" data-metric="progress">
         <div class="metric-label">Progress</div>
         <div class="metric-value" id="metricProgressValue">0%</div>
         <div class="metric-state" id="metricProgressState">Just starting</div>
         <div class="metric-spark progress"><span id="metricProgressBar"></span></div>
-        <p class="metric-copy" id="metricProgressCopy">Progress is how many scenario goals have been completed.</p>
       </article>
 
       <article class="panel metric-card panel-strong" data-metric="trust">
@@ -203,7 +211,6 @@
         <div class="metric-value" id="metricTrustValue">0.00</div>
         <div class="metric-state" id="metricTrustState">Stable cooperation</div>
         <div class="metric-spark trust"><span id="metricTrustBar"></span></div>
-        <p class="metric-copy" id="metricTrustCopy">Average trust shows how willing the team is to accept help from one another.</p>
       </article>
 
       <article class="panel metric-card panel-strong" data-metric="avgstress">
@@ -211,15 +218,6 @@
         <div class="metric-value" id="metricAvgStressValue">0.00</div>
         <div class="metric-state" id="metricAvgStressState">Low pressure</div>
         <div class="metric-spark avgstress"><span id="metricAvgStressBar"></span></div>
-        <p class="metric-copy" id="metricAvgStressCopy">Average emotional load carried by all agents at this step.</p>
-      </article>
-
-      <article class="panel metric-card panel-strong" data-metric="stress">
-        <div class="metric-label">Peak Stress</div>
-        <div class="metric-value" id="metricStressValue">0.00</div>
-        <div class="metric-state" id="metricStressState">Low pressure</div>
-        <div class="metric-spark stress"><span id="metricStressBar"></span></div>
-        <p class="metric-copy" id="metricStressCopy">Highest individual stress reached during the run so far.</p>
       </article>
 
       <article class="panel metric-card panel-strong" data-metric="conflict">
@@ -227,15 +225,6 @@
         <div class="metric-value" id="metricConflictValue">0.00</div>
         <div class="metric-state" id="metricConflictState">Low friction</div>
         <div class="metric-spark conflict"><span id="metricConflictBar"></span></div>
-        <p class="metric-copy" id="metricConflictCopy">Refusals, doubt, and coordination pressure the team has encountered.</p>
-      </article>
-
-      <article class="panel metric-card panel-strong" data-metric="stage">
-        <div class="metric-label">Run Stage</div>
-        <div class="metric-value" id="metricTicksValue">0</div>
-        <div class="metric-state" id="metricTicksState">Simulation step</div>
-        <div class="metric-spark ticks"><span id="metricTicksBar"></span></div>
-        <p class="metric-copy" id="metricTicksCopy">Where this moment sits within the full run.</p>
       </article>
     </section>
 
@@ -266,13 +255,37 @@
             <p class="done-card-sub" id="doneTrustSub">—</p>
           </div>
           <div class="done-card">
-            <div class="done-card-label">Highest stress</div>
+            <div class="done-card-label">Peak team stress</div>
             <div class="done-card-value" id="doneStressValue">—</div>
             <p class="done-card-sub" id="doneStressSub">—</p>
           </div>
         </div>
 
         <div class="done-insight" id="doneInsight">—</div>
+
+        <!-- Memory impressions + emotion effects + event counts — populated from saved run summary -->
+        <div id="doneSections" style="display:none;margin-top:18px;flex-direction:column;gap:12px;">
+          <div style="border-radius:14px;border:1px solid rgba(17,32,51,0.08);background:#f6f9fc;padding:16px;">
+            <div style="font-size:0.74rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:800;color:#617387;margin-bottom:8px;">Metric movement</div>
+            <div id="doneMetricMovement" style="font-size:0.9rem;color:#112033;line-height:1.6;">—</div>
+          </div>
+          <div style="border-radius:14px;border:1px solid rgba(17,32,51,0.08);background:#f6f9fc;padding:16px;">
+            <div style="font-size:0.74rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:800;color:#617387;margin-bottom:8px;">Progress timeline</div>
+            <div id="doneBlockerTimeline" style="font-size:0.9rem;color:#112033;line-height:1.6;">—</div>
+          </div>
+          <div style="border-radius:14px;border:1px solid rgba(17,32,51,0.08);background:#f6f9fc;padding:16px;">
+            <div style="font-size:0.74rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:800;color:#617387;margin-bottom:8px;">Memory impressions</div>
+            <div id="doneMemory" style="font-size:0.9rem;color:#112033;line-height:1.6;">—</div>
+          </div>
+          <div style="border-radius:14px;border:1px solid rgba(17,32,51,0.08);background:#f6f9fc;padding:16px;">
+            <div style="font-size:0.74rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:800;color:#617387;margin-bottom:8px;">Emotion effects</div>
+            <div id="doneEmotion" style="font-size:0.9rem;color:#112033;line-height:1.6;">—</div>
+          </div>
+          <div style="border-radius:14px;border:1px solid rgba(17,32,51,0.08);background:#f6f9fc;padding:16px;">
+            <div style="font-size:0.74rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:800;color:#617387;margin-bottom:8px;">Behaviour counts</div>
+            <div id="doneEventCounts" style="font-size:0.9rem;color:#112033;line-height:1.8;">—</div>
+          </div>
+        </div>
       </div>
 
       <div class="done-actions">
@@ -285,8 +298,13 @@
     </div>
   </div>
 
+  <!-- PDF export libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="api.js"></script>
   <script src="export-utils.js"></script>
-  <script src="dashboard.js?v=20260425d"></script>
+  <script src="pdf-report.js"></script>
+  <script src="report-generator.js"></script>
+  <script src="dashboard.js?v=20260504b"></script>
 </body>
 </html>
