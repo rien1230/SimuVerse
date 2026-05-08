@@ -41,22 +41,22 @@ class RunRegistry:
         with cls._instance_lock:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
-                cls._instance._initialised = False  # Mark as not initialised yet
+                cls._instance._initialized = False  # Mark as not initialized yet
             return cls._instance
 
     def __init__(self):
         """
-        Initialise the registry (only called once due to singleton pattern).
+        Initialize the registry (only called once due to singleton pattern).
         Sets up the internal data structures and configuration limits.
         """
-        if self._initialised:
-            return  # Already initialised (singleton pattern)
+        if self._initialized:
+            return  # Already initialized (singleton pattern)
 
         self._runs: Dict[str, RunEntry] = {}  # Dictionary mapping run_id -> RunEntry
         self._runs_lock = Lock()  # Lock to protect the _runs dictionary (thread safety)
         self.max_active_runs = 20  # Maximum number of runs allowed at once
         self.idle_timeout_sec = 3600  # 1 hour - runs idle longer than this get cleaned up
-        self._initialised = True  # Mark as initialised
+        self._initialized = True  # Mark as initialized
 
     def create_run(self, seed: int, config: Optional[Dict[str, Any]] = None) -> str:
         """
@@ -135,17 +135,7 @@ class RunRegistry:
             return self._runs.pop(run_id, None) is not None
 
     def list_runs(self) -> List[Dict[str, Any]]:
-        """
-        Get a summary of all currently active runs.
-
-        Useful for:
-        - Admin/debugging views
-        - Showing users what simulations are available
-        - Monitoring system load
-
-        Returns:
-            List[Dict[str, Any]]: List of run summaries with basic info
-        """
+        """Return a summary dict for every active run (id, status, tick, client count)."""
         with self._runs_lock:
             out: List[Dict[str, Any]] = []
             for run_id, entry in self._runs.items():

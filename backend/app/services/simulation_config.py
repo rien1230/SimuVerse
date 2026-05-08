@@ -1,4 +1,4 @@
-"""Builds the initialised config that each simulation run starts from."""
+"""Builds the normalized config that each simulation run starts from."""
 
 import random
 from typing import Dict, Any, List, Optional
@@ -123,8 +123,8 @@ TEAM_PRESET_LABELS = {
 
 
 def canonical_team_preset(team_type: str) -> str:
-    initialised = normalize_team_type(team_type)
-    return TEAM_PRESET_LABELS.get(initialised, initialised)
+    normalized = normalize_team_type(team_type)
+    return TEAM_PRESET_LABELS.get(normalized, normalized)
 
 TEAM_TYPE_ALIASES = {
     "smooth": "smooth",
@@ -158,25 +158,25 @@ def normalize_environment(environment: str) -> str:
 
 
 def default_goal_for_environment(environment: str) -> str:
-    initialised_environment = normalize_environment(environment)
-    if initialised_environment not in DEFAULT_GOALS:
+    normalized_environment = normalize_environment(environment)
+    if normalized_environment not in DEFAULT_GOALS:
         raise InvalidEnvironmentError(environment)
-    return DEFAULT_GOALS[initialised_environment]
+    return DEFAULT_GOALS[normalized_environment]
 
 
 def normalize_goal(environment: str, goal: Optional[str]) -> Optional[str]:
     if goal is None:
         return None
-    initialised_environment = normalize_environment(environment)
+    normalized_environment = normalize_environment(environment)
     goal_key = str(goal).strip().lower()
-    return GOAL_ALIASES.get(initialised_environment, {}).get(goal_key, goal_key)
+    return GOAL_ALIASES.get(normalized_environment, {}).get(goal_key, goal_key)
 
 
 def resolve_team_personalities(team_type: str) -> List[str]:
-    initialised = normalize_team_type(team_type)
-    if initialised == "random":
+    normalized = normalize_team_type(team_type)
+    if normalized == "random":
         return [random.choice(AVAILABLE_PERSONALITIES) for _ in range(4)]
-    return list(TEAM_STYLE_PERSONALITIES.get(initialised, TEAM_STYLE_PERSONALITIES["balanced"]))
+    return list(TEAM_STYLE_PERSONALITIES.get(normalized, TEAM_STYLE_PERSONALITIES["balanced"]))
 
 
 def build_simulation_config(
@@ -185,24 +185,24 @@ def build_simulation_config(
     team_type: str = "balanced",
 ) -> Dict[str, Any]:
     """Build the simulation configuration from user selections."""
-    initialised_environment = normalize_environment(environment)
-    if initialised_environment not in ENVIRONMENTS:
+    normalized_environment = normalize_environment(environment)
+    if normalized_environment not in ENVIRONMENTS:
         raise InvalidEnvironmentError(environment)
 
     resolved_goal = normalize_goal(
-        initialised_environment,
-        goal or default_goal_for_environment(initialised_environment),
+        normalized_environment,
+        goal or default_goal_for_environment(normalized_environment),
     )
-    if resolved_goal not in ENVIRONMENTS[initialised_environment]["goals"]:
-        raise InvalidGoalError(resolved_goal, initialised_environment)
+    if resolved_goal not in ENVIRONMENTS[normalized_environment]["goals"]:
+        raise InvalidGoalError(resolved_goal, normalized_environment)
 
-    initialised_team_type = normalize_team_type(team_type)
-    if initialised_team_type not in TEAM_PRESETS:
+    normalized_team_type = normalize_team_type(team_type)
+    if normalized_team_type not in TEAM_PRESETS:
         raise InvalidTeamTypeError(team_type)
 
-    scenario_id = ENVIRONMENTS[initialised_environment]["goals"][resolved_goal]
+    scenario_id = ENVIRONMENTS[normalized_environment]["goals"][resolved_goal]
 
-    if TEAM_PRESETS[initialised_team_type] is None:
+    if TEAM_PRESETS[normalized_team_type] is None:
         agents = [
             {
                 "E": random.uniform(0.0, 1.0),
@@ -212,18 +212,18 @@ def build_simulation_config(
             for _ in range(4)
         ]
     else:
-        agents = [dict(agent) for agent in TEAM_PRESETS[initialised_team_type]]
+        agents = [dict(agent) for agent in TEAM_PRESETS[normalized_team_type]]
 
     return {
-        "environment": initialised_environment,
+        "environment": normalized_environment,
         "goal": resolved_goal,
         "team_type": team_type,
-        "resolved_team_type": initialised_team_type,
-        "team_preset": canonical_team_preset(initialised_team_type),
+        "resolved_team_type": normalized_team_type,
+        "team_preset": canonical_team_preset(normalized_team_type),
         "scenario_id": scenario_id,
         "agents": agents,
-        "agent_personalities": resolve_team_personalities(initialised_team_type),
-        "episode_max_ticks": EPISODE_MAX_TICKS.get(initialised_environment, 20),
+        "agent_personalities": resolve_team_personalities(normalized_team_type),
+        "episode_max_ticks": EPISODE_MAX_TICKS.get(normalized_environment, 20),
         "min_events_per_tick": 0,
     }
 

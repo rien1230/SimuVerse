@@ -66,8 +66,26 @@ def prune_runs(max_saved_runs: int = MAX_SAVED_RUNS, max_age_days: int = MAX_RUN
 
 
 def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    metrics       = model.last_diff.get("metrics", {})      if model.last_diff else {}
-    interventions = model.last_diff.get("interventions", []) if model.last_diff else []
+    metrics = model.last_diff.get("metrics", {}) if model.last_diff else {}
+
+    # Collect ALL interventions from the full run-level log (not just the last tick's diff).
+    # model._applied_interventions_log is appended to by model.apply_intervention() for
+    # every intervention across the whole run; model.last_diff["interventions"] only holds
+    # the interventions that happened in the final tick, so it would always be [] for runs
+    # where the last action was not an intervention.
+    full_history_for_iv = getattr(model, "history", [])
+    interventions = [
+        iv
+        for tick_data in full_history_for_iv
+        for iv in tick_data.get("interventions", [])
+    ]
+    # Fallback: if history interventions are empty but the log has entries, synthesise
+    # minimal records from _applied_interventions_log so the count is never lost.
+    if not interventions:
+        interventions = [
+            {"type": t, "tick": None}
+            for t in getattr(model, "_applied_interventions_log", [])
+        ]
     persisted_config = {k: v for k, v in (config or {}).items() if v is not None}
 
     # Compute whole-run peak tension and time_to_first_share from metric_history
@@ -92,14 +110,170 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
         for a in model.agents
     ]
 
+    # ── Event counts ──────────────────────────────────────────────────────────
+    # Tallied across every tick in model.history so the frontend can display
+    # a behaviour summary (messages exchanged, clues shared, etc.) without
+    # having to scan the full history array itself.
+    full_history = getattr(model, "history", [])
+    _ec_messages    = 0
+    _ec_clues       = 0
+    _ec_questions   = 0
+    _ec_agreements  = 0
+    _ec_challenges  = 0
+    for tick_data in full_history:
+        for ev in tick_data.get("events", []):
+            t = ev.get("type", "")
+            if ev.get("text"):
+                _ec_messages += 1
+            if t == "share_info":
+                _ec_clues += 1
+            elif t in ("ask_info", "request_info"):
+                _ec_questions += 1
+            elif t == "agree":
+                _ec_agreements += 1
+            elif t in ("refuse", "challenge", "push_back"):
+                _ec_challenges += 1
+
+    # Blockers resolved — tasks dict values are plain booleans (True = done)
+    # in escape/office scenarios, or status-dicts in generic scenarios.
+    tasks_dict = getattr(model.scenario, "tasks", {})
+    _blockers_total    = len(tasks_dict)
+    _blockers_resolved = sum(
+        1 for v in tasks_dict.values()
+        if (v.get("status") == "done" if isinstance(v, dict) else v is True)
+    )
+    _interventions_used = len(
+        [iv for tick_data in full_history
+         for iv in tick_data.get("interventions", [])]
+    )
+
+    event_counts = {
+        "messages_exchanged": _ec_messages,
+        "clues_shared":       _ec_clues,
+        "questions_asked":    _ec_questions,
+        "agreements":         _ec_agreements,
+        "challenges":         _ec_challenges,
+        "blockers_resolved":  _blockers_resolved,
+        "blockers_total":     _blockers_total,
+        "interventions_used": _interventions_used,
+    }
+
+    # ── Metric trajectory ─────────────────────────────────────────────────────
+    # Precomputed from metric_history so the frontend doesn't have to scan the
+    # full history array.  Captures where trust and stress started, peaked, and
+    # ended so the completion modal can show directional change.
+    mh = getattr(model, "metric_history", [])
+    _mt_trust_start = round(mh[0]["avg_trust"],  3) if mh else 0.0
+    _mt_trust_end   = round(mh[-1]["avg_trust"], 3) if mh else 0.0
+    _stress_pairs   = [(h["tick"], round(h["avg_stress"], 3)) for h in mh]
+    _mt_stress_start = _stress_pairs[0][1]  if _stress_pairs else 0.0
+    _mt_stress_end   = _stress_pairs[-1][1] if _stress_pairs else 0.0
+    _peak_entry      = max(_stress_pairs, key=lambda x: x[1]) if _stress_pairs else (0, 0.0)
+    _mt_stress_peak_tick, _mt_stress_peak = _peak_entry
+
+    metric_trajectory = {
+        "trust_start":      _mt_trust_start,
+        "trust_end":        _mt_trust_end,
+        "trust_delta":      round(_mt_trust_end - _mt_trust_start, 3),
+        "stress_start":     _mt_stress_start,
+        "stress_peak":      _mt_stress_peak,
+        "stress_peak_tick": _mt_stress_peak_tick,
+        "stress_end":       _mt_stress_end,
+    }
+
+    # ── Blocker timeline ──────────────────────────────────────────────────────
+    # Scans metric_history for constraint/task transitions to build one timeline
+    # entry per active blocker.
+    #
+    # Field priority:
+    #   active_blocker — the constraint at the START of the tick (pre-resolution).
+    #     This is the semantically correct field: it shows what was being actively
+    #     worked on during a tick, including constraints that resolved in their very
+    #     first tick (e.g. Café dietary_constraint resolved at tick 1 never becomes
+    #     bottleneck_item because that field is updated after resolution).
+    #   bottleneck_item — legacy fallback for runs saved before active_blocker was
+    #     added to metric_history.
+    blocker_timeline: list = []
+    _prev_blocker  = None
+    _blocker_start = 1
+    for _h in mh:
+        _item = _h.get("active_blocker") or _h.get("bottleneck_item")
+        if _item != _prev_blocker:
+            if _prev_blocker is not None:
+                _end = _h["tick"] - 1
+                blocker_timeline.append({
+                    "item":       _prev_blocker,
+                    "start_tick": _blocker_start,
+                    "end_tick":   _end,
+                    "duration":   max(1, _end - _blocker_start + 1),
+                })
+            if _item is not None:
+                _blocker_start = _h["tick"]
+            _prev_blocker = _item
+    # Close the final open segment
+    if _prev_blocker is not None and mh:
+        _last = mh[-1]["tick"]
+        blocker_timeline.append({
+            "item":       _prev_blocker,
+            "start_tick": _blocker_start,
+            "end_tick":   _last,
+            "duration":   max(1, _last - _blocker_start + 1),
+        })
+
+    # For escape rooms: "unlock" is the final door-open phase.
+    # It is marked complete via mark_task_complete("unlock") but is never set
+    # as bottleneck_item (it's not in ESCAPE_PRIORITY), so it never appears
+    # in the timeline above.  Synthesise it from the final ticks so the
+    # timeline is complete and blockers_total stays consistent.
+    # Note: use model.scenario_type ("escape"), NOT model.scenario.id
+    # ("escape_puzzle") — the id check silently failed and caused the unlock
+    # entry to be skipped, making the timeline show only 4 of 5 blockers.
+    if getattr(model, "scenario_type", "") == "escape":
+        _unlock_done = getattr(model.scenario, "tasks", {}).get("unlock", False)
+        if _unlock_done is True and not any(b["item"] == "unlock" for b in blocker_timeline):
+            _last_run_tick = mh[-1]["tick"] if mh else model.tick
+            # Unlock phase starts right after the last tracked blocker ends
+            _ul_start = (blocker_timeline[-1]["end_tick"] + 1) if blocker_timeline else 1
+            _ul_end   = _last_run_tick
+            if _ul_start <= _ul_end:
+                blocker_timeline.append({
+                    "item":       "unlock",
+                    "start_tick": _ul_start,
+                    "end_tick":   _ul_end,
+                    "duration":   max(1, _ul_end - _ul_start + 1),
+                })
+
+    # Reconcile blocker counts so event_counts and blocker_timeline always agree.
+    # The timeline is more reliable here — it reflects what the user actually saw,
+    # whereas the raw tasks dict can include tasks that were never tracked as
+    # bottlenecks (e.g. a cafe "decision" task that resolved silently).
+    if blocker_timeline:
+        event_counts["blockers_total"] = len(blocker_timeline)
+        _resolved_count = 0
+        for _b in blocker_timeline:
+            _v = tasks_dict.get(_b["item"], False)
+            if isinstance(_v, dict):
+                if _v.get("status") == "done":
+                    _resolved_count += 1
+            elif _v is True:
+                _resolved_count += 1
+        event_counts["blockers_resolved"] = _resolved_count
+
+    from app.sim.metrics import classify_run_outcome, describe_run
+    _outcome_label  = classify_run_outcome(model)
+    _outcome_detail = describe_run(model)
+
     return {
         "run_id":         run_id,
         "scenario_id":    model.scenario.id,
         "scenario_name":  model.scenario.name,
+        "team_preset":    getattr(model, "team_preset", None),
         "seed":           getattr(model, "seed_value", None),
         "timestamp":      datetime.now(timezone.utc).isoformat(),
         "config":         persisted_config,
         "outcome":        model.end_reason,
+        "outcome_label":  _outcome_label,
+        "outcome_detail": _outcome_detail,
         "ticks":          model.tick,
         "final_progress": round(model.scenario.progress_ratio(), 3),
         "metrics": {
@@ -107,6 +281,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
             "avg_stress":     metrics.get("avg_stress", 0.0),
             "conflict_rate":  metrics.get("cumulative_conflict_rate",
                                metrics.get("conflict_rate", 0.0)),
+            "pressure":       round(getattr(model.environment, "urgency_modifier", 0.0), 3),
             "total_refusals": model.total_refusals,
             "total_shares":   model.total_shares,
             "stalled_ticks":  model.total_stalled_ticks,
@@ -116,6 +291,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
         "group_state": {
             "tension":           round(model.group_tension, 3),
             "cohesion":          round(model.group_cohesion, 3),
+            "pressure":          round(getattr(model.environment, "urgency_modifier", 0.0), 3),
             "stall_ticks":       model.progress_stall_ticks,
             "bottleneck_item":   model.bottleneck_item,
             "bottleneck_holder": model.bottleneck_holder,
@@ -130,6 +306,16 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
         # Full tick-by-tick history for replay
         # Stored as a list of tick diffs — each contains agents, events, metrics
         "history":            getattr(model, "history", []),
+        # Memory impressions formed during the run
+        "memory_summary":     model.memory_summary(),
+        # User emotion injections applied during the run
+        "emotion_summary":    model.emotion_summary(),
+        # Behaviour event tallies for the run summary panel
+        "event_counts":       event_counts,
+        # Trust / stress movement across the run (start → peak → end)
+        "metric_trajectory":  metric_trajectory,
+        # Per-blocker step ranges for the timeline panel
+        "blocker_timeline":   blocker_timeline,
     }
 
 
@@ -181,14 +367,20 @@ def list_runs(scenario_id: Optional[str] = None) -> List[Dict[str, Any]]:
                 "seed":               data.get("seed"),
                 "timestamp":          timestamp,
                 "outcome":            data.get("outcome"),
+                "outcome_label":      data.get("outcome_label"),
                 "ticks":              data.get("ticks"),
                 "final_progress":     data.get("final_progress"),
                 "metrics":            data.get("metrics", {}),
+                "metric_trajectory":  data.get("metric_trajectory"),
+                "peak_tension":       data.get("peak_tension"),
+                "group_state":        data.get("group_state", {}),
+                "team_preset":        data.get("team_preset"),
                 "intervention_count": data.get("intervention_count", 0),
                 "environment":        config.get("environment"),
                 "team_type":          config.get("team_type"),
                 "goal":               config.get("goal"),
                 "config":             config,
+                "tasks":              data.get("tasks", {}),
             })
         except (json.JSONDecodeError, KeyError):
             logger.warning("Skipping malformed run file: %s", fpath.name)

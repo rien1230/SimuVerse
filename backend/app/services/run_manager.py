@@ -27,14 +27,9 @@ SCHEMA_VERSION = 1
 @dataclass
 class RunManager:
     """
-    Manages the lifecycle of a single simulation run.
-
-    Responsibilities:
-    - Creates and configures the simulation model
-    - Manages run states: idle, running, paused, stopped
-    - Executes simulation ticks deterministically
-    - Logs all events for replay capability
-    - Handles automatic stopping conditions
+    One RunManager per simulation run — holds the model, status, config,
+    and event logger. Controls start/pause/step/stop and writes to history
+    when the run finishes.
     """
 
     seed: int  # Random seed for deterministic simulation
@@ -49,14 +44,9 @@ class RunManager:
 
     def __post_init__(self) -> None:
         """
-        Initialises the RunManager after dataclass fields are set.
-
-        This is where we:
-        1. Set up default configuration
-        2. Filter config so only SimModel-supported keys are passed in
-        3. Create the simulation model
-        4. Initialise the event logger
-        5. Write metadata header for replay file
+        Called automatically after __init__ by the dataclass machinery.
+        Sets defaults, builds SimModel, applies personality/team settings,
+        starts the event logger, and writes the replay metadata header.
         """
         logger.debug("RunManager init — seed=%s config=%s", self.seed, self.config)
 
@@ -147,37 +137,28 @@ class RunManager:
         logger.debug("RunManager ready — run_id=%s", self.run_id)
 
     def start(self) -> None:
-        """
-        Start or resume the simulation run.
-
-        Raises:
-            RuntimeError: If trying to start a stopped run
-        """
+        """Move status to running. Raises if the run is already stopped."""
         if self.status == "stopped":
             raise RuntimeError("Run is stopped. Create a new RunManager for a new run.")
         self.status = "running"
 
     def pause(self) -> None:
-        """
-        Pause the simulation run.
-
-        Only transitions from 'running' to 'paused'.
-        """
+        """Switch from running to paused. Ignored if already paused or stopped."""
         if self.status == "running":
             self.status = "paused"
 
     def stop(self) -> None:
-        """
-        Stop the simulation run.
-
-        Can be called from any state to force stop.
-        """
+        """Force status to stopped and save to history if any ticks ran."""
         self.status = "stopped"
         if self.model.tick > 0:
             self._persist_history_once()
 
     def _persist_history_once(self) -> None:
-        """Persist the current run exactly once so History can replay it."""
+        """Write the final run snapshot to disk exactly once.
+
+        Sets history_saved = True so repeated calls do nothing. This is the
+        final save — called when the run ends naturally or is force-stopped.
+        """
         if self.history_saved:
             return
         if not bool(self.config.get("save_history", True)):
@@ -190,21 +171,34 @@ class RunManager:
         )
         self.history_saved = True
 
-    def step(self) -> Dict[str, Any]:
+    def _checkpoint_history(self) -> None:
+        """Write an intermediate snapshot without marking the run as finally saved.
+
+        Called on WebSocket disconnect so there's something in history even if
+        the user never came back. Because history_saved stays False, a reconnect
+        that runs to completion will overwrite this with the real final result.
+        Skipped if the final save already happened.
         """
-        Execute one simulation tick.
+        if self.history_saved:
+            return  # Final state already written; checkpoint would only downgrade it
+        if not bool(self.config.get("save_history", True)):
+            return
+        try:
+            save_run(
+                self.model,
+                run_id=self.run_id,
+                config=self.config,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to write disconnect checkpoint for run %s", self.run_id
+            )
 
-        This method:
-        1. Advances the model by one tick
-        2. Captures the state changes (diff)
-        3. Logs the diff for replay
-        4. Updates run status if the episode ended
+    def step(self) -> Dict[str, Any]:
+        """Advance the simulation by one tick and return the state diff.
 
-        Returns:
-            Dictionary containing the state diff for this tick
-
-        Raises:
-            RuntimeError: If run is stopped or model produces no diff
+        Calls model.step(), logs the diff, and stops the run automatically
+        if the scenario ended. Raises if the run is already stopped.
         """
         if self.status == "stopped":
             raise RuntimeError("Run is stopped. Create a new RunManager for a new run.")
@@ -236,20 +230,10 @@ class RunManager:
         return diff
 
     def run_loop(self, max_steps: Optional[int] = None, tick_hz: Optional[float] = None) -> None:
-        """
-        Run the simulation continuously.
+        """Step repeatedly until the run ends, max_steps is hit, or status changes.
 
-        Useful for:
-        - Automated testing
-        - WebSocket streaming with auto-play
-        - Batch processing
-
-        Args:
-            max_steps: Maximum number of ticks to run (None = unlimited)
-            tick_hz: Simulation speed in ticks per second (None = as fast as possible)
-
-        Raises:
-            RuntimeError: If run is not in 'running' state
+        tick_hz controls how many ticks per second (None = as fast as possible).
+        Used for batch experiments and automated testing.
         """
         if self.status != "running":
             raise RuntimeError("Call start() before run_loop().")

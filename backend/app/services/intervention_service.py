@@ -53,6 +53,31 @@ def _handle_reveal_info(model, params: Dict[str, Any]) -> Dict[str, Any]:
     if not agent_id or not item:
         return _failure("reveal_info requires 'agent_id' and 'item'")
 
+    scenario_type = getattr(getattr(model, "behaviour", None), "scenario_type", "")
+    current_blocker = iv._current_blocker_item(model)
+    if scenario_type == "cafe" and item == "decision":
+        tasks = getattr(getattr(model, "scenario", None), "tasks", {}) or {}
+        prerequisites_done = all(
+            bool(tasks.get(key, False))
+            for key in ("dietary_constraint", "budget_constraint", "location_constraint")
+        )
+        if current_blocker != "decision" or not prerequisites_done:
+            return _failure(
+                "Decision cannot be targeted directly in Cafe before the final decision phase. "
+                "Resolve Dietary Constraint, Budget, and Location first."
+            )
+    if scenario_type == "escape" and item == "unlock":
+        tasks = getattr(getattr(model, "scenario", None), "tasks", {}) or {}
+        prerequisites_done = all(
+            bool(tasks.get(key, False))
+            for key in ("map", "lock", "key", "door")
+        )
+        if current_blocker != "unlock" or not prerequisites_done:
+            return _failure(
+                "Final Unlock cannot be targeted directly in Escape before the final unlock phase. "
+                "Resolve Room Map, Lock Pattern, Key Location, and Door Code first."
+            )
+
     return _normalise_result(iv.reveal_info(model, agent_id, item))
 
 
@@ -80,6 +105,20 @@ def _handle_boost_urgency(model, params: Dict[str, Any]) -> Dict[str, Any]:
     return _normalise_result(iv.boost_urgency(model, amount))
 
 
+def _handle_ease_pressure(model, params: Dict[str, Any]) -> Dict[str, Any]:
+    amount = params.get("amount", 0.2)
+
+    try:
+        amount = float(amount)
+    except (TypeError, ValueError):
+        return _failure("'amount' must be a float between 0.0 and 1.0")
+
+    if not 0.0 <= amount <= 1.0:
+        return _failure("'amount' must be between 0.0 and 1.0")
+
+    return _normalise_result(iv.ease_pressure(model, amount))
+
+
 def _handle_inject_tension(model, params: Dict[str, Any]) -> Dict[str, Any]:
     amount = params.get("amount", 0.2)
 
@@ -104,6 +143,31 @@ def _handle_force_meeting(model, params: Dict[str, Any]) -> Dict[str, Any]:
     return _normalise_result(iv.force_meeting(model, agent_a, agent_b))
 
 
+def _handle_inject_emotion(model, params: Dict[str, Any]) -> Dict[str, Any]:
+    """Classify free-text emotion and apply the effect to all agents immediately.
+
+    Uses the same classify_user_emotion + inject_user_emotion pipeline as the
+    /simulation/start endpoint, so the effect (stress/trust/valence delta) and
+    its decay are identical to what the setup-form emotion injection produces.
+    """
+    text = str(params.get("text", "")).strip()
+    if not text:
+        return _failure("inject_emotion requires a 'text' field in params")
+    try:
+        log_entry = model.inject_user_emotion(text, tick=getattr(model, "tick", 0))
+        emotion = log_entry.get("detected_emotion", "neutral")
+        short = text if len(text) <= 45 else text[:42] + "\u2026"
+        return {
+            "success": True,
+            "message": (
+                f"Emotion '{emotion}' detected and applied to all agents "
+                f"(\"{short}\")."
+            ),
+        }
+    except Exception as exc:
+        return _failure(f"Emotion injection failed: {exc}")
+
+
 # ---------------------------------------------------------------------------
 # Dispatch table
 # ---------------------------------------------------------------------------
@@ -112,8 +176,10 @@ _HANDLERS: Dict[str, Callable[..., Dict[str, Any]]] = {
     "reveal_info": _handle_reveal_info,
     "nudge_strategy": _handle_nudge_strategy,
     "boost_urgency": _handle_boost_urgency,
+    "ease_pressure": _handle_ease_pressure,
     "inject_tension": _handle_inject_tension,
     "force_meeting": _handle_force_meeting,
+    "inject_emotion": _handle_inject_emotion,
 }
 
 

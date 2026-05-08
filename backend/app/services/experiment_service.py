@@ -18,14 +18,14 @@ DEFAULT_SCENARIO_SET = ["office_proposal", "cafe_restaurant", "escape_puzzle"]
 
 
 def _normalize_scenario_ids(scenario_ids: List[str]) -> List[str]:
-    initialised: List[str] = []
+    normalized: List[str] = []
     seen = set()
     for scenario_id in scenario_ids:
         resolved = resolve_scenario_id(scenario_id)
         if resolved not in seen:
-            initialised.append(resolved)
+            normalized.append(resolved)
             seen.add(resolved)
-    return initialised
+    return normalized
 
 
 def _display_team_type(team_type: Optional[str]) -> str:
@@ -136,8 +136,10 @@ def _run_single_simulation(
         "total_refusals": model.total_refusals,
         "total_shares": model.total_shares,
         "stalled_ticks": model.total_stalled_ticks,
-        "first_share_tick": first_share_tick,
-        "completion_order": getattr(model, "completion_order", []),
+        "first_share_tick":  first_share_tick,
+        "completion_order":  getattr(model, "completion_order", []),
+        "memory_summary":    model.memory_summary(),
+        "emotion_summary":   model.emotion_summary(),
     }
 
 

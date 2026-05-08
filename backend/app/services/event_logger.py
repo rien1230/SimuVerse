@@ -8,9 +8,7 @@ import json
 
 
 def _find_repo_root(start_file: Path) -> Path:
-    """
-    This function is to locate the repository root.
-    """
+    """Walk up from the given file until we find the 'backend' parent directory."""
     for parent in start_file.resolve().parents:
         if parent.name == "backend":
             return parent.parent
@@ -35,7 +33,7 @@ class EventLogger:
 
     def __post_init__(self) -> None:
         """
-        initialised the logger after the dataclass fields are set.
+        Initialize the logger after the dataclass fields are set.
 
         Sets up the file path for this run's replay file.
         Creates the directory if it doesn't exist.
