@@ -17,6 +17,7 @@ from app.api.routes.runs import router as run_router
 from app.api.routes.run_history_routes import history_router
 from app.api.routes.interventions import router as intervention_router
 from app.api.routes.simulation import router as simulation_router
+from app.api.routes.experiments import router as experiment_router
 
 configure_logging()
 
@@ -36,6 +37,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5001", "http://127.0.0.1:5001",
+        "http://localhost:5002", "http://127.0.0.1:5002",  # preview static server
         "http://localhost:3000", "http://127.0.0.1:3000",
         "http://localhost:63342", "http://127.0.0.1:63342",  # JetBrains IDE server
         "null",
@@ -49,6 +51,7 @@ app.include_router(run_router,          prefix="/api", tags=["simulation"])
 app.include_router(history_router,      prefix="/api", tags=["run history"])
 app.include_router(intervention_router, prefix="/api", tags=["interventions"])
 app.include_router(simulation_router,   prefix="/api", tags=["simulation"])
+app.include_router(experiment_router,   prefix="/api", tags=["experiments"])
 
 
 @app.get("/api/health")

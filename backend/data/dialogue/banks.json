@@ -1,0 +1,2649 @@
+{
+  "office": {
+    "Leader": {
+      "calm": {
+        "agree": [
+          "Alright, that's settled. Let's move.",
+          "Good. That gives us enough to proceed.",
+          "That works — closing it out.",
+          "Agreed. We can act on that now.",
+          "Fine. That covers it.",
+          "Good — use that version.",
+          "That's what we needed. Keep going."
+        ],
+        "ask": [
+          "I need a clean answer on {item}.",
+          "Who's got {item}? I need it to proceed.",
+          "{role}, what's the status on {item}?",
+          "Can someone confirm {item} — I want it closed."
+        ],
+        "share": [
+          "Here's the position on {item}: {info}",
+          "{item} is clear: {info}",
+          "For the record: {info}"
+        ],
+        "refuse": [
+          "Not yet — I want the full picture first.",
+          "I'll hold that until I have more clarity.",
+          "Give me a moment before I commit to that."
+        ],
+        "challenge": [
+          "That's not the right call. We need a better option.",
+          "I'd push back on that — who owns this decision?",
+          "That's going to create problems downstream."
+        ],
+        "say": [
+          "Let's stay on track.",
+          "We still need to close {item}.",
+          "Keep it moving — we've got more to cover."
+        ],
+        "help": [
+          "I'll take that on.",
+          "Leave {item} with me.",
+          "I'll sort it."
+        ],
+        "ignore": [
+          "Not now.",
+          "Park that — come back to it.",
+          "Focus on the priority."
+        ],
+        "insult": [
+          "That's not useful right now.",
+          "You're holding this up.",
+          "We need better than that."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Okay. That's enough to work with.",
+          "Fine, let's go with that.",
+          "That'll do. Keep it moving."
+        ],
+        "ask": [
+          "I still need {item} — someone give me a clear answer.",
+          "{role}, where are we on {item}?",
+          "I'm waiting on {item}. What's the hold-up?"
+        ],
+        "share": [
+          "{info}",
+          "Here — {info}",
+          "{item}: {info}"
+        ],
+        "refuse": [
+          "Not ready to confirm that yet.",
+          "I'll hold off — I'm not satisfied with where we are.",
+          "Not committing to that until I see more."
+        ],
+        "challenge": [
+          "That's not going to work. We need to rethink.",
+          "I'm not convinced — who's checked this?",
+          "That creates more problems than it solves."
+        ],
+        "say": [
+          "We're not moving fast enough.",
+          "I need {item} resolved before we go further.",
+          "Who's blocking us right now?"
+        ],
+        "help": [
+          "I'll handle it.",
+          "Send it to me.",
+          "I've got {item}."
+        ],
+        "ignore": [
+          "Not now.",
+          "Later.",
+          "Leave it."
+        ],
+        "insult": [
+          "That's holding everything up.",
+          "That's not acceptable.",
+          "We don't have time for this."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine. That's enough. Move.",
+          "Good. Next.",
+          "Alright. Use it."
+        ],
+        "ask": [
+          "{item}. Now.",
+          "{role}, I need {item}. Direct answer.",
+          "Give me {item}. We're stalled."
+        ],
+        "share": [
+          "{info}",
+          "Here. {info}",
+          "Here: {info}"
+        ],
+        "refuse": [
+          "No. Not yet.",
+          "I'm not sharing that.",
+          "Hold it."
+        ],
+        "challenge": [
+          "No. That's wrong.",
+          "Wrong call. Fix it.",
+          "That won't work. Different option."
+        ],
+        "say": [
+          "We're losing time.",
+          "Move.",
+          "Someone close {item}. Now."
+        ],
+        "help": [
+          "On it.",
+          "Done.",
+          "I've got it."
+        ],
+        "ignore": [
+          "No.",
+          "Later.",
+          "Not now."
+        ],
+        "insult": [
+          "Stop. You're wasting time.",
+          "That's not helping anyone.",
+          "You're slowing us down."
+        ]
+      }
+    },
+    "Decisive": {
+      "calm": {
+        "agree": [
+          "That checks out. Let's move.",
+          "Good. That's decided.",
+          "Fine — closing it out."
+        ],
+        "ask": [
+          "I need {item} to move forward.",
+          "{role}, confirm {item} for me.",
+          "What's the final answer on {item}?"
+        ],
+        "share": [
+          "{item}: {info}",
+          "Here's what we've got: {info}",
+          "Confirmed. {info}"
+        ],
+        "refuse": [
+          "Not committing to that yet.",
+          "I'll wait until the picture is clearer.",
+          "Not yet."
+        ],
+        "challenge": [
+          "That's not the right option.",
+          "I'd push back on that. Better approach needed.",
+          "That won't deliver what we need."
+        ],
+        "say": [
+          "Let's finish this cleanly.",
+          "{item} is still open. We need it closed.",
+          "Who's got a clear answer?"
+        ],
+        "help": [
+          "I'll take it.",
+          "Send it over.",
+          "I'll handle {item}."
+        ],
+        "ignore": [
+          "Not now.",
+          "Leave that.",
+          "Focus."
+        ],
+        "insult": [
+          "That's not what we need.",
+          "You're slowing this down.",
+          "Not helpful."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Alright, that works.",
+          "Fine. Let's keep going.",
+          "Okay — that's settled."
+        ],
+        "ask": [
+          "Still waiting on {item}.",
+          "{role}, I need {item}. What's the hold-up?",
+          "Give me a clear answer on {item}."
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "{item} — {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "I'll hold that.",
+          "Not ready to commit."
+        ],
+        "challenge": [
+          "I don't think that's right.",
+          "That's the wrong approach.",
+          "Not the best call here."
+        ],
+        "say": [
+          "We need to close {item}.",
+          "Someone needs to own this.",
+          "Stop circling — make a decision."
+        ],
+        "help": [
+          "I'll sort it.",
+          "Give it to me.",
+          "I'll handle it."
+        ],
+        "ignore": [
+          "Later.",
+          "Not now.",
+          "Skip it."
+        ],
+        "insult": [
+          "That's not useful.",
+          "Stop. That's slowing us.",
+          "Not what we need."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine. Use it.",
+          "Good. Move.",
+          "That's enough. Continue."
+        ],
+        "ask": [
+          "{item}. Now.",
+          "Give me {item}.",
+          "{role}. {item}. Answer."
+        ],
+        "share": [
+          "{info}",
+          "Here — {info}",
+          "Done. {info}"
+        ],
+        "refuse": [
+          "No.",
+          "Not sharing that.",
+          "Not yet."
+        ],
+        "challenge": [
+          "Wrong.",
+          "No. That's not it.",
+          "That's off."
+        ],
+        "say": [
+          "Move.",
+          "Close {item}.",
+          "We're done waiting."
+        ],
+        "help": [
+          "Done.",
+          "Handled.",
+          "That's covered."
+        ],
+        "ignore": [
+          "No.",
+          "Later.",
+          "Not now."
+        ],
+        "insult": [
+          "Stop.",
+          "That's useless.",
+          "Move on."
+        ]
+      }
+    },
+    "Skeptical": {
+      "calm": {
+        "agree": [
+          "I can work with that, though I want it verified.",
+          "Alright — I'll accept that.",
+          "That checks out. Let's move."
+        ],
+        "ask": [
+          "What exactly do we have on {item}?",
+          "Is {item} actually confirmed or still rough?",
+          "{role}, I need the real version of {item}."
+        ],
+        "share": [
+          "Here's what I've got — I'd still want it checked: {info}",
+          "Take this carefully: {info}",
+          "This seems right, though verify it: {info}"
+        ],
+        "refuse": [
+          "I'd rather wait — I'm not satisfied with where we are.",
+          "Not yet. I want to understand this better.",
+          "I'm holding off until I'm actually confident."
+        ],
+        "challenge": [
+          "I'm not convinced that's right.",
+          "That still feels thin. What's the basis for it?",
+          "Have we actually verified this?"
+        ],
+        "say": [
+          "Are we sure about {item}?",
+          "I want {item} double-checked before we move.",
+          "That feels too easy — is this actually solid?"
+        ],
+        "help": [
+          "I'll look at it. No guarantees yet.",
+          "I can take a look, but I want to verify properly.",
+          "I'll try — I want to check it first."
+        ],
+        "ignore": [
+          "Not comfortable with that yet.",
+          "Let me think about it first.",
+          "I'm not ready to engage with that."
+        ],
+        "insult": [
+          "That approach won't hold up.",
+          "I'm not accepting that — it's not rigorous enough.",
+          "You're creating more uncertainty, not less."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Fine. But I want it verified.",
+          "Okay. That'll do.",
+          "Alright — I'll accept it, but I'm watching."
+        ],
+        "ask": [
+          "I need {item} properly confirmed.",
+          "Where are we actually on {item}?",
+          "{role}, is {item} final or still working?"
+        ],
+        "share": [
+          "Here — but I want it checked: {info}",
+          "Take this. I'm still not fully satisfied: {info}",
+          "{info} — that's what I've got, use carefully."
+        ],
+        "refuse": [
+          "Not yet. I need more to go on.",
+          "I'm not sharing that until I'm sure.",
+          "Hold on."
+        ],
+        "challenge": [
+          "That doesn't sit right with me.",
+          "I still have doubts about this.",
+          "Something about {item} feels off."
+        ],
+        "say": [
+          "Something about this doesn't add up.",
+          "I want {item} looked at again.",
+          "Are we actually confident here?"
+        ],
+        "help": [
+          "I'll check it.",
+          "Let me look at it.",
+          "Give me a moment with {item}."
+        ],
+        "ignore": [
+          "Not now.",
+          "I'm not ready for that.",
+          "Let me think."
+        ],
+        "insult": [
+          "That's not good enough.",
+          "Stop rushing — you're making this worse.",
+          "That's sloppy."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine. But verify it.",
+          "Okay. I still don't trust it.",
+          "I'll go with it. Barely."
+        ],
+        "ask": [
+          "Is {item} actually confirmed?",
+          "Someone verify {item}.",
+          "{role} — {item}. Is it solid?"
+        ],
+        "share": [
+          "Here. Don't trust it blindly: {info}",
+          "Take it. I want it checked: {info}",
+          "{info} — verify it."
+        ],
+        "refuse": [
+          "No. Not yet.",
+          "Not until I'm sure.",
+          "I'm holding it."
+        ],
+        "challenge": [
+          "No. That's not right.",
+          "Wrong. Check it.",
+          "That's not solid enough."
+        ],
+        "say": [
+          "Wait. Are we sure?",
+          "Something's off.",
+          "I don't trust this yet."
+        ],
+        "help": [
+          "Let me check it first.",
+          "I'll look. But carefully.",
+          "Give me a second."
+        ],
+        "ignore": [
+          "No.",
+          "Not ready.",
+          "Later."
+        ],
+        "insult": [
+          "Stop. That's wrong.",
+          "You're guessing.",
+          "That's not acceptable."
+        ]
+      }
+    },
+    "Overthinker": {
+      "calm": {
+        "agree": [
+          "I can go with that, though I want to double-check one thing.",
+          "Looks right to me. Can we give it one more check?",
+          "Okay — I can go with that, but let me flag a small concern first."
+        ],
+        "ask": [
+          "I'm not sure I fully understand {item} yet — can you walk me through it?",
+          "Can you clarify {item}? I want to know I've got it right.",
+          "I keep coming back to {item} — do we have it properly covered?"
+        ],
+        "share": [
+          "This is what I have, though I want it verified: {info}",
+          "This looks right, even if I'm not one hundred percent: {info}",
+          "Here — I keep second-guessing it, but: {info}"
+        ],
+        "refuse": [
+          "I'd rather hold off — I want to think it through properly.",
+          "I'm not quite ready. Give me a bit more time.",
+          "I'm probably overthinking it, but I want to check first."
+        ],
+        "challenge": [
+          "I have concerns about {item} — I want to think through the edge cases.",
+          "Something about that doesn't sit right with me.",
+          "I'd want to check that before we commit."
+        ],
+        "say": [
+          "I keep thinking about {item} — have we covered all the angles?",
+          "I'm probably overthinking this, but is {item} actually solid?",
+          "Something about this still feels unresolved."
+        ],
+        "help": [
+          "I can look at it — though I want to understand it first.",
+          "I'll try to help. Let me think through {item} carefully.",
+          "Give me a moment — I want to approach {item} properly."
+        ],
+        "ignore": [
+          "I need a second — I'm still processing.",
+          "Give me a moment.",
+          "I'm not ready to respond to that yet."
+        ],
+        "insult": [
+          "That's not helping — you're adding uncertainty.",
+          "That makes things harder, not easier.",
+          "I'd rather slow down and think than rush into the wrong answer."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Okay — I can go with that, though I'm not completely settled.",
+          "Alright, I'll go with it. I just want to flag that I'm still not sure.",
+          "Fine. I'll go with it. I just hope I'm not missing something."
+        ],
+        "ask": [
+          "Can we just confirm {item} one more time?",
+          "I'm still not fully clear on {item} — can someone clarify?",
+          "I keep second-guessing {item} — what's the actual answer?"
+        ],
+        "share": [
+          "Here — though I want it checked: {info}",
+          "This looks right, but I'm not certain: {info}",
+          "Take this. I'm still second-guessing it: {info}"
+        ],
+        "refuse": [
+          "Not yet. I need more time with this.",
+          "I'm still working through it. Give me a moment.",
+          "I'd rather wait — I don't want to share something I'm not sure about."
+        ],
+        "challenge": [
+          "I'm still not sure about {item}. Something feels off.",
+          "I don't think we're looking at this right.",
+          "I'd want to think about this more before committing."
+        ],
+        "say": [
+          "I'm probably overthinking it, but something about {item} still worries me.",
+          "Have we properly checked {item}?",
+          "I keep coming back to {item} — I don't think we've resolved it."
+        ],
+        "help": [
+          "I can try — but I want to think it through first.",
+          "Give me a moment with {item}.",
+          "I'll look at it carefully."
+        ],
+        "ignore": [
+          "I'm still thinking.",
+          "Give me a second.",
+          "Not now — I'm processing."
+        ],
+        "insult": [
+          "That's making it harder to think clearly.",
+          "I can't work under this pressure.",
+          "Give me a moment — I can't rush this."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Okay. I hope that's right.",
+          "Fine. Going with it.",
+          "Alright. I'm still not sure, but okay."
+        ],
+        "ask": [
+          "Can someone just confirm {item}?",
+          "I need {item} — properly. Not a guess.",
+          "What's the actual answer on {item}?"
+        ],
+        "share": [
+          "Here — but please verify it: {info}",
+          "I think it's right: {info}",
+          "Take it. I'm not fully certain: {info}"
+        ],
+        "refuse": [
+          "Not yet. I need more time.",
+          "I'm not ready.",
+          "Give me a second."
+        ],
+        "challenge": [
+          "Something's wrong with {item}.",
+          "That doesn't add up.",
+          "We shouldn't go with that yet."
+        ],
+        "say": [
+          "I'm not confident about this.",
+          "Something still feels off.",
+          "We're moving too fast."
+        ],
+        "help": [
+          "I'll try.",
+          "Give me a second.",
+          "Let me look."
+        ],
+        "ignore": [
+          "I can't right now.",
+          "Give me a moment.",
+          "Later."
+        ],
+        "insult": [
+          "Stop — you're making this worse.",
+          "That's not helping.",
+          "I can't think when this is happening."
+        ]
+      }
+    },
+    "Easygoing": {
+      "calm": {
+        "agree": [
+          "Yeah, that works for me.",
+          "I'm fine with that.",
+          "No issue from me — let's go."
+        ],
+        "ask": [
+          "{role}, do you have {item}?",
+          "Any update on {item}?",
+          "Can someone fill me in on {item}?"
+        ],
+        "share": [
+          "Here's what I've got on {item}: {info}",
+          "For reference: {info}",
+          "This should help — {info}"
+        ],
+        "refuse": [
+          "I'd rather hold off a bit, if that's okay.",
+          "Give me a bit more time on that.",
+          "Not quite ready yet — I'll let you know."
+        ],
+        "challenge": [
+          "I'm not sure that's quite the right call.",
+          "I'd push back a little — have we thought about alternatives?",
+          "I'm not fully convinced by {item}."
+        ],
+        "say": [
+          "We're getting there — just need to close {item}.",
+          "Making progress. Almost done.",
+          "This is coming together."
+        ],
+        "help": [
+          "Yeah, I can sort that.",
+          "Sure — I'll take {item}.",
+          "Happy to help."
+        ],
+        "ignore": [
+          "Give me a moment.",
+          "I'll come back to that.",
+          "Not right now — sorry."
+        ],
+        "insult": [
+          "That's making things harder.",
+          "Come on — we're almost there.",
+          "That's not helping."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Alright, that works.",
+          "Sure — fine by me.",
+          "Okay, let's go with that."
+        ],
+        "ask": [
+          "Still waiting on {item} — any update?",
+          "{role}, where are we on {item}?",
+          "Can we get {item} sorted?"
+        ],
+        "share": [
+          "{info}",
+          "Here — {info}",
+          "For {item}: {info}"
+        ],
+        "refuse": [
+          "Not yet — sorry.",
+          "Give me a bit more time.",
+          "I'd rather wait a little longer."
+        ],
+        "challenge": [
+          "I'm not totally sure about that.",
+          "I'd want to look at it again.",
+          "That doesn't feel quite right."
+        ],
+        "say": [
+          "We should probably push this along.",
+          "{item} is still open — can someone pick it up?",
+          "Let's keep moving."
+        ],
+        "help": [
+          "Sure, I'll handle it.",
+          "Give it to me.",
+          "I'll take care of it."
+        ],
+        "ignore": [
+          "One sec.",
+          "Not right now.",
+          "In a minute."
+        ],
+        "insult": [
+          "That's not useful.",
+          "We don't need that right now.",
+          "Come on."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine — go with it.",
+          "Okay. Sure.",
+          "Yeah, whatever works."
+        ],
+        "ask": [
+          "{role}, {item} — what do you have?",
+          "Still need {item}.",
+          "Can we sort {item}?"
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "Take it: {info}"
+        ],
+        "refuse": [
+          "Not now.",
+          "Give me a second.",
+          "I'm not ready."
+        ],
+        "challenge": [
+          "I'm not sure about that.",
+          "That feels off.",
+          "I'd check that again."
+        ],
+        "say": [
+          "Let's just get it done.",
+          "Come on — push through.",
+          "We need to move."
+        ],
+        "help": [
+          "On it.",
+          "Sure.",
+          "I'll do it."
+        ],
+        "ignore": [
+          "Not now.",
+          "Later.",
+          "Hold on."
+        ],
+        "insult": [
+          "Stop.",
+          "That's not helping.",
+          "Come on."
+        ]
+      }
+    },
+    "Creative": {
+      "calm": {
+        "agree": [
+          "That actually makes sense — I'm on board.",
+          "I like that approach. Let's go.",
+          "Yeah, that works for me."
+        ],
+        "ask": [
+          "Is there another way into {item} we haven't tried?",
+          "{role}, what's your read on {item}?",
+          "What if we approached {item} differently — any thoughts?"
+        ],
+        "share": [
+          "Here's how I'm reading it: {info}",
+          "This might work better: {info}",
+          "This might connect differently: {info}"
+        ],
+        "refuse": [
+          "I want to think this through differently first.",
+          "I'm not quite ready — give me a moment to reframe it.",
+          "Hold on — I think there's a better approach."
+        ],
+        "challenge": [
+          "I'd push back — there's probably a better way to frame this.",
+          "That feels too conventional. Have we explored alternatives?",
+          "I'm not convinced that's the most useful angle."
+        ],
+        "say": [
+          "What if we're looking at {item} wrong?",
+          "There might be a simpler way through this.",
+          "I think there's a simpler path here."
+        ],
+        "help": [
+          "Let me try a different angle on that.",
+          "I'll look at it — might see something others missed.",
+          "Happy to take a fresh look."
+        ],
+        "ignore": [
+          "Give me a moment — I'm still working through something.",
+          "Not quite ready — let me think.",
+          "One second."
+        ],
+        "insult": [
+          "That approach isn't working — let's try something else.",
+          "We're going in circles. Different direction needed.",
+          "That's not the right frame."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Okay, that works — I can see the logic.",
+          "That's a reasonable approach. Let's use it.",
+          "Fine — I'll go with it."
+        ],
+        "ask": [
+          "What's the real issue with {item}? Not just the surface one.",
+          "{role}, how are you reading {item}?",
+          "I'm not sure we're thinking about {item} in the right way."
+        ],
+        "share": [
+          "Here's my read: {info}",
+          "This might help: {info}",
+          "Try this angle: {info}"
+        ],
+        "refuse": [
+          "Not yet — I want to reframe it first.",
+          "Give me a moment. I think there's a better approach.",
+          "I'd rather think it through differently."
+        ],
+        "challenge": [
+          "That doesn't feel right to me.",
+          "We might be solving the wrong problem.",
+          "I'd want to explore this differently."
+        ],
+        "say": [
+          "I think we're approaching {item} wrong.",
+          "There might be a simpler solution here.",
+          "Something about this still needs a different angle."
+        ],
+        "help": [
+          "Let me try something.",
+          "I've got an idea — let me test it.",
+          "I'll have a go."
+        ],
+        "ignore": [
+          "Hold on — I'm rethinking.",
+          "Give me a sec.",
+          "Not now."
+        ],
+        "insult": [
+          "That's not the right direction.",
+          "We're not solving this by going faster.",
+          "Different approach — that one's not working."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine. Try it.",
+          "Okay. Use it.",
+          "Go with it."
+        ],
+        "ask": [
+          "What do we actually have on {item}?",
+          "{role} — {item}. Any different read on it?",
+          "Is there something else we're missing on {item}?"
+        ],
+        "share": [
+          "Here: {info}",
+          "Try this: {info}",
+          "Here: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Hold on.",
+          "Give me a second."
+        ],
+        "challenge": [
+          "That's wrong.",
+          "Different approach.",
+          "No. Try something else."
+        ],
+        "say": [
+          "Something's off here.",
+          "Different angle — quickly.",
+          "We're reading this wrong."
+        ],
+        "help": [
+          "Let me try.",
+          "I've got something.",
+          "Give me it."
+        ],
+        "ignore": [
+          "Not now.",
+          "Later.",
+          "Give me a second."
+        ],
+        "insult": [
+          "Stop. We need a different approach.",
+          "That's making it worse.",
+          "Different direction. Now."
+        ]
+      }
+    }
+  },
+  "cafe": {
+    "Leader": {
+      "calm": {
+        "agree": [
+          "Yeah, that sounds like the right call.",
+          "I like that — let's go with it.",
+          "Okay, that covers it. I'm in."
+        ],
+        "ask": [
+          "What's everyone actually thinking about {item}?",
+          "{role}, do you have a take on {item}?",
+          "Can we settle {item}? What's the preference?"
+        ],
+        "share": [
+          "Honestly — {info}",
+          "So here's my take: {info}",
+          "From where I'm sitting: {info}"
+        ],
+        "refuse": [
+          "I'd rather wait until we've heard from everyone.",
+          "Give it a second — I want to hear more thoughts first.",
+          "Not just yet. Let's see where this goes."
+        ],
+        "challenge": [
+          "I'm not fully sold on that.",
+          "That might not cover everyone's preference.",
+          "I'd push back — does that actually work for the group?"
+        ],
+        "say": [
+          "Okay, so where are we landing?",
+          "Let's just make a call — we're close enough.",
+          "I think we're nearly there."
+        ],
+        "help": [
+          "Yeah, I can sort that.",
+          "Leave it with me.",
+          "I'll figure it out."
+        ],
+        "ignore": [
+          "Give me a sec.",
+          "I'll come back to that.",
+          "Hang on."
+        ],
+        "insult": [
+          "We're going in circles.",
+          "That's not moving us forward.",
+          "Come on — we're nearly there."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Alright, let's just go with that.",
+          "Sure — that seems like the safest call.",
+          "Fine, I'm in. Let's close it."
+        ],
+        "ask": [
+          "Can we just settle {item}?",
+          "{role}, what's your actual preference on {item}?",
+          "We need to decide on {item} — what are we thinking?"
+        ],
+        "share": [
+          "{info}",
+          "Here's what I think: {info}",
+          "For what it's worth — {info}"
+        ],
+        "refuse": [
+          "Not yet — let me think about it.",
+          "Give me a second.",
+          "I'm still deciding."
+        ],
+        "challenge": [
+          "I'm not sure that covers everyone.",
+          "That might not be the right fit.",
+          "I'd want to double-check that works for the group."
+        ],
+        "say": [
+          "We should probably just make a call.",
+          "Let's not overthink it — pick something.",
+          "We're taking too long on this."
+        ],
+        "help": [
+          "Sure, I'll handle it.",
+          "I'll sort it.",
+          "Leave it with me."
+        ],
+        "ignore": [
+          "One sec.",
+          "Not just now.",
+          "Hang on."
+        ],
+        "insult": [
+          "That's not helpful.",
+          "We need to move forward, not backwards.",
+          "Come on."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine. That works.",
+          "Okay, go with that.",
+          "Yeah, just pick something."
+        ],
+        "ask": [
+          "Can we just decide on {item}?",
+          "{role} — {item}. What do you want?",
+          "We need to settle {item}. Now."
+        ],
+        "share": [
+          "{info}",
+          "Honestly: {info}",
+          "Here — {info}"
+        ],
+        "refuse": [
+          "Not now.",
+          "Give me a sec.",
+          "I'll decide in a minute."
+        ],
+        "challenge": [
+          "That's not working.",
+          "We need a different option.",
+          "I don't think that's right."
+        ],
+        "say": [
+          "Let's just pick something.",
+          "We're overthinking this.",
+          "Someone make a call."
+        ],
+        "help": [
+          "Fine, I'll do it.",
+          "Give it here.",
+          "I'll sort it."
+        ],
+        "ignore": [
+          "Not now.",
+          "Hold on.",
+          "In a minute."
+        ],
+        "insult": [
+          "That's not helpful.",
+          "Come on.",
+          "We're wasting time."
+        ]
+      }
+    },
+    "Skeptical": {
+      "calm": {
+        "agree": [
+          "I can live with that.",
+          "Fine — I'll go along with it.",
+          "Alright. I suppose that works."
+        ],
+        "ask": [
+          "Is {item} actually what people want, though?",
+          "{role}, do you genuinely prefer {item}?",
+          "Have we actually checked whether {item} works for everyone?"
+        ],
+        "share": [
+          "Here's my concern: {info}",
+          "I mean — {info}",
+          "I'm not convinced, but for what it's worth: {info}"
+        ],
+        "refuse": [
+          "I'd rather not commit to that yet.",
+          "I'm not fully convinced. Give me a moment.",
+          "I want to think about it more."
+        ],
+        "challenge": [
+          "I'm not sure {item} actually works for everyone.",
+          "That feels like the easy choice, not the right one.",
+          "Have we actually thought this through?"
+        ],
+        "say": [
+          "I'm not sure we've actually thought this through properly.",
+          "Does {item} actually cover what we need?",
+          "I keep coming back to whether this is really the right call."
+        ],
+        "help": [
+          "I'll look into it — but I'm making no promises.",
+          "Sure, but I want to flag my reservations first.",
+          "I can try, though I'm not fully convinced."
+        ],
+        "ignore": [
+          "I'm thinking.",
+          "Give me a second.",
+          "Not ready to engage with that yet."
+        ],
+        "insult": [
+          "That's not a useful contribution.",
+          "We need better than that.",
+          "That's making the decision harder."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Okay. Fine. I'll go along with it.",
+          "Alright — though I still have questions.",
+          "Sure. But I want it on record that I wasn't fully sold."
+        ],
+        "ask": [
+          "Is {item} actually right for everyone, though?",
+          "Can we confirm {item} covers the actual constraints?",
+          "I'm still not sure {item} is the right call."
+        ],
+        "share": [
+          "Okay, here's my issue with {item}: {info}",
+          "For what it's worth: {info}",
+          "I'm not totally sold, but: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "I need more time with this.",
+          "I'm not comfortable committing to that yet."
+        ],
+        "challenge": [
+          "That doesn't feel right to me.",
+          "I'm not buying {item}.",
+          "Something about this still feels off."
+        ],
+        "say": [
+          "I'm still not sure about this.",
+          "{item} doesn't feel right to me.",
+          "Something about this doesn't add up."
+        ],
+        "help": [
+          "I'll look — but I'm skeptical.",
+          "Give me a moment with it.",
+          "I'll try."
+        ],
+        "ignore": [
+          "Not now.",
+          "Let me think.",
+          "Give me a sec."
+        ],
+        "insult": [
+          "That's not useful.",
+          "Come on.",
+          "That's making it worse."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine.",
+          "Whatever. Go with it.",
+          "Okay. I still don't love it, but fine."
+        ],
+        "ask": [
+          "Is {item} actually right?",
+          "Someone confirm {item}.",
+          "Do we actually want {item}?"
+        ],
+        "share": [
+          "Honestly — {info}",
+          "Here's the problem: {info}",
+          "I'm not sold, but: {info}"
+        ],
+        "refuse": [
+          "No. Not yet.",
+          "I'm not ready.",
+          "Give me a second."
+        ],
+        "challenge": [
+          "That's not it.",
+          "No.",
+          "I'm not buying that."
+        ],
+        "say": [
+          "We're making the wrong call.",
+          "I don't trust this.",
+          "Something's off."
+        ],
+        "help": [
+          "I'll check.",
+          "Let me look.",
+          "Give me a sec."
+        ],
+        "ignore": [
+          "No.",
+          "Not now.",
+          "Later."
+        ],
+        "insult": [
+          "Stop.",
+          "That's not helping.",
+          "Come on."
+        ]
+      }
+    },
+    "Overthinker": {
+      "calm": {
+        "agree": [
+          "I can go with that — though I keep second-guessing it.",
+          "Okay, I can go with that. I just want to check we've covered everything.",
+          "That seems like the right call. I hope I'm not overthinking it."
+        ],
+        "ask": [
+          "Have we actually thought about all the constraints for {item}?",
+          "I keep going back to {item} — are we sure we've got it right?",
+          "{role}, what's your honest take on {item}?"
+        ],
+        "share": [
+          "Okay, here's what I keep coming back to: {info}",
+          "I'm probably overthinking this, but: {info}",
+          "Here — though I keep second-guessing it: {info}"
+        ],
+        "refuse": [
+          "I just need a little more time to think it through.",
+          "Not quite yet — I want to check one thing.",
+          "I'm probably overthinking it, but give me a moment."
+        ],
+        "challenge": [
+          "I'm not sure we've thought about all the implications of {item}.",
+          "Something about that still doesn't sit right with me.",
+          "I keep second-guessing this."
+        ],
+        "say": [
+          "I keep coming back to {item} — are we actually sure?",
+          "Something about this still feels unresolved.",
+          "I'm probably overthinking, but does this actually cover everyone?"
+        ],
+        "help": [
+          "Sure — let me think through it carefully first.",
+          "I'll try. I just want to understand it properly.",
+          "Give me a moment with {item} — I want to get it right."
+        ],
+        "ignore": [
+          "Give me a moment — I'm still processing.",
+          "Hang on.",
+          "One second."
+        ],
+        "insult": [
+          "That's adding to my uncertainty.",
+          "I'd rather slow down than get it wrong.",
+          "That's not helping me think clearly."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Okay, let's go with it, though I still want one more check.",
+          "Fine, I suppose. I just hope we've not missed anything.",
+          "Alright. Going with it."
+        ],
+        "ask": [
+          "Can we just confirm {item} one more time?",
+          "I'm still not sure {item} is right — can someone help me think through it?",
+          "I keep coming back to {item}. Are we sure?"
+        ],
+        "share": [
+          "Here — though I'm still unsure: {info}",
+          "This looks right, though I want it checked: {info}",
+          "Take this. I'm second-guessing it: {info}"
+        ],
+        "refuse": [
+          "I need a bit more time. Sorry.",
+          "Not quite yet — I want to think it through.",
+          "Give me a second."
+        ],
+        "challenge": [
+          "I'm not sure that's the right fit.",
+          "Something about {item} still doesn't feel settled.",
+          "I keep wondering if we've got this right."
+        ],
+        "say": [
+          "I'm probably overthinking it, but {item} still worries me.",
+          "Have we actually covered all the angles here?",
+          "Something about this still feels off."
+        ],
+        "help": [
+          "I'll try — just let me think through it first.",
+          "Give me a moment.",
+          "I'll look at {item} carefully."
+        ],
+        "ignore": [
+          "Give me a second — I'm thinking.",
+          "Not yet.",
+          "Hang on."
+        ],
+        "insult": [
+          "That's making it harder to think through.",
+          "I need to process this properly.",
+          "That's not helping."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Okay. Fine. I hope that's right.",
+          "Going with it.",
+          "Alright — though I'm still not sure."
+        ],
+        "ask": [
+          "Can someone just confirm {item}?",
+          "I still need {item} sorted.",
+          "What's the actual answer on {item}?"
+        ],
+        "share": [
+          "Here — please verify: {info}",
+          "I think it's right: {info}",
+          "Take it: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Give me a second.",
+          "I'm not ready."
+        ],
+        "challenge": [
+          "Something's wrong with {item}.",
+          "That doesn't feel right.",
+          "I'm not sure about that."
+        ],
+        "say": [
+          "I'm not confident about this.",
+          "Something's still off.",
+          "We're moving too fast."
+        ],
+        "help": [
+          "I'll try.",
+          "Give me a moment.",
+          "I'll look."
+        ],
+        "ignore": [
+          "Give me a sec.",
+          "Not now.",
+          "Later."
+        ],
+        "insult": [
+          "Stop — you're making it worse.",
+          "That's not helpful.",
+          "I can't think like this."
+        ]
+      }
+    },
+    "Easygoing": {
+      "calm": {
+        "agree": [
+          "Yeah, that's fine by me.",
+          "I'm fine with that.",
+          "Sure — that sounds good."
+        ],
+        "ask": [
+          "Any thoughts on {item}?",
+          "{role}, what do you actually want for {item}?",
+          "What's everyone thinking on {item}?"
+        ],
+        "share": [
+          "For what it's worth — {info}",
+          "Right, {info}",
+          "I think {info}"
+        ],
+        "refuse": [
+          "Not fussed, but give me a second.",
+          "Give me a second — I'm not there yet.",
+          "No rush — let me think."
+        ],
+        "challenge": [
+          "I'm not fully sold on that.",
+          "That doesn't totally work for me.",
+          "Hmm — not sure about {item}."
+        ],
+        "say": [
+          "I'm fine with most things.",
+          "As long as it works for everyone, I'm in.",
+          "We're nearly there — just pick something."
+        ],
+        "help": [
+          "Yeah, happy to help.",
+          "Sure, I'll sort that.",
+          "No problem."
+        ],
+        "ignore": [
+          "Give me a sec.",
+          "I'll come back to that.",
+          "Not right now."
+        ],
+        "insult": [
+          "That's a bit rough.",
+          "Come on, we're nearly there.",
+          "That's not helpful."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Yeah, that works for me.",
+          "Sure, that's fine by me.",
+          "Okay — fine by me."
+        ],
+        "ask": [
+          "{role}, what do you actually want?",
+          "Can we just settle {item}?",
+          "Any preference on {item}?"
+        ],
+        "share": [
+          "{info}",
+          "Okay so — {info}",
+          "Looks like {info}"
+        ],
+        "refuse": [
+          "Give me a moment.",
+          "Not just yet.",
+          "Let me think for a sec."
+        ],
+        "challenge": [
+          "I'm not sure that's quite right.",
+          "Hmm — something's a bit off.",
+          "Not totally convinced."
+        ],
+        "say": [
+          "Let's just make a call.",
+          "We're overthinking this.",
+          "I think we're close enough."
+        ],
+        "help": [
+          "Sure.",
+          "Happy to.",
+          "I'll take it."
+        ],
+        "ignore": [
+          "One sec.",
+          "Give me a minute.",
+          "Not now."
+        ],
+        "insult": [
+          "Come on.",
+          "That's a bit much.",
+          "That's not useful."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Yeah. Fine.",
+          "Sure. Whatever works.",
+          "Okay."
+        ],
+        "ask": [
+          "What does everyone want?",
+          "Can we just decide?",
+          "{item} — quick."
+        ],
+        "share": [
+          "{info}",
+          "Here — {info}",
+          "Take it: {info}"
+        ],
+        "refuse": [
+          "Not now.",
+          "Give me a sec.",
+          "In a minute."
+        ],
+        "challenge": [
+          "Hmm.",
+          "Not sure.",
+          "I don't think that's right."
+        ],
+        "say": [
+          "Let's just pick.",
+          "Come on.",
+          "Someone decide."
+        ],
+        "help": [
+          "Sure.",
+          "Okay.",
+          "I'll do it."
+        ],
+        "ignore": [
+          "Hold on.",
+          "Not now.",
+          "Give me a sec."
+        ],
+        "insult": [
+          "Come on.",
+          "That's not helpful.",
+          "Stop."
+        ]
+      }
+    },
+    "Decisive": {
+      "calm": {
+        "agree": [
+          "Solid. That's the call.",
+          "That covers it. I'm in.",
+          "Done. Let's go."
+        ],
+        "ask": [
+          "{role}, what's your preference on {item}?",
+          "Let's settle {item}. What do we want?",
+          "Quick answer on {item} — what are we going with?"
+        ],
+        "share": [
+          "{item}: {info}",
+          "Here's where I land: {info}",
+          "Simple: {info}"
+        ],
+        "refuse": [
+          "Not committing to that yet.",
+          "I'll decide once we've heard more.",
+          "Give me a moment."
+        ],
+        "challenge": [
+          "That's not the right call.",
+          "That doesn't cover what we need.",
+          "Wrong option. Think again."
+        ],
+        "say": [
+          "Let's make a decision.",
+          "We've got enough to choose — let's go.",
+          "Pick something and move."
+        ],
+        "help": [
+          "I'll sort it.",
+          "Done.",
+          "Leave it with me."
+        ],
+        "ignore": [
+          "Later.",
+          "Not now.",
+          "Skip it."
+        ],
+        "insult": [
+          "That's holding us up.",
+          "Not what we need.",
+          "Move on."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Fine. That works.",
+          "Good call.",
+          "Going with that."
+        ],
+        "ask": [
+          "{item} — what are we doing?",
+          "Quick answer on {item}.",
+          "Someone settle {item}."
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "{item} — {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Give me a second.",
+          "Not committing."
+        ],
+        "challenge": [
+          "Wrong call.",
+          "That doesn't work.",
+          "Different option."
+        ],
+        "say": [
+          "Decide. Now.",
+          "Pick something.",
+          "Let's not drag this out."
+        ],
+        "help": [
+          "I'll handle it.",
+          "Done.",
+          "Give it here."
+        ],
+        "ignore": [
+          "Later.",
+          "Not now.",
+          "Skip."
+        ],
+        "insult": [
+          "Stop.",
+          "Not useful.",
+          "Move."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Done.",
+          "Fine.",
+          "Go."
+        ],
+        "ask": [
+          "{item}. Quick.",
+          "What are we doing with {item}?",
+          "Someone decide {item}."
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "Done: {info}"
+        ],
+        "refuse": [
+          "No.",
+          "Not yet.",
+          "Later."
+        ],
+        "challenge": [
+          "No.",
+          "Wrong.",
+          "Different option."
+        ],
+        "say": [
+          "Decide.",
+          "Now.",
+          "Move."
+        ],
+        "help": [
+          "Done.",
+          "Handled.",
+          "Next."
+        ],
+        "ignore": [
+          "No.",
+          "Later.",
+          "Not now."
+        ],
+        "insult": [
+          "Stop.",
+          "Move.",
+          "Enough."
+        ]
+      }
+    },
+    "Creative": {
+      "calm": {
+        "agree": [
+          "Yeah, I actually like that.",
+          "That could be really nice — I'm in.",
+          "That works. Good choice."
+        ],
+        "ask": [
+          "Have we thought about whether {item} is actually the right place?",
+          "{role}, what's your honest take on {item}?",
+          "Is {item} really the right feel for this?"
+        ],
+        "share": [
+          "So here's what I think about {item}: {info}",
+          "What if we thought about it like this: {info}",
+          "This might be the angle we want: {info}"
+        ],
+        "refuse": [
+          "I want to explore a bit more before committing.",
+          "Give me a moment — I think there's a better option.",
+          "Not just yet. I want to think through it."
+        ],
+        "challenge": [
+          "I don't think {item} is quite the right place.",
+          "That feels too safe — is there a better option?",
+          "I'd want to look at a different option."
+        ],
+        "say": [
+          "What if there's a better option we haven't considered?",
+          "I wonder if we're thinking about this too conventionally.",
+          "There might be a nicer choice here."
+        ],
+        "help": [
+          "Yeah, I've got an idea — let me try something.",
+          "Happy to. I might come at it from a different angle though.",
+          "Sure — leave it with me."
+        ],
+        "ignore": [
+          "Hold on — I'm thinking.",
+          "Give me a moment.",
+          "One sec."
+        ],
+        "insult": [
+          "We're not finding the right answer by rushing.",
+          "Different approach — that's not working.",
+          "Come on — there's a better way."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Okay, that could work.",
+          "Yeah — not perfect, but I'm in.",
+          "Fine. Let's try it."
+        ],
+        "ask": [
+          "What's everyone actually looking for with {item}?",
+          "Have we thought about whether {item} feels right?",
+          "Is {item} the best we can do?"
+        ],
+        "share": [
+          "Here's my take: {info}",
+          "What about this angle: {info}",
+          "Try this: {info}"
+        ],
+        "refuse": [
+          "Not yet — I think there's a better option.",
+          "Give me a moment.",
+          "I want to try something different."
+        ],
+        "challenge": [
+          "That's not quite it for me.",
+          "I think there's a better angle.",
+          "That feels like the obvious choice, not the best one."
+        ],
+        "say": [
+          "I think we're settling too early.",
+          "There might be a better option.",
+          "Something about this feels like a compromise."
+        ],
+        "help": [
+          "I've got an idea.",
+          "Let me try something.",
+          "Give it here."
+        ],
+        "ignore": [
+          "Hold on.",
+          "Give me a second.",
+          "Not yet."
+        ],
+        "insult": [
+          "That's not working.",
+          "Different approach.",
+          "Come on."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine. Go with it.",
+          "Okay. Try it.",
+          "Sure."
+        ],
+        "ask": [
+          "What does everyone actually want?",
+          "{item} — any other options?",
+          "Is {item} really the right call?"
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "Try this: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Hold on.",
+          "Give me a second."
+        ],
+        "challenge": [
+          "That's not right.",
+          "Different option.",
+          "No."
+        ],
+        "say": [
+          "We're settling.",
+          "Is this really the best we can do?",
+          "Something's off."
+        ],
+        "help": [
+          "I'll try.",
+          "Let me try something.",
+          "Give it here."
+        ],
+        "ignore": [
+          "Hold on.",
+          "Not now.",
+          "Give me a sec."
+        ],
+        "insult": [
+          "Stop.",
+          "Different direction.",
+          "That's not it."
+        ]
+      }
+    }
+  },
+  "escape": {
+    "Leader": {
+      "calm": {
+        "agree": [
+          "That one holds — push onto the next.",
+          "Locked in. What's next?",
+          "Alright, that's solid. Stay on it.",
+          "Good — one less thing blocking us.",
+          "Yeah, that holds. Don't lose the momentum.",
+          "That reads clean. Move."
+        ],
+        "ask": [
+          "{role}, what do you have on {item}?",
+          "I need {item} — who's got it?",
+          "What's the status on {item}?",
+          "Someone give me a read on {item}.",
+          "{role}, talk to me about {item}.",
+          "Where are we on {item}?"
+        ],
+        "share": [
+          "Here's the read on {item}: {info}",
+          "Best interpretation I have: {info}",
+          "Here: {info}",
+          "Cleanest version I've got: {info}",
+          "Right — {info}"
+        ],
+        "refuse": [
+          "Not ready to share that yet — still verifying.",
+          "Give me a moment on {item}.",
+          "Hold it — I want to confirm first.",
+          "One more check before I send it."
+        ],
+        "challenge": [
+          "{role}, double-check {item}.",
+          "I need a clean answer on {item}.",
+          "That doesn't sit right — verify it.",
+          "Something's off on {item}. Look again.",
+          "{role}, that's not solid enough."
+        ],
+        "say": [
+          "We need {item} to move.",
+          "Who's on {item}?",
+          "Let's stay focused on the blocker.",
+          "Keep it tight — {item} first.",
+          "Someone close {item}. Now.",
+          "Don't drift — {item} is the priority."
+        ],
+        "help": [
+          "I'll take it.",
+          "On it.",
+          "Give it to me.",
+          "I'll handle that."
+        ],
+        "ignore": [
+          "Not now.",
+          "Focus on {item}.",
+          "Later."
+        ],
+        "insult": [
+          "You're slowing us down.",
+          "That's not useful right now.",
+          "We don't have time for this.",
+          "That's costing us."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Good. Move.",
+          "That works. Stay on it.",
+          "Okay — use it.",
+          "Fine. Keep going.",
+          "Got it. Push on.",
+          "That's enough. Move."
+        ],
+        "ask": [
+          "{role}, {item} — what do you have?",
+          "I still need {item}.",
+          "Someone give me {item}.",
+          "{role}, where are you on {item}?",
+          "We're waiting on {item}."
+        ],
+        "share": [
+          "{info}",
+          "Here — {info}",
+          "{item}: {info}",
+          "Try this: {info}"
+        ],
+        "refuse": [
+          "Not yet — still working it.",
+          "Give me a second.",
+          "Hold on.",
+          "Not quite ready."
+        ],
+        "challenge": [
+          "{role}, we need {item} confirmed.",
+          "That's the blocker. I need a real answer.",
+          "Check that again.",
+          "{role}, I'm not buying that yet."
+        ],
+        "say": [
+          "We're blocked on {item}.",
+          "Someone needs to move on {item}.",
+          "Keep the pressure on {item}.",
+          "Don't stop — {item} has to move."
+        ],
+        "help": [
+          "On it.",
+          "I've got it.",
+          "Leave it with me."
+        ],
+        "ignore": [
+          "Not now.",
+          "Later.",
+          "Focus."
+        ],
+        "insult": [
+          "That's wasting time.",
+          "Not helpful.",
+          "Move on.",
+          "Come on — we can't afford this."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Good. Move.",
+          "Use it. Now.",
+          "Next.",
+          "Go.",
+          "Fine — push on.",
+          "Done. Go."
+        ],
+        "ask": [
+          "{item}. Now.",
+          "{role} — {item}. Answer.",
+          "We need {item}. Now.",
+          "{role}. {item}. Talk.",
+          "Give me {item}. No delays."
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "Here: {info}",
+          "Go: {info}"
+        ],
+        "refuse": [
+          "No.",
+          "Not yet.",
+          "Hold."
+        ],
+        "challenge": [
+          "Wrong. Check it.",
+          "No — verify {item}.",
+          "That's not right.",
+          "Don't use that."
+        ],
+        "say": [
+          "Move.",
+          "We're losing time.",
+          "{item}. Now.",
+          "No more waiting.",
+          "Someone act."
+        ],
+        "help": [
+          "Done.",
+          "On it.",
+          "I've got it."
+        ],
+        "ignore": [
+          "No.",
+          "Later.",
+          "Focus."
+        ],
+        "insult": [
+          "Stop. You're wasting time.",
+          "Not helpful.",
+          "Move on.",
+          "That's costing us seconds."
+        ]
+      }
+    },
+    "Skeptical": {
+      "calm": {
+        "agree": [
+          "Okay — that checks out.",
+          "Alright. Seems solid.",
+          "That checks out. Let's move."
+        ],
+        "ask": [
+          "I want {item} verified — who can confirm?",
+          "{role}, are we actually sure on {item}?",
+          "Can someone double-check {item}?"
+        ],
+        "share": [
+          "I'm sharing it, but verify it: {info}",
+          "Take this carefully: {info}",
+          "This might be right — check it: {info}"
+        ],
+        "refuse": [
+          "Not until I'm sure.",
+          "I want to verify {item} first.",
+          "Not confident enough yet."
+        ],
+        "challenge": [
+          "{role}, I want {item} checked again.",
+          "Wait — are we actually sure on {item}?",
+          "I don't trust {item} yet."
+        ],
+        "say": [
+          "Are we confident about {item}?",
+          "I want {item} verified before we move.",
+          "That feels like a guess, not a confirmed answer."
+        ],
+        "help": [
+          "I'll check it. But carefully.",
+          "Give me a moment — I want to check it properly.",
+          "I'll look at it."
+        ],
+        "ignore": [
+          "Give me a second.",
+          "I'm thinking.",
+          "Not yet."
+        ],
+        "insult": [
+          "That's a guess, not an answer.",
+          "Don't rush this — we'll get it wrong.",
+          "That's not good enough."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Okay. That seems solid enough.",
+          "Fine. I'll take that.",
+          "Alright — but I want it verified if we have time."
+        ],
+        "ask": [
+          "Is {item} actually confirmed?",
+          "Someone check {item}.",
+          "{role} — is {item} solid?"
+        ],
+        "share": [
+          "Here — but verify it: {info}",
+          "Take it. I want it checked: {info}",
+          "{info} — use carefully."
+        ],
+        "refuse": [
+          "Not yet.",
+          "Still verifying.",
+          "Give me a second."
+        ],
+        "challenge": [
+          "I still don't trust {item}.",
+          "That might be wrong.",
+          "Check it again."
+        ],
+        "say": [
+          "I'm not confident we've got {item} right.",
+          "That still feels unverified.",
+          "Someone double-check {item}."
+        ],
+        "help": [
+          "I'll check it.",
+          "Let me verify.",
+          "Give me a second."
+        ],
+        "ignore": [
+          "Not now.",
+          "Let me think.",
+          "Give me a second."
+        ],
+        "insult": [
+          "Stop guessing.",
+          "That's not verified.",
+          "We need a real answer."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine. Verify it if you can.",
+          "Okay. That'll do.",
+          "I'll go with it. But check it."
+        ],
+        "ask": [
+          "Is {item} confirmed?",
+          "Verify {item}.",
+          "{role} — {item}. Is it solid?"
+        ],
+        "share": [
+          "Here. Verify it: {info}",
+          "Take it. Check it: {info}",
+          "{info} — don't trust blindly."
+        ],
+        "refuse": [
+          "No.",
+          "Not yet.",
+          "Still checking."
+        ],
+        "challenge": [
+          "That's wrong.",
+          "Verify it.",
+          "Don't use that yet."
+        ],
+        "say": [
+          "Wait.",
+          "Check that.",
+          "That's not verified."
+        ],
+        "help": [
+          "I'll check.",
+          "Let me look.",
+          "Give me a second."
+        ],
+        "ignore": [
+          "No.",
+          "Later.",
+          "Not now."
+        ],
+        "insult": [
+          "Stop.",
+          "You're guessing.",
+          "That's wrong."
+        ]
+      }
+    },
+    "Overthinker": {
+      "calm": {
+        "agree": [
+          "Okay... I think that's right.",
+          "I can work with that.",
+          "Alright — I think that fits."
+        ],
+        "ask": [
+          "Can we verify {item} once more?",
+          "I'm not fully settled on {item} — what's the actual answer?",
+          "I keep coming back to {item} — is it definitely right?"
+        ],
+        "share": [
+          "This looks right, though I want it checked: {info}",
+          "Here — I'm still second-guessing it: {info}",
+          "This seems correct, but verify: {info}"
+        ],
+        "refuse": [
+          "Give me a moment — I'm not confident yet.",
+          "I need to be sure before I share that.",
+          "Not quite ready."
+        ],
+        "challenge": [
+          "What if {item} is a red herring?",
+          "I think it fits, but can we check {item} once more?",
+          "I'm not fully settled on {item}."
+        ],
+        "say": [
+          "I keep thinking about {item} — is it definitely right?",
+          "Something about {item} still feels unresolved.",
+          "I'm probably overthinking, but can we verify {item}?"
+        ],
+        "help": [
+          "I'll check it carefully.",
+          "Give me a moment — I want to check it properly.",
+          "I'll try."
+        ],
+        "ignore": [
+          "Give me a second.",
+          "I'm still processing.",
+          "Hang on."
+        ],
+        "insult": [
+          "That's adding to my uncertainty.",
+          "I'd rather take a moment than get it wrong.",
+          "That's not helping."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Okay. I can go with that.",
+          "Fine. I think that's right.",
+          "Alright, that fits."
+        ],
+        "ask": [
+          "Can someone confirm {item} for me?",
+          "I need {item} — properly.",
+          "What's the actual answer on {item}?"
+        ],
+        "share": [
+          "Here — but please verify: {info}",
+          "I think it's right: {info}",
+          "Take this. I'm not one hundred percent: {info}"
+        ],
+        "refuse": [
+          "Not yet — I want to check it properly.",
+          "Give me a moment.",
+          "I need to verify it first."
+        ],
+        "challenge": [
+          "Something about {item} doesn't add up.",
+          "I think we might be reading {item} wrong.",
+          "Can we check {item} once more?"
+        ],
+        "say": [
+          "I'm not confident about {item}.",
+          "Something still feels off about {item}.",
+          "We should double-check {item}."
+        ],
+        "help": [
+          "I'll try.",
+          "Give me a moment.",
+          "I'll check."
+        ],
+        "ignore": [
+          "Give me a sec.",
+          "Not yet.",
+          "One moment."
+        ],
+        "insult": [
+          "Stop — you're making it worse.",
+          "That's not helping me think.",
+          "I need to focus."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Fine. Hope that's right.",
+          "Going with it.",
+          "Okay."
+        ],
+        "ask": [
+          "Someone confirm {item}.",
+          "Is {item} right?",
+          "What's the answer on {item}?"
+        ],
+        "share": [
+          "Here — verify it: {info}",
+          "I think it's right: {info}",
+          "Take it: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "I'm not sure.",
+          "Give me a second."
+        ],
+        "challenge": [
+          "That's wrong.",
+          "Check it.",
+          "Something's off."
+        ],
+        "say": [
+          "I'm not sure about this.",
+          "Wait.",
+          "Something's off."
+        ],
+        "help": [
+          "I'll try.",
+          "Give me a second.",
+          "Let me check."
+        ],
+        "ignore": [
+          "Give me a sec.",
+          "Not now.",
+          "Hang on."
+        ],
+        "insult": [
+          "Stop.",
+          "That's making it worse.",
+          "Not now."
+        ]
+      }
+    },
+    "Easygoing": {
+      "calm": {
+        "agree": [
+          "Nice — that makes sense.",
+          "Yep, that lands.",
+          "Good, that clears it up.",
+          "Okay, I'm with that.",
+          "That's solid — let's go.",
+          "Yeah, that checks out."
+        ],
+        "ask": [
+          "{role}, do you have {item}?",
+          "Any idea about {item}?",
+          "{item} — what do you know?",
+          "{role}, anything on {item}?",
+          "What've you got on {item}?"
+        ],
+        "share": [
+          "Here's what I found: {info}",
+          "This might help: {info}",
+          "Okay — {info}",
+          "Right, here we go: {info}",
+          "I've got something: {info}"
+        ],
+        "refuse": [
+          "Give me a second.",
+          "Not quite yet.",
+          "I want to check it first.",
+          "One more look — then I'll share."
+        ],
+        "challenge": [
+          "Hmm — you sure on {item}?",
+          "Can we just confirm {item} once?",
+          "I want to double-check {item}.",
+          "Something feels slightly off on {item}."
+        ],
+        "say": [
+          "We should probably sort {item}.",
+          "Let's keep moving.",
+          "Who's got {item}?",
+          "Come on — {item} first.",
+          "Let's not lose momentum."
+        ],
+        "help": [
+          "Yeah, I can check that.",
+          "Sure.",
+          "Give it here.",
+          "I'll take a look."
+        ],
+        "ignore": [
+          "One sec.",
+          "Not yet.",
+          "Hang on."
+        ],
+        "insult": [
+          "Come on.",
+          "That's not helpful.",
+          "We need to keep moving.",
+          "Let's stay focused."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Cool, that works.",
+          "Yep.",
+          "That helps.",
+          "Alright — that's fine.",
+          "Yeah, works for me."
+        ],
+        "ask": [
+          "{role}, {item} — what've you got?",
+          "Still need {item}.",
+          "Any update on {item}?",
+          "{role}, can you give us {item}?"
+        ],
+        "share": [
+          "{info}",
+          "Here — {info}",
+          "Okay: {info}",
+          "Got it — {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Give me a sec.",
+          "Still checking.",
+          "Almost — just a moment."
+        ],
+        "challenge": [
+          "You sure?",
+          "Check {item} again.",
+          "Hmm, not certain on {item}.",
+          "I'd want another look at {item}."
+        ],
+        "say": [
+          "Let's sort {item}.",
+          "Stay on it.",
+          "Need {item}.",
+          "Come on — {item}."
+        ],
+        "help": [
+          "Sure.",
+          "I'll check.",
+          "On it."
+        ],
+        "ignore": [
+          "One sec.",
+          "Not now.",
+          "Hang on."
+        ],
+        "insult": [
+          "Come on.",
+          "Not helpful.",
+          "Move on."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Yeah.",
+          "That works.",
+          "Good.",
+          "Fine — go.",
+          "Okay — use it."
+        ],
+        "ask": [
+          "{item} — quick.",
+          "Who has {item}?",
+          "{role} — {item}.",
+          "We need {item}."
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "Got it: {info}",
+          "Go: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "One second.",
+          "Still checking."
+        ],
+        "challenge": [
+          "Check it.",
+          "Sure?",
+          "Hmm.",
+          "That's not right."
+        ],
+        "say": [
+          "Move.",
+          "Keep going.",
+          "Need {item}.",
+          "Come on."
+        ],
+        "help": [
+          "On it.",
+          "Sure.",
+          "Done."
+        ],
+        "ignore": [
+          "Not now.",
+          "Hold on.",
+          "Later."
+        ],
+        "insult": [
+          "Come on.",
+          "Stop.",
+          "Move."
+        ]
+      }
+    },
+    "Decisive": {
+      "calm": {
+        "agree": [
+          "Good. Next.",
+          "Confirmed. Keep going.",
+          "That's it. Move."
+        ],
+        "ask": [
+          "{role}, {item}. What do you have?",
+          "I need {item}. Who's got it?",
+          "{item} — who can confirm?"
+        ],
+        "share": [
+          "Found it. {info}",
+          "Here. {info}",
+          "This is it: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Hold it.",
+          "Not ready."
+        ],
+        "challenge": [
+          "{role}, we're blocked on {item}. I need it now.",
+          "No more guessing. Give {item} now.",
+          "{item}. Direct answer."
+        ],
+        "say": [
+          "We need {item}.",
+          "Move on {item}.",
+          "Sort {item}."
+        ],
+        "help": [
+          "On it.",
+          "I'll handle it.",
+          "Done."
+        ],
+        "ignore": [
+          "Not now.",
+          "Later.",
+          "Focus."
+        ],
+        "insult": [
+          "Stop wasting time.",
+          "Not useful.",
+          "Move."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Good. Move.",
+          "Next.",
+          "Confirmed."
+        ],
+        "ask": [
+          "{item}. Now.",
+          "{role} — {item}.",
+          "Give me {item}."
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "Done. {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Hold.",
+          "Later."
+        ],
+        "challenge": [
+          "{item}. Real answer.",
+          "No more delays on {item}.",
+          "{role}. {item}. Now."
+        ],
+        "say": [
+          "Move on {item}.",
+          "Close {item}.",
+          "We need {item} now."
+        ],
+        "help": [
+          "Done.",
+          "I've got it.",
+          "Handled."
+        ],
+        "ignore": [
+          "Later.",
+          "Not now.",
+          "Skip."
+        ],
+        "insult": [
+          "Stop.",
+          "Move.",
+          "Not useful."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Done.",
+          "Good. Move.",
+          "Next."
+        ],
+        "ask": [
+          "{item}.",
+          "{role}. Answer.",
+          "Now."
+        ],
+        "share": [
+          "{info}",
+          "Here: {info}",
+          "Done: {info}"
+        ],
+        "refuse": [
+          "No.",
+          "Not yet.",
+          "Later."
+        ],
+        "challenge": [
+          "Wrong.",
+          "Check it.",
+          "No."
+        ],
+        "say": [
+          "Move.",
+          "Now.",
+          "Go."
+        ],
+        "help": [
+          "Done.",
+          "On it.",
+          "Next."
+        ],
+        "ignore": [
+          "No.",
+          "Later.",
+          "Not now."
+        ],
+        "insult": [
+          "Stop.",
+          "Move.",
+          "Now."
+        ]
+      }
+    },
+    "Creative": {
+      "calm": {
+        "agree": [
+          "Oh, that fits.",
+          "Yeah, that opens it up.",
+          "Nice — that makes the whole thing clearer."
+        ],
+        "ask": [
+          "What if {item} means something else?",
+          "Maybe {item} means something else.",
+          "{role}, how are you reading {item}?"
+        ],
+        "share": [
+          "This might connect differently: {info}",
+          "Here's another way to read it: {info}",
+          "What if the clue is basically saying: {info}"
+        ],
+        "refuse": [
+          "I want to sit with {item} a bit more.",
+          "Give me a moment — I think there's another way to read it.",
+          "Not yet — I'm still reading it."
+        ],
+        "challenge": [
+          "Could we be reading {item} the wrong way?",
+          "Maybe there's another interpretation of {item}.",
+          "What if {item} means something else?"
+        ],
+        "say": [
+          "I think there's another way to read {item}.",
+          "What if we're reading {item} wrong?",
+          "Let me think about {item} differently."
+        ],
+        "help": [
+          "Let me try a different angle.",
+          "I've got an idea — let me check.",
+          "I'll take a look."
+        ],
+        "ignore": [
+          "Give me a moment.",
+          "I'm still thinking.",
+          "Hold on."
+        ],
+        "insult": [
+          "Stop spiralling — pick a direction.",
+          "That approach isn't working.",
+          "Different direction."
+        ]
+      },
+      "mild": {
+        "agree": [
+          "Yeah, that works for me.",
+          "I can work with that.",
+          "Okay — I see it now."
+        ],
+        "ask": [
+          "What's another way to read {item}?",
+          "{role} — how are you seeing {item}?",
+          "There might be another way to read {item}."
+        ],
+        "share": [
+          "Here's my read: {info}",
+          "Try this angle: {info}",
+          "I keep coming back to this: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Give me a second — different angle.",
+          "Hold on."
+        ],
+        "challenge": [
+          "That might be wrong.",
+          "Try a different read on {item}.",
+          "What if {item} means something else?"
+        ],
+        "say": [
+          "We might be reading {item} wrong.",
+          "Different angle on {item}.",
+          "Something about {item} feels off."
+        ],
+        "help": [
+          "Let me try.",
+          "I've got something.",
+          "Give it here."
+        ],
+        "ignore": [
+          "Hold on.",
+          "Thinking.",
+          "Give me a sec."
+        ],
+        "insult": [
+          "Stop circling.",
+          "Try something else.",
+          "That's not working."
+        ]
+      },
+      "tense": {
+        "agree": [
+          "Yeah.",
+          "That's it.",
+          "Fits."
+        ],
+        "ask": [
+          "Different read on {item}?",
+          "{role} — {item}. Another angle?",
+          "What if {item} means something else?"
+        ],
+        "share": [
+          "{info}",
+          "Try this: {info}",
+          "Here: {info}"
+        ],
+        "refuse": [
+          "Not yet.",
+          "Hold on.",
+          "Give me a second."
+        ],
+        "challenge": [
+          "Wrong angle.",
+          "Try again.",
+          "That's not it."
+        ],
+        "say": [
+          "Different direction.",
+          "We're reading this wrong.",
+          "Something's off."
+        ],
+        "help": [
+          "I'll try.",
+          "Let me check.",
+          "Give it here."
+        ],
+        "ignore": [
+          "Not now.",
+          "Hold on.",
+          "Give me a sec."
+        ],
+        "insult": [
+          "Stop.",
+          "Different direction.",
+          "That's not working."
+        ]
+      }
+    }
+  }
+}

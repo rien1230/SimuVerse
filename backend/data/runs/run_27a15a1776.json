@@ -1,0 +1,3011 @@
+{
+  "run_id": "27a15a1776",
+  "scenario_id": "escape_puzzle",
+  "scenario_name": "Solve Puzzle Chain",
+  "team_preset": "pressure_team",
+  "seed": 742630789,
+  "timestamp": "2026-05-07T13:35:57.029956+00:00",
+  "config": {
+    "min_events_per_tick": 0,
+    "episode_max_ticks": 20,
+    "environment": "escape_room",
+    "scenario_id": "escape_puzzle",
+    "use_nlp": false,
+    "team_type": "pressure",
+    "team_preset": "pressure_team",
+    "goal": "solve_puzzle",
+    "resolved_team_type": "pressure",
+    "agents": [
+      {
+        "E": 0.78,
+        "A": 0.34,
+        "N": 0.58
+      },
+      {
+        "E": 0.72,
+        "A": 0.3,
+        "N": 0.6
+      },
+      {
+        "E": 0.6,
+        "A": 0.28,
+        "N": 0.64
+      },
+      {
+        "E": 0.82,
+        "A": 0.32,
+        "N": 0.56
+      }
+    ],
+    "agent_personalities": [
+      "Leader",
+      "Decisive",
+      "Skeptical",
+      "Overthinker"
+    ],
+    "save_history": true,
+    "source": "interactive"
+  },
+  "outcome": "success",
+  "outcome_label": "Completed under moderate pressure \u2014 intervention helped",
+  "outcome_detail": "This high-pressure time-limited environment run (pressure team) reached 100% completion in 11 steps. Stress reached moderate levels with little to no conflict. Agents exchanged 2 pieces of information. Outcome: Completed under moderate pressure \u2014 intervention helped. For a Pressure Team, this run shows controlled urgency rather than conflict. Agents moved through blockers efficiently, with stress rising under pressure while cooperation remained intact. Interventions used: force_meeting, reveal_info, inject_tension, inject_tension.",
+  "ticks": 11,
+  "final_progress": 1.0,
+  "metrics": {
+    "avg_trust": 0.593,
+    "avg_stress": 0.324,
+    "conflict_rate": 0.0,
+    "pressure": 0.8,
+    "total_refusals": 0,
+    "total_shares": 2,
+    "stalled_ticks": 6,
+    "group_tension": 0.317,
+    "group_cohesion": 0.569
+  },
+  "group_state": {
+    "tension": 0.317,
+    "cohesion": 0.569,
+    "pressure": 0.8,
+    "stall_ticks": 0,
+    "bottleneck_item": null,
+    "bottleneck_holder": null
+  },
+  "tasks": {
+    "map": true,
+    "key": true,
+    "lock": true,
+    "door": true,
+    "unlock": true
+  },
+  "completion_order": [],
+  "peak_tension": 0.338,
+  "time_to_first_share": 1,
+  "intervention_count": 4,
+  "interventions": [
+    {
+      "type": "force_meeting",
+      "tick": 2
+    },
+    {
+      "type": "reveal_info",
+      "tick": 7
+    },
+    {
+      "type": "inject_tension",
+      "tick": 10
+    },
+    {
+      "type": "inject_tension",
+      "tick": 11
+    }
+  ],
+  "agents": [
+    {
+      "id": "A1",
+      "name": "A1",
+      "role": "Team Leader",
+      "personality": "Leader",
+      "strategy": "cooperative",
+      "final_stress": 0.098,
+      "final_valence": 0.348,
+      "known_items": [
+        "map",
+        "door"
+      ],
+      "trust": {
+        "A2": 0.759,
+        "A3": 0.5,
+        "A4": 0.726
+      }
+    },
+    {
+      "id": "A2",
+      "name": "A2",
+      "role": "Code Breaker",
+      "personality": "Decisive",
+      "strategy": "avoidant",
+      "final_stress": 0.276,
+      "final_valence": 0.164,
+      "known_items": [
+        "map",
+        "key"
+      ],
+      "trust": {
+        "A1": 0.822,
+        "A3": 0.553,
+        "A4": 0.5
+      }
+    },
+    {
+      "id": "A3",
+      "name": "A3",
+      "role": "Puzzle Solver",
+      "personality": "Skeptical",
+      "strategy": "avoidant",
+      "final_stress": 0.42,
+      "final_valence": 0.129,
+      "known_items": [
+        "lock"
+      ],
+      "trust": {
+        "A1": 0.5,
+        "A2": 0.5,
+        "A4": 0.5
+      }
+    },
+    {
+      "id": "A4",
+      "name": "A4",
+      "role": "Scout",
+      "personality": "Overthinker",
+      "strategy": "avoidant",
+      "final_stress": 0.502,
+      "final_valence": 0.123,
+      "known_items": [
+        "door"
+      ],
+      "trust": {
+        "A1": 0.753,
+        "A2": 0.5,
+        "A3": 0.5
+      }
+    }
+  ],
+  "history": [
+    {
+      "tick": 1,
+      "run_metrics": {
+        "emotional": 0.202,
+        "coord_pressure": 0.225,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.20229999999999998,
+        "coord_pressure": 0.22510000000000002,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.42,
+            "A3": 0.339,
+            "A4": 0.378
+          },
+          "known_items": [
+            "map"
+          ],
+          "mood": {
+            "valence": -0.012,
+            "arousal": 0.308
+          },
+          "stress": 0.278,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.707,
+            "A3": 0.433,
+            "A4": 0.473
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.049,
+            "arousal": 0.322
+          },
+          "stress": 0.256,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.027,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.294,
+            "A2": 0.338,
+            "A4": 0.308
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.053,
+            "arousal": 0.318
+          },
+          "stress": 0.303,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.388,
+            "A2": 0.433,
+            "A3": 0.363
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": -0.037,
+            "arousal": 0.318
+          },
+          "stress": 0.319,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.564
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.316
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.383
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.386
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.453
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.336
+        }
+      ],
+      "events": [
+        {
+          "type": "say",
+          "actor": "A2",
+          "target": "A1",
+          "text": "Team Leader, no more waiting.",
+          "reason": "escape_rush"
+        },
+        {
+          "type": "share_info",
+          "actor": "A1",
+          "target": "A2",
+          "text": "This is what we have: the room splits into three sections, hidden panel east side.",
+          "item": "map",
+          "reason": "escape_forced_release",
+          "partial": false,
+          "can_complete": true
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.406,
+        "mean_valence": 0.013,
+        "mean_arousal": 0.316,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.289,
+        "stress_variance": 0.0006,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "say": 1,
+          "share_info": 1
+        },
+        "stalled_ticks": 1,
+        "bottleneck_item": "map",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "avoidant": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 1,
+        "group_tension": 0.338,
+        "group_cohesion": 0.424,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.338,
+        "cohesion": 0.424,
+        "pressure": 0.8,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "map",
+        "bottleneck_item": "map",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": false,
+          "key": false,
+          "lock": false,
+          "door": false,
+          "unlock": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.0,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 2,
+      "run_metrics": {
+        "emotional": 0.198,
+        "coord_pressure": 0.207,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.3962,
+        "coord_pressure": 0.4137,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.662,
+            "A3": 0.339,
+            "A4": 0.378
+          },
+          "known_items": [
+            "map"
+          ],
+          "mood": {
+            "valence": 0.015,
+            "arousal": 0.32
+          },
+          "stress": 0.254,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.052,
+          "in_conversation_with": "A2",
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.85,
+            "A3": 0.433,
+            "A4": 0.473
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.086,
+            "arousal": 0.322
+          },
+          "stress": 0.22,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.055,
+          "in_conversation_with": "A1",
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.294,
+            "A2": 0.338,
+            "A4": 0.308
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.051,
+            "arousal": 0.326
+          },
+          "stress": 0.307,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.388,
+            "A2": 0.433,
+            "A3": 0.363
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": -0.036,
+            "arousal": 0.326
+          },
+          "stress": 0.326,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.756
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.316
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.383
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.386
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.453
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.336
+        }
+      ],
+      "events": [
+        {
+          "type": "suggest",
+          "actor": "A1",
+          "target": "A2",
+          "text": "That's map: east wall \u2014 there's a panel behind the bookshelf. Move with it.",
+          "preference": "map",
+          "reason": "user_force_meeting"
+        },
+        {
+          "type": "agree",
+          "actor": "A2",
+          "target": "A1",
+          "text": "Good. Map now.",
+          "preference": "map",
+          "reason": "user_force_meeting"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.438,
+        "mean_valence": 0.029,
+        "mean_arousal": 0.324,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.277,
+        "stress_variance": 0.0017,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "suggest": 1,
+          "agree": 1
+        },
+        "stalled_ticks": 1,
+        "bottleneck_item": "map",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 2,
+          "avoidant": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 2,
+        "group_tension": 0.318,
+        "group_cohesion": 0.447,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [
+        {
+          "type": "force_meeting",
+          "tick": 2
+        }
+      ],
+      "group_state": {
+        "tension": 0.318,
+        "cohesion": 0.447,
+        "pressure": 0.8,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "map",
+        "bottleneck_item": "map",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": false,
+          "key": false,
+          "lock": false,
+          "door": false,
+          "unlock": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.0,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 3,
+      "run_metrics": {
+        "emotional": 0.202,
+        "coord_pressure": 0.194,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.6048,
+        "coord_pressure": 0.5808,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.742,
+            "A3": 0.339,
+            "A4": 0.378
+          },
+          "known_items": [
+            "map"
+          ],
+          "mood": {
+            "valence": 0.033,
+            "arousal": 0.331
+          },
+          "stress": 0.286,
+          "emotional_stress": 0.004,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.066,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.48, stress:0.29)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.85,
+            "A3": 0.433,
+            "A4": 0.473
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.084,
+            "arousal": 0.331
+          },
+          "stress": 0.244,
+          "emotional_stress": 0.005,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.069,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.294,
+            "A2": 0.338,
+            "A4": 0.308
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.05,
+            "arousal": 0.335
+          },
+          "stress": 0.32,
+          "emotional_stress": 0.01,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.388,
+            "A2": 0.433,
+            "A3": 0.364
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": -0.035,
+            "arousal": 0.335
+          },
+          "stress": 0.341,
+          "emotional_stress": 0.015,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.796
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.316
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.383
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.386
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.453
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.336
+        }
+      ],
+      "events": [
+        {
+          "type": "suggest",
+          "actor": "A2",
+          "target": "A1",
+          "text": "We've got Room Map. Use it now.",
+          "preference": "map",
+          "reason": "forced_meeting_followthrough"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.445,
+        "mean_valence": 0.033,
+        "mean_arousal": 0.333,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.298,
+        "stress_variance": 0.0014,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "suggest": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": "lock",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 2,
+        "group_tension": 0.318,
+        "group_cohesion": 0.447,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.318,
+        "cohesion": 0.447,
+        "pressure": 0.8,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "map",
+        "bottleneck_item": "lock",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": false,
+          "lock": false,
+          "door": false,
+          "unlock": false
+        },
+        "resolved_items": [
+          "map"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.2,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 4,
+      "run_metrics": {
+        "emotional": 0.204,
+        "coord_pressure": 0.2,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.8169,
+        "coord_pressure": 0.7994,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.754,
+            "A3": 0.337,
+            "A4": 0.377
+          },
+          "known_items": [
+            "map"
+          ],
+          "mood": {
+            "valence": 0.032,
+            "arousal": 0.34
+          },
+          "stress": 0.291,
+          "emotional_stress": 0.004,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.066,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.48, stress:0.29)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.846,
+            "A3": 0.431,
+            "A4": 0.471
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.082,
+            "arousal": 0.339
+          },
+          "stress": 0.249,
+          "emotional_stress": 0.005,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.069,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.294,
+            "A2": 0.338,
+            "A4": 0.308
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.049,
+            "arousal": 0.343
+          },
+          "stress": 0.323,
+          "emotional_stress": 0.01,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.389,
+            "A2": 0.433,
+            "A3": 0.364
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": -0.034,
+            "arousal": 0.343
+          },
+          "stress": 0.348,
+          "emotional_stress": 0.015,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.8
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.315
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.383
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.385
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.452
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.336
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.445,
+        "mean_valence": 0.032,
+        "mean_arousal": 0.341,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.303,
+        "stress_variance": 0.0014,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 1,
+        "bottleneck_item": "lock",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 3,
+        "group_tension": 0.318,
+        "group_cohesion": 0.447,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.318,
+        "cohesion": 0.447,
+        "pressure": 0.8,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "lock",
+        "bottleneck_item": "lock",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": false,
+          "lock": false,
+          "door": false,
+          "unlock": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.2,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 5,
+      "run_metrics": {
+        "emotional": 0.209,
+        "coord_pressure": 0.193,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.0451,
+        "coord_pressure": 0.9664999999999999,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.75,
+            "A3": 0.336,
+            "A4": 0.375
+          },
+          "known_items": [
+            "map"
+          ],
+          "mood": {
+            "valence": 0.031,
+            "arousal": 0.348
+          },
+          "stress": 0.306,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.066,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.48, stress:0.29)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.842,
+            "A3": 0.429,
+            "A4": 0.469
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.08,
+            "arousal": 0.347
+          },
+          "stress": 0.264,
+          "emotional_stress": 0.01,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.069,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.292,
+            "A2": 0.337,
+            "A4": 0.307
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.048,
+            "arousal": 0.351
+          },
+          "stress": 0.366,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.387,
+            "A2": 0.431,
+            "A3": 0.362
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": -0.033,
+            "arousal": 0.351
+          },
+          "stress": 0.37,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.796
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.314
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.381
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.383
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.45
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.334
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.443,
+        "mean_valence": 0.031,
+        "mean_arousal": 0.349,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.326,
+        "stress_variance": 0.002,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 0,
+        "bottleneck_item": "key",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "defensive": 1,
+          "neutral": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 3,
+        "group_tension": 0.318,
+        "group_cohesion": 0.447,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.318,
+        "cohesion": 0.447,
+        "pressure": 0.8,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "lock",
+        "bottleneck_item": "key",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": false,
+          "lock": true,
+          "door": false,
+          "unlock": false
+        },
+        "resolved_items": [
+          "lock"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.4,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 6,
+      "run_metrics": {
+        "emotional": 0.213,
+        "coord_pressure": 0.18,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.281,
+        "coord_pressure": 1.0788,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.747,
+            "A3": 0.334,
+            "A4": 0.373
+          },
+          "known_items": [
+            "map"
+          ],
+          "mood": {
+            "valence": 0.03,
+            "arousal": 0.364
+          },
+          "stress": 0.329,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.066,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.48, stress:0.29)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.838,
+            "A3": 0.563,
+            "A4": 0.467
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.103,
+            "arousal": 0.367
+          },
+          "stress": 0.24,
+          "emotional_stress": 0.01,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.097,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.291,
+            "A2": 0.387,
+            "A4": 0.305
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.07,
+            "arousal": 0.358
+          },
+          "stress": 0.37,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.31, stress:0.40)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.385,
+            "A2": 0.429,
+            "A3": 0.36
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": -0.032,
+            "arousal": 0.367
+          },
+          "stress": 0.409,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.792
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.312
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.379
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.475
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.448
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.333
+        }
+      ],
+      "events": [
+        {
+          "type": "agree",
+          "actor": "A3",
+          "target": "A2",
+          "text": "Alright. I can buy that.",
+          "preference": "key",
+          "reason": "escape_confirm"
+        },
+        {
+          "type": "say",
+          "actor": "A2",
+          "target": "A3",
+          "text": "We're losing time. Decide and go.",
+          "reason": "escape_urgency_pulse"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.457,
+        "mean_valence": 0.043,
+        "mean_arousal": 0.364,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.337,
+        "stress_variance": 0.004,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "agree": 1,
+          "say": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": "door",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "avoidant": 3,
+          "neutral": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 3,
+        "group_tension": 0.299,
+        "group_cohesion": 0.469,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.299,
+        "cohesion": 0.469,
+        "pressure": 0.8,
+        "stall_ticks": 0,
+        "success_streak": 2,
+        "active_blocker": "key",
+        "bottleneck_item": "door",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": true,
+          "lock": true,
+          "door": false,
+          "unlock": false
+        },
+        "resolved_items": [
+          "key"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.6,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 7,
+      "run_metrics": {
+        "emotional": 0.213,
+        "coord_pressure": 0.18,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.4916999999999998,
+        "coord_pressure": 1.26,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.747,
+            "A3": 0.334,
+            "A4": 0.649
+          },
+          "known_items": [
+            "map",
+            "door"
+          ],
+          "mood": {
+            "valence": 0.193,
+            "arousal": 0.375
+          },
+          "stress": 0.206,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.096,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.48, stress:0.29)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.838,
+            "A3": 0.563,
+            "A4": 0.467
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.1,
+            "arousal": 0.374
+          },
+          "stress": 0.239,
+          "emotional_stress": 0.01,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.097,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.291,
+            "A2": 0.387,
+            "A4": 0.305
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.068,
+            "arousal": 0.366
+          },
+          "stress": 0.373,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.31, stress:0.40)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.623,
+            "A2": 0.427,
+            "A3": 0.359
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": 0.007,
+            "arousal": 0.367
+          },
+          "stress": 0.388,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.42)"
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.792
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.312
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.636
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.475
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.447
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.332
+        }
+      ],
+      "events": [
+        {
+          "type": "suggest",
+          "actor": "A1",
+          "target": "A4",
+          "text": "I've got door code as well. Let's close it now.",
+          "preference": "door",
+          "reason": "user_reveal_info"
+        },
+        {
+          "type": "agree",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Good. That's enough on door code to use.",
+          "preference": "door",
+          "reason": "user_reveal_info"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.499,
+        "mean_valence": 0.092,
+        "mean_arousal": 0.37,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.301,
+        "stress_variance": 0.0064,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "suggest": 1,
+          "agree": 1
+        },
+        "stalled_ticks": 1,
+        "bottleneck_item": "door",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "avoidant": 4
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 4,
+        "group_tension": 0.281,
+        "group_cohesion": 0.49,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [
+        {
+          "type": "reveal_info",
+          "tick": 7
+        }
+      ],
+      "group_state": {
+        "tension": 0.281,
+        "cohesion": 0.49,
+        "pressure": 0.8,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "door",
+        "bottleneck_item": "door",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": true,
+          "lock": true,
+          "door": false,
+          "unlock": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.6,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 8,
+      "run_metrics": {
+        "emotional": 0.215,
+        "coord_pressure": 0.203,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.7233999999999998,
+        "coord_pressure": 1.6229,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.747,
+            "A3": 0.334,
+            "A4": 0.801
+          },
+          "known_items": [
+            "map",
+            "door"
+          ],
+          "mood": {
+            "valence": 0.276,
+            "arousal": 0.393
+          },
+          "stress": 0.155,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.113,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.63, stress:0.16)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.834,
+            "A3": 0.561,
+            "A4": 0.465
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.096,
+            "arousal": 0.389
+          },
+          "stress": 0.28,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.097,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.289,
+            "A2": 0.385,
+            "A4": 0.304
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.065,
+            "arousal": 0.381
+          },
+          "stress": 0.427,
+          "emotional_stress": 0.04,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.31, stress:0.40)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.623,
+            "A2": 0.427,
+            "A3": 0.359
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": 0.027,
+            "arousal": 0.372
+          },
+          "stress": 0.462,
+          "emotional_stress": 0.06,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.039,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.42)"
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.79
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.312
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.712
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.473
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.446
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.331
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Okay, 4-2-7-1.",
+          "item": "door",
+          "reason": "escape_forced_release",
+          "partial": false,
+          "can_complete": true
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.511,
+        "mean_valence": 0.116,
+        "mean_arousal": 0.384,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.331,
+        "stress_variance": 0.0149,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "share_info": 1
+        },
+        "stalled_ticks": 2,
+        "bottleneck_item": "door",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "cooperative": 1,
+          "avoidant": 3
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 5,
+        "group_tension": 0.247,
+        "group_cohesion": 0.531,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.247,
+        "cohesion": 0.531,
+        "pressure": 0.8,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "active_blocker": "door",
+        "bottleneck_item": "door",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": true,
+          "lock": true,
+          "door": false,
+          "unlock": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.6,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 9,
+      "run_metrics": {
+        "emotional": 0.22,
+        "coord_pressure": 0.198,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.9802999999999997,
+        "coord_pressure": 1.7853,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.747,
+            "A3": 0.335,
+            "A4": 0.826
+          },
+          "known_items": [
+            "map",
+            "door"
+          ],
+          "mood": {
+            "valence": 0.283,
+            "arousal": 0.397
+          },
+          "stress": 0.139,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.13,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.63, stress:0.16)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.83,
+            "A3": 0.558,
+            "A4": 0.446
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.092,
+            "arousal": 0.403
+          },
+          "stress": 0.323,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.097,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.288,
+            "A2": 0.384,
+            "A4": 0.287
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.062,
+            "arousal": 0.396
+          },
+          "stress": 0.482,
+          "emotional_stress": 0.06,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.31, stress:0.40)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.756,
+            "A2": 0.426,
+            "A3": 0.357
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": 0.052,
+            "arousal": 0.39
+          },
+          "stress": 0.526,
+          "emotional_stress": 0.09,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.053,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.42)"
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.789
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.312
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.791
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.471
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.436
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.322
+        }
+      ],
+      "events": [
+        {
+          "type": "agree",
+          "actor": "A1",
+          "target": "A4",
+          "text": "Locked in. Go.",
+          "preference": "door",
+          "reason": "escape_confirm_fallback"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.52,
+        "mean_valence": 0.122,
+        "mean_arousal": 0.397,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.367,
+        "stress_variance": 0.0231,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "agree": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0,
+        "strategy_distribution": {
+          "cooperative": 1,
+          "avoidant": 3
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 5,
+        "group_tension": 0.217,
+        "group_cohesion": 0.569,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.217,
+        "cohesion": 0.569,
+        "pressure": 0.8,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "door",
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": true,
+          "lock": true,
+          "door": true,
+          "unlock": false
+        },
+        "resolved_items": [
+          "door"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.8,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 10,
+      "run_metrics": {
+        "emotional": 0.226,
+        "coord_pressure": 0.189,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 2.2602999999999995,
+        "coord_pressure": 1.8887,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.759,
+            "A3": 0.334,
+            "A4": 0.774
+          },
+          "known_items": [
+            "map",
+            "door"
+          ],
+          "mood": {
+            "valence": 0.281,
+            "arousal": 0.405
+          },
+          "stress": 0.169,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.146,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.63, stress:0.16)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.826,
+            "A3": 0.556,
+            "A4": 0.444
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.089,
+            "arousal": 0.41
+          },
+          "stress": 0.355,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.097,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.287,
+            "A2": 0.382,
+            "A4": 0.285
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.061,
+            "arousal": 0.403
+          },
+          "stress": 0.521,
+          "emotional_stress": 0.06,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.31, stress:0.40)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.757,
+            "A2": 0.426,
+            "A3": 0.357
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": 0.051,
+            "arousal": 0.398
+          },
+          "stress": 0.556,
+          "emotional_stress": 0.09,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.067,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.42)"
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.792
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.31
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.765
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.469
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.435
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.321
+        }
+      ],
+      "events": [
+        {
+          "type": "say",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Exit Lock is starting to feel shaky.",
+          "reason": "user_inject_tension"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.515,
+        "mean_valence": 0.121,
+        "mean_arousal": 0.404,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.4,
+        "stress_variance": 0.0235,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "say": 1
+        },
+        "stalled_ticks": 1,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0,
+        "strategy_distribution": {
+          "cooperative": 1,
+          "avoidant": 3
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 6,
+        "group_tension": 0.267,
+        "group_cohesion": 0.569,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [
+        {
+          "type": "inject_tension",
+          "tick": 10
+        }
+      ],
+      "group_state": {
+        "tension": 0.267,
+        "cohesion": 0.569,
+        "pressure": 0.8,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "unlock",
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": true,
+          "lock": true,
+          "door": true,
+          "unlock": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 0.8,
+        "urgency_modifier": 0.8,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 11,
+      "run_metrics": {
+        "emotional": 0.226,
+        "coord_pressure": 0.177,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 2.4870999999999994,
+        "coord_pressure": 1.9521,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Team Leader",
+          "personality": "Leader",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.759,
+            "A3": 0.5,
+            "A4": 0.726
+          },
+          "known_items": [
+            "map",
+            "door"
+          ],
+          "mood": {
+            "valence": 0.348,
+            "arousal": 0.362
+          },
+          "stress": 0.098,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.163,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.63, stress:0.16)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Code Breaker",
+          "personality": "Decisive",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.822,
+            "A3": 0.553,
+            "A4": 0.5
+          },
+          "known_items": [
+            "map",
+            "key"
+          ],
+          "mood": {
+            "valence": 0.164,
+            "arousal": 0.367
+          },
+          "stress": 0.276,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.097,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.32)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Puzzle Solver",
+          "personality": "Skeptical",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.5,
+            "A2": 0.5,
+            "A4": 0.5
+          },
+          "known_items": [
+            "lock"
+          ],
+          "mood": {
+            "valence": 0.129,
+            "arousal": 0.36
+          },
+          "stress": 0.42,
+          "emotional_stress": 0.06,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.31, stress:0.40)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Scout",
+          "personality": "Overthinker",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.753,
+            "A2": 0.5,
+            "A3": 0.5
+          },
+          "known_items": [
+            "door"
+          ],
+          "mood": {
+            "valence": 0.123,
+            "arousal": 0.355
+          },
+          "stress": 0.502,
+          "emotional_stress": 0.09,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.08,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.45, stress:0.42)"
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.791
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.5
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.739
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.526
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.5
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.5
+        }
+      ],
+      "events": [
+        {
+          "type": "say",
+          "actor": "A4",
+          "target": "A1",
+          "text": "I don't like how loose exit lock still feels.",
+          "reason": "user_inject_tension"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.593,
+        "mean_valence": 0.191,
+        "mean_arousal": 0.361,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.324,
+        "stress_variance": 0.0236,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "say": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0,
+        "strategy_distribution": {
+          "cooperative": 1,
+          "avoidant": 3
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 6,
+        "group_tension": 0.317,
+        "group_cohesion": 0.569,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [
+        {
+          "type": "inject_tension",
+          "tick": 11
+        }
+      ],
+      "group_state": {
+        "tension": 0.317,
+        "cohesion": 0.569,
+        "pressure": 0.8,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "unlock",
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0
+      },
+      "scenario": {
+        "id": "escape_puzzle",
+        "name": "Solve Puzzle Chain",
+        "description": "Agents combine clues to escape.",
+        "environment": "escape",
+        "tasks": {
+          "map": true,
+          "key": true,
+          "lock": true,
+          "door": true,
+          "unlock": true
+        },
+        "resolved_items": [
+          "unlock"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "map"
+          ],
+          "A2": [
+            "key"
+          ],
+          "A3": [
+            "lock"
+          ],
+          "A4": [
+            "door"
+          ]
+        },
+        "progress": 1.0,
+        "urgency_modifier": 0.8,
+        "outcome": "success",
+        "final_decision": null
+      },
+      "ended": true,
+      "end_reason": "success"
+    }
+  ],
+  "memory_summary": {
+    "total_impressions": 1,
+    "positive_count": 1,
+    "conflict_prone_count": 0,
+    "strongest_positive": {
+      "observer": "A1",
+      "observer_personality": "Leader",
+      "target": "A2",
+      "patterns": {
+        "positive": 0.333
+      },
+      "formed_at_tick": 10,
+      "interaction_count": 3,
+      "evidence": [
+        {
+          "tick": 2,
+          "kind": "agree",
+          "text": "Good. Map now.",
+          "item": "map"
+        }
+      ],
+      "effect": "A1 became more willing to accept A2's clue suggestions without second-guessing them.",
+      "narrative": "A1 detected an early coordination signal from A2 after one agreement. This suggests A1 became slightly more confident in A2's clue contributions, although there was not enough repeated evidence to form a strong memory impression."
+    },
+    "strongest_conflict": null,
+    "all_impressions": [
+      {
+        "observer": "A1",
+        "observer_personality": "Leader",
+        "target": "A2",
+        "patterns": {
+          "positive": 0.333
+        },
+        "formed_at_tick": 10,
+        "interaction_count": 3,
+        "evidence": [
+          {
+            "tick": 2,
+            "kind": "agree",
+            "text": "Good. Map now.",
+            "item": "map"
+          }
+        ],
+        "effect": "A1 became more willing to accept A2's clue suggestions without second-guessing them.",
+        "narrative": "A1 detected an early coordination signal from A2 after one agreement. This suggests A1 became slightly more confident in A2's clue contributions, although there was not enough repeated evidence to form a strong memory impression."
+      }
+    ],
+    "no_impression_reason": null
+  },
+  "emotion_summary": {
+    "emotion_inputs": 0,
+    "dominant_emotion": null,
+    "average_valence": null,
+    "average_arousal": null,
+    "strongest_input": null,
+    "stress_impact": "+0.00",
+    "trust_impact": "+0.00",
+    "ticks_applied": [],
+    "interpretation": "No user emotion input was applied during this run.",
+    "agent_emotional_memory": {
+      "avg_pressure": 0.0,
+      "avg_positivity": 0.0,
+      "peak_pressure": 0.0,
+      "peak_pressure_tick": 1,
+      "dominant_negative": null,
+      "dominant_positive": null,
+      "interpretation": "Agents carried low emotional pressure throughout the run (avg 0% of recent memories negative)."
+    }
+  },
+  "event_counts": {
+    "messages_exchanged": 13,
+    "clues_shared": 2,
+    "questions_asked": 0,
+    "agreements": 4,
+    "challenges": 0,
+    "blockers_resolved": 5,
+    "blockers_total": 5,
+    "interventions_used": 4
+  },
+  "metric_trajectory": {
+    "trust_start": 0.406,
+    "trust_end": 0.593,
+    "trust_delta": 0.187,
+    "stress_start": 0.289,
+    "stress_peak": 0.4,
+    "stress_peak_tick": 10,
+    "stress_end": 0.324
+  },
+  "blocker_timeline": [
+    {
+      "item": "map",
+      "start_tick": 1,
+      "end_tick": 3,
+      "duration": 3
+    },
+    {
+      "item": "lock",
+      "start_tick": 4,
+      "end_tick": 5,
+      "duration": 2
+    },
+    {
+      "item": "key",
+      "start_tick": 6,
+      "end_tick": 6,
+      "duration": 1
+    },
+    {
+      "item": "door",
+      "start_tick": 7,
+      "end_tick": 9,
+      "duration": 3
+    },
+    {
+      "item": "unlock",
+      "start_tick": 10,
+      "end_tick": 11,
+      "duration": 2
+    }
+  ]
+}

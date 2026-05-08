@@ -329,7 +329,51 @@ class TestBoostUrgency:
 
 
 # ---------------------------------------------------------------------------
-# 4. inject_tension
+# 4. ease_pressure
+# ---------------------------------------------------------------------------
+
+class TestEasePressure:
+
+    def test_returns_success(self):
+        m = _make("escape_room", "escape", team_type="tension")
+        _step(m, 2)
+        iv.boost_urgency(m, 0.3)
+        result = iv.ease_pressure(m, 0.1)
+        assert result["success"] is True
+        assert "Pressure eased" in result["message"]
+
+    def test_lowers_urgency_modifier(self):
+        m = _make("office_proposal", "office", team_type="balanced")
+        _step(m, 2)
+        iv.boost_urgency(m, 0.3)
+        before = getattr(m.environment, "urgency_modifier", 0.0)
+        iv.ease_pressure(m, 0.1)
+        after = getattr(m.environment, "urgency_modifier", 0.0)
+        assert after < before, (
+            f"urgency_modifier did not decrease after ease_pressure: {before:.3f} → {after:.3f}"
+        )
+
+    def test_pressure_floor_at_zero(self):
+        m = _make("cafe_restaurant", "cafe", team_type="smooth")
+        _step(m, 1)
+        before = getattr(m.environment, "urgency_modifier", 0.0)
+        result = iv.ease_pressure(m, 0.2)
+        after = getattr(m.environment, "urgency_modifier", 0.0)
+        assert after == pytest.approx(0.0)
+        assert after >= 0.0
+        assert result["pressure_before"] == pytest.approx(before)
+        assert result["pressure_after"] == pytest.approx(0.0)
+
+    def test_relaxed_run_still_completes(self):
+        m = _make("escape_room", "escape", seed=42, team_type="smooth")
+        _step(m, 3)
+        iv.ease_pressure(m, 0.1)
+        _run_to_end(m)
+        assert m.ended is True
+
+
+# ---------------------------------------------------------------------------
+# 5. inject_tension
 # ---------------------------------------------------------------------------
 
 class TestInjectTension:
@@ -401,6 +445,31 @@ class TestInjectTension:
         assert _avg_stress(tension) >= _avg_stress(smooth), (
             f"tension team stress ({_avg_stress(tension):.3f}) < "
             f"smooth team stress ({_avg_stress(smooth):.3f}) after same injection"
+        )
+
+    def test_tension_impulse_survives_same_tick_recovery(self):
+        m = _make("office_proposal", "office", team_type="smooth")
+        _step(m, 3)
+        before = float(m.group_tension)
+        iv.inject_tension(m, 0.05)
+        m.step()
+        assert m.group_tension >= before + 0.049, (
+            f"inject_tension spike was erased in the same tick: {before:.3f} -> {m.group_tension:.3f}"
+        )
+
+    def test_tension_impulse_lasts_into_next_step(self):
+        m = _make("office_proposal", "office", team_type="smooth")
+        _step(m, 3)
+        before = float(m.group_tension)
+        iv.inject_tension(m, 0.05)
+        m.step()
+        after_first = float(m.group_tension)
+        m.step()
+        after_second = float(m.group_tension)
+        assert after_first >= before + 0.049
+        assert after_second >= before + 0.049, (
+            f"tension impulse did not remain visible into the next step: "
+            f"{before:.3f} -> {after_first:.3f} -> {after_second:.3f}"
         )
 
 

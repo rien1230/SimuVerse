@@ -1,0 +1,4287 @@
+{
+  "run_id": "c628643701",
+  "scenario_id": "office_proposal",
+  "scenario_name": "Complete Project Proposal",
+  "team_preset": "creative_team",
+  "seed": 1984579353,
+  "timestamp": "2026-05-07T07:06:41.598269+00:00",
+  "config": {
+    "min_events_per_tick": 0,
+    "episode_max_ticks": 25,
+    "environment": "office",
+    "scenario_id": "office_proposal",
+    "use_nlp": false,
+    "team_type": "creative",
+    "team_preset": "creative_team",
+    "goal": "complete_proposal",
+    "resolved_team_type": "creative",
+    "agents": [
+      {
+        "E": 0.7,
+        "A": 0.58,
+        "N": 0.3
+      },
+      {
+        "E": 0.62,
+        "A": 0.52,
+        "N": 0.34
+      },
+      {
+        "E": 0.54,
+        "A": 0.48,
+        "N": 0.36
+      },
+      {
+        "E": 0.68,
+        "A": 0.56,
+        "N": 0.28
+      }
+    ],
+    "agent_personalities": [
+      "Creative",
+      "Overthinker",
+      "Creative",
+      "Easygoing"
+    ],
+    "save_history": true,
+    "source": "interactive"
+  },
+  "outcome": "success",
+  "outcome_label": "Completed under low pressure \u2014 creative cooperation",
+  "outcome_detail": "This structured task-focused environment run (creative team) reached 100% completion in 17 steps. Stress stayed low with little to no conflict. Agents exchanged 4 pieces of information. Outcome: Completed under low pressure \u2014 creative cooperation. This matches the Creative Team preset: agents used flexible idea-sharing, confirmation, and collaborative problem-solving rather than conflict.",
+  "ticks": 17,
+  "final_progress": 1.0,
+  "metrics": {
+    "avg_trust": 0.599,
+    "avg_stress": 0.12,
+    "conflict_rate": 0.0,
+    "pressure": 0.25,
+    "total_refusals": 0,
+    "total_shares": 4,
+    "stalled_ticks": 13,
+    "group_tension": 0.08,
+    "group_cohesion": 0.725
+  },
+  "group_state": {
+    "tension": 0.08,
+    "cohesion": 0.725,
+    "pressure": 0.25,
+    "stall_ticks": 0,
+    "bottleneck_item": null,
+    "bottleneck_holder": null
+  },
+  "tasks": {
+    "budget": true,
+    "requirements": true,
+    "design": true,
+    "tech_specs": true
+  },
+  "completion_order": [
+    "requirements",
+    "design",
+    "tech_specs",
+    "budget"
+  ],
+  "peak_tension": 0.2,
+  "time_to_first_share": 3,
+  "intervention_count": 0,
+  "interventions": [],
+  "agents": [
+    {
+      "id": "A1",
+      "name": "A1",
+      "role": "Project Manager",
+      "personality": "Creative",
+      "strategy": "avoidant",
+      "final_stress": 0.141,
+      "final_valence": 0.227,
+      "known_items": [
+        "budget",
+        "tech_specs"
+      ],
+      "trust": {
+        "A2": 0.5,
+        "A3": 0.5,
+        "A4": 0.773
+      }
+    },
+    {
+      "id": "A2",
+      "name": "A2",
+      "role": "Developer",
+      "personality": "Overthinker",
+      "strategy": "neutral",
+      "final_stress": 0.095,
+      "final_valence": 0.161,
+      "known_items": [
+        "design",
+        "requirements"
+      ],
+      "trust": {
+        "A1": 0.5,
+        "A3": 0.735,
+        "A4": 0.616
+      }
+    },
+    {
+      "id": "A3",
+      "name": "A3",
+      "role": "Designer",
+      "personality": "Creative",
+      "strategy": "avoidant",
+      "final_stress": 0.165,
+      "final_valence": 0.128,
+      "known_items": [
+        "design"
+      ],
+      "trust": {
+        "A1": 0.5,
+        "A2": 0.5,
+        "A4": 0.5
+      }
+    },
+    {
+      "id": "A4",
+      "name": "A4",
+      "role": "Data Analyst",
+      "personality": "Easygoing",
+      "strategy": "neutral",
+      "final_stress": 0.08,
+      "final_valence": 0.271,
+      "known_items": [
+        "requirements",
+        "budget",
+        "tech_specs"
+      ],
+      "trust": {
+        "A1": 0.82,
+        "A2": 0.738,
+        "A3": 0.5
+      }
+    }
+  ],
+  "history": [
+    {
+      "tick": 1,
+      "run_metrics": {
+        "emotional": 0.081,
+        "coord_pressure": 0.151,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.0812,
+        "coord_pressure": 0.15125,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.44,
+            "A3": 0.37,
+            "A4": 0.41
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.063,
+            "arousal": 0.309
+          },
+          "stress": 0.145,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.49,
+            "A3": 0.465,
+            "A4": 0.505
+          },
+          "known_items": [
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.023,
+            "arousal": 0.309
+          },
+          "stress": 0.107,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.054,
+            "arousal": 0.309
+          },
+          "stress": 0.125,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.42,
+            "A2": 0.465,
+            "A3": 0.395
+          },
+          "known_items": [
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.015,
+            "arousal": 0.309
+          },
+          "stress": 0.088,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.465
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.415
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.485
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.416,
+        "mean_valence": 0.039,
+        "mean_arousal": 0.309,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.116,
+        "stress_variance": 0.0004,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 1,
+        "bottleneck_item": "requirements",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 1,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "pressure": 0.25,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "requirements",
+        "bottleneck_item": "requirements",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": false,
+          "design": false,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.0,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 2,
+      "run_metrics": {
+        "emotional": 0.098,
+        "coord_pressure": 0.207,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.19519999999999998,
+        "coord_pressure": 0.41375,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.44,
+            "A3": 0.37,
+            "A4": 0.41
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.061,
+            "arousal": 0.318
+          },
+          "stress": 0.15,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.491,
+            "A3": 0.466,
+            "A4": 0.506
+          },
+          "known_items": [
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.022,
+            "arousal": 0.318
+          },
+          "stress": 0.114,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.052,
+            "arousal": 0.318
+          },
+          "stress": 0.13,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.42,
+            "A2": 0.465,
+            "A3": 0.395
+          },
+          "known_items": [
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.014,
+            "arousal": 0.318
+          },
+          "stress": 0.086,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.465
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.415
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.485
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.416,
+        "mean_valence": 0.037,
+        "mean_arousal": 0.318,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.12,
+        "stress_variance": 0.0005,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 2,
+        "bottleneck_item": "requirements",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 0,
+        "cumulative_stalled": 2,
+        "group_tension": 0.2,
+        "group_cohesion": 0.5,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.2,
+        "cohesion": 0.5,
+        "pressure": 0.25,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "active_blocker": "requirements",
+        "bottleneck_item": "requirements",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": false,
+          "design": false,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.0,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 3,
+      "run_metrics": {
+        "emotional": 0.108,
+        "coord_pressure": 0.29,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.3246,
+        "coord_pressure": 0.8691,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.44,
+            "A3": 0.37,
+            "A4": 0.41
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.057,
+            "arousal": 0.335
+          },
+          "stress": 0.17,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.491,
+            "A3": 0.466,
+            "A4": 0.526
+          },
+          "known_items": [
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.04,
+            "arousal": 0.325
+          },
+          "stress": 0.179,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.027,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.18)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.37,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.049,
+            "arousal": 0.335
+          },
+          "stress": 0.151,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.42,
+            "A2": 0.704,
+            "A3": 0.395
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.105,
+            "arousal": 0.339
+          },
+          "stress": 0.067,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.466
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.415
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.615
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A2",
+          "target": "A4",
+          "text": "This looks right: the proposal needs to cover mobile support and offline use.",
+          "item": "requirements",
+          "reason": "forced_release_after_stall",
+          "partial": false,
+          "can_complete": false
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.438,
+        "mean_valence": 0.063,
+        "mean_arousal": 0.333,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.142,
+        "stress_variance": 0.002,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "share_info": 1
+        },
+        "stalled_ticks": 3,
+        "bottleneck_item": "requirements",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "neutral": 2,
+          "avoidant": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 3,
+        "group_tension": 0.178,
+        "group_cohesion": 0.536,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.178,
+        "cohesion": 0.536,
+        "pressure": 0.25,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "active_blocker": "requirements",
+        "bottleneck_item": "requirements",
+        "bottleneck_holder": "A2",
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": false,
+          "design": false,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.0,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 4,
+      "run_metrics": {
+        "emotional": 0.112,
+        "coord_pressure": 0.258,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.44980000000000003,
+        "coord_pressure": 1.03065,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.432,
+            "A3": 0.37,
+            "A4": 0.41
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.055,
+            "arousal": 0.343
+          },
+          "stress": 0.18,
+          "emotional_stress": 0.012,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.491,
+            "A3": 0.466,
+            "A4": 0.646
+          },
+          "known_items": [
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.066,
+            "arousal": 0.337
+          },
+          "stress": 0.167,
+          "emotional_stress": 0.045,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.041,
+          "in_conversation_with": "A4",
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.18)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.362,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.047,
+            "arousal": 0.343
+          },
+          "stress": 0.161,
+          "emotional_stress": 0.012,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.42,
+            "A2": 0.736,
+            "A3": 0.395
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.121,
+            "arousal": 0.337
+          },
+          "stress": 0.037,
+          "emotional_stress": 0.001,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.042,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.462
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.415
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.414
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.691
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "agree",
+          "actor": "A4",
+          "target": "A2",
+          "text": "Yeah, that's fine there.",
+          "item": "requirements",
+          "reason": "office_confirm"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.45,
+        "mean_valence": 0.072,
+        "mean_arousal": 0.34,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.136,
+        "stress_variance": 0.0033,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "agree": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": "design",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "avoidant": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 3,
+        "group_tension": 0.159,
+        "group_cohesion": 0.569,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.159,
+        "cohesion": 0.569,
+        "pressure": 0.25,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "requirements",
+        "bottleneck_item": "design",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": false,
+          "tech_specs": false
+        },
+        "resolved_items": [
+          "requirements"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.25,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 5,
+      "run_metrics": {
+        "emotional": 0.116,
+        "coord_pressure": 0.244,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.5778,
+        "coord_pressure": 1.22245,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.371,
+            "A4": 0.411
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.053,
+            "arousal": 0.351
+          },
+          "stress": 0.185,
+          "emotional_stress": 0.012,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.491,
+            "A3": 0.466,
+            "A4": 0.646
+          },
+          "known_items": [
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.064,
+            "arousal": 0.345
+          },
+          "stress": 0.174,
+          "emotional_stress": 0.045,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.041,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.49, stress:0.18)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.362,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.045,
+            "arousal": 0.351
+          },
+          "stress": 0.166,
+          "emotional_stress": 0.012,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.421,
+            "A2": 0.736,
+            "A3": 0.396
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.117,
+            "arousal": 0.345
+          },
+          "stress": 0.036,
+          "emotional_stress": 0.001,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.042,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.462
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.416
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.414
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.691
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.45,
+        "mean_valence": 0.07,
+        "mean_arousal": 0.348,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.14,
+        "stress_variance": 0.0036,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 1,
+        "bottleneck_item": "design",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 2,
+          "avoidant": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 4,
+        "group_tension": 0.159,
+        "group_cohesion": 0.569,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.159,
+        "cohesion": 0.569,
+        "pressure": 0.25,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "design",
+        "bottleneck_item": "design",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": false,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.25,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 6,
+      "run_metrics": {
+        "emotional": 0.117,
+        "coord_pressure": 0.265,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.7023,
+        "coord_pressure": 1.5881,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.371,
+            "A4": 0.411
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.051,
+            "arousal": 0.359
+          },
+          "stress": 0.195,
+          "emotional_stress": 0.016,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.702,
+            "A4": 0.646
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.153,
+            "arousal": 0.357
+          },
+          "stress": 0.119,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.056,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.362,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.064,
+            "arousal": 0.349
+          },
+          "stress": 0.184,
+          "emotional_stress": 0.016,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.014,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.421,
+            "A2": 0.736,
+            "A3": 0.396
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.113,
+            "arousal": 0.353
+          },
+          "stress": 0.041,
+          "emotional_stress": 0.002,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.042,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.462
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.348
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.416
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.532
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.691
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.368
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A3",
+          "target": "A2",
+          "text": "Developer, here's the draft: flat design, clean layout, and the primary colour is blue.",
+          "item": "design",
+          "reason": "proactive_owner_share",
+          "partial": false,
+          "can_complete": false
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.469,
+        "mean_valence": 0.095,
+        "mean_arousal": 0.355,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.135,
+        "stress_variance": 0.0038,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "share_info": 1
+        },
+        "stalled_ticks": 2,
+        "bottleneck_item": "design",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "neutral": 3,
+          "avoidant": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 5,
+        "group_tension": 0.142,
+        "group_cohesion": 0.6,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.142,
+        "cohesion": 0.6,
+        "pressure": 0.25,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "active_blocker": "design",
+        "bottleneck_item": "design",
+        "bottleneck_holder": "A3",
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": false,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.25,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 7,
+      "run_metrics": {
+        "emotional": 0.118,
+        "coord_pressure": 0.249,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.8226,
+        "coord_pressure": 1.74325,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.363,
+            "A4": 0.411
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.049,
+            "arousal": 0.367
+          },
+          "stress": 0.204,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.734,
+            "A4": 0.647
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.168,
+            "arousal": 0.355
+          },
+          "stress": 0.097,
+          "emotional_stress": 0.035,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.482,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.088,
+            "arousal": 0.361
+          },
+          "stress": 0.17,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.421,
+            "A2": 0.737,
+            "A3": 0.388
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.109,
+            "arousal": 0.361
+          },
+          "stress": 0.045,
+          "emotional_stress": 0.003,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.042,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.462
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.344
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.416
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.608
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.692
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.364
+        }
+      ],
+      "events": [
+        {
+          "type": "agree",
+          "actor": "A2",
+          "target": "A3",
+          "text": "Okay, that holds together.",
+          "item": "design",
+          "reason": "office_confirm"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.481,
+        "mean_valence": 0.104,
+        "mean_arousal": 0.361,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.129,
+        "stress_variance": 0.0039,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "agree": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 3,
+          "avoidant": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 5,
+        "group_tension": 0.127,
+        "group_cohesion": 0.629,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.127,
+        "cohesion": 0.629,
+        "pressure": 0.25,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "design",
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": false
+        },
+        "resolved_items": [
+          "design"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 8,
+      "run_metrics": {
+        "emotional": 0.118,
+        "coord_pressure": 0.241,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 0.9457,
+        "coord_pressure": 1.92865,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.363,
+            "A4": 0.411
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.048,
+            "arousal": 0.375
+          },
+          "stress": 0.209,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.735,
+            "A4": 0.647
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.162,
+            "arousal": 0.363
+          },
+          "stress": 0.104,
+          "emotional_stress": 0.035,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.482,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.085,
+            "arousal": 0.368
+          },
+          "stress": 0.175,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.421,
+            "A2": 0.737,
+            "A3": 0.388
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.105,
+            "arousal": 0.369
+          },
+          "stress": 0.044,
+          "emotional_stress": 0.003,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.042,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.462
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.344
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.416
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.608
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.692
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.364
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.481,
+        "mean_valence": 0.1,
+        "mean_arousal": 0.369,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.133,
+        "stress_variance": 0.0041,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 1,
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 3,
+          "avoidant": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 6,
+        "group_tension": 0.127,
+        "group_cohesion": 0.629,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.127,
+        "cohesion": 0.629,
+        "pressure": 0.25,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "tech_specs",
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 9,
+      "run_metrics": {
+        "emotional": 0.12,
+        "coord_pressure": 0.255,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.0779,
+        "coord_pressure": 2.2913,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.363,
+            "A4": 0.411
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.046,
+            "arousal": 0.382
+          },
+          "stress": 0.219,
+          "emotional_stress": 0.024,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.735,
+            "A4": 0.647
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.156,
+            "arousal": 0.37
+          },
+          "stress": 0.117,
+          "emotional_stress": 0.05,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.482,
+            "A4": 0.34
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.082,
+            "arousal": 0.376
+          },
+          "stress": 0.185,
+          "emotional_stress": 0.024,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.421,
+            "A2": 0.737,
+            "A3": 0.388
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.101,
+            "arousal": 0.377
+          },
+          "stress": 0.062,
+          "emotional_stress": 0.004,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.042,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.462
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.344
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.416
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.608
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.692
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.364
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.481,
+        "mean_valence": 0.096,
+        "mean_arousal": 0.376,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.146,
+        "stress_variance": 0.0037,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 2,
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "neutral": 3,
+          "avoidant": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 7,
+        "group_tension": 0.127,
+        "group_cohesion": 0.629,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.127,
+        "cohesion": 0.629,
+        "pressure": 0.25,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "active_blocker": "tech_specs",
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 10,
+      "run_metrics": {
+        "emotional": 0.123,
+        "coord_pressure": 0.28,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.2297,
+        "coord_pressure": 2.8032000000000004,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.363,
+            "A4": 0.403
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.044,
+            "arousal": 0.39
+          },
+          "stress": 0.274,
+          "emotional_stress": 0.028,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.014,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.735,
+            "A4": 0.639
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.151,
+            "arousal": 0.378
+          },
+          "stress": 0.129,
+          "emotional_stress": 0.065,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.482,
+            "A4": 0.332
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.08,
+            "arousal": 0.383
+          },
+          "stress": 0.195,
+          "emotional_stress": 0.028,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.441,
+            "A2": 0.737,
+            "A3": 0.388
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.098,
+            "arousal": 0.384
+          },
+          "stress": 0.098,
+          "emotional_stress": 0.005,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.056,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.462
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.344
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.422
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.609
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.688
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.36
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A4",
+          "text": "What's the latest on the spec doc, Data Analyst?",
+          "item": "tech_specs",
+          "reason": "need information"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.481,
+        "mean_valence": 0.093,
+        "mean_arousal": 0.384,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.174,
+        "stress_variance": 0.0046,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "stalled_ticks": 3,
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 4,
+        "strategy_distribution": {
+          "neutral": 3,
+          "avoidant": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 8,
+        "group_tension": 0.127,
+        "group_cohesion": 0.629,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.127,
+        "cohesion": 0.629,
+        "pressure": 0.25,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "active_blocker": "tech_specs",
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 4
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 11,
+      "run_metrics": {
+        "emotional": 0.126,
+        "coord_pressure": 0.309,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.3899,
+        "coord_pressure": 3.39435,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.363,
+            "A4": 0.395
+          },
+          "known_items": [
+            "budget"
+          ],
+          "mood": {
+            "valence": 0.043,
+            "arousal": 0.397
+          },
+          "stress": 0.283,
+          "emotional_stress": 0.032,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.014,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.735,
+            "A4": 0.631
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.145,
+            "arousal": 0.385
+          },
+          "stress": 0.142,
+          "emotional_stress": 0.08,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.325,
+            "A2": 0.482,
+            "A4": 0.324
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.077,
+            "arousal": 0.391
+          },
+          "stress": 0.205,
+          "emotional_stress": 0.032,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.441,
+            "A2": 0.737,
+            "A3": 0.388
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.094,
+            "arousal": 0.391
+          },
+          "stress": 0.114,
+          "emotional_stress": 0.006,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.056,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.463
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.344
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.418
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.609
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.684
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.356
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.479,
+        "mean_valence": 0.09,
+        "mean_arousal": 0.391,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.186,
+        "stress_variance": 0.0042,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 4,
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 5,
+        "strategy_distribution": {
+          "neutral": 3,
+          "avoidant": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 9,
+        "group_tension": 0.127,
+        "group_cohesion": 0.629,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.127,
+        "cohesion": 0.629,
+        "pressure": 0.25,
+        "stall_ticks": 4,
+        "success_streak": 0,
+        "active_blocker": "tech_specs",
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 5
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 12,
+      "run_metrics": {
+        "emotional": 0.129,
+        "coord_pressure": 0.341,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.5452,
+        "coord_pressure": 4.0969500000000005,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.363,
+            "A4": 0.62
+          },
+          "known_items": [
+            "budget",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.133,
+            "arousal": 0.408
+          },
+          "stress": 0.224,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.47, stress:0.22)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.735,
+            "A4": 0.623
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.14,
+            "arousal": 0.393
+          },
+          "stress": 0.154,
+          "emotional_stress": 0.095,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.326,
+            "A2": 0.483,
+            "A4": 0.317
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.074,
+            "arousal": 0.398
+          },
+          "stress": 0.214,
+          "emotional_stress": 0.036,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.441,
+            "A2": 0.737,
+            "A3": 0.388
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.111,
+            "arousal": 0.389
+          },
+          "stress": 0.126,
+          "emotional_stress": 0.007,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.463
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.344
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.531
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.609
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.68
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.352
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Sure, here you go: React, Node.js, and PostgreSQL \u2014 that's the stack.",
+          "item": "tech_specs",
+          "reason": "forced_release_after_stall",
+          "partial": false,
+          "can_complete": false
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.496,
+        "mean_valence": 0.115,
+        "mean_arousal": 0.397,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.179,
+        "stress_variance": 0.0017,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "share_info": 1
+        },
+        "stalled_ticks": 5,
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 6,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "neutral": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 3,
+        "cumulative_stalled": 10,
+        "group_tension": 0.113,
+        "group_cohesion": 0.656,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.113,
+        "cohesion": 0.656,
+        "pressure": 0.25,
+        "stall_ticks": 5,
+        "success_streak": 0,
+        "active_blocker": "tech_specs",
+        "bottleneck_item": "tech_specs",
+        "bottleneck_holder": "A4",
+        "bottleneck_age": 6
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 13,
+      "run_metrics": {
+        "emotional": 0.13,
+        "coord_pressure": 0.327,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.6942,
+        "coord_pressure": 4.2559000000000005,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.363,
+            "A4": 0.652
+          },
+          "known_items": [
+            "budget",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.148,
+            "arousal": 0.405
+          },
+          "stress": 0.194,
+          "emotional_stress": 0.004,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.043,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.47, stress:0.22)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.735,
+            "A4": 0.615
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.135,
+            "arousal": 0.4
+          },
+          "stress": 0.166,
+          "emotional_stress": 0.11,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.326,
+            "A2": 0.483,
+            "A4": 0.309
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.071,
+            "arousal": 0.405
+          },
+          "stress": 0.218,
+          "emotional_stress": 0.04,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.561,
+            "A2": 0.737,
+            "A3": 0.388
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.134,
+            "arousal": 0.399
+          },
+          "stress": 0.104,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.086,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.463
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.345
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.607
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.609
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.676
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.349
+        }
+      ],
+      "events": [
+        {
+          "type": "agree",
+          "actor": "A1",
+          "target": "A4",
+          "text": "Nice, that settles it.",
+          "item": "tech_specs",
+          "reason": "office_confirm"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.508,
+        "mean_valence": 0.122,
+        "mean_arousal": 0.402,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.17,
+        "stress_variance": 0.0018,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "agree": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": "budget",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "neutral": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 3,
+        "cumulative_stalled": 10,
+        "group_tension": 0.101,
+        "group_cohesion": 0.681,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.101,
+        "cohesion": 0.681,
+        "pressure": 0.25,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "tech_specs",
+        "bottleneck_item": "budget",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": true
+        },
+        "resolved_items": [
+          "tech_specs"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.75,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 14,
+      "run_metrics": {
+        "emotional": 0.132,
+        "coord_pressure": 0.317,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.8438999999999999,
+        "coord_pressure": 4.436100000000001,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.433,
+            "A3": 0.363,
+            "A4": 0.652
+          },
+          "known_items": [
+            "budget",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.143,
+            "arousal": 0.411
+          },
+          "stress": 0.192,
+          "emotional_stress": 0.004,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.043,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.47, stress:0.22)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.735,
+            "A4": 0.615
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.131,
+            "arousal": 0.407
+          },
+          "stress": 0.173,
+          "emotional_stress": 0.11,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.326,
+            "A2": 0.483,
+            "A4": 0.309
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.069,
+            "arousal": 0.412
+          },
+          "stress": 0.216,
+          "emotional_stress": 0.04,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.561,
+            "A2": 0.737,
+            "A3": 0.388
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.13,
+            "arousal": 0.406
+          },
+          "stress": 0.101,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.086,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.463
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.345
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.607
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.609
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.676
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.349
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.508,
+        "mean_valence": 0.118,
+        "mean_arousal": 0.409,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.171,
+        "stress_variance": 0.0018,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 1,
+        "bottleneck_item": "budget",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "neutral": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 3,
+        "cumulative_stalled": 11,
+        "group_tension": 0.101,
+        "group_cohesion": 0.681,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.101,
+        "cohesion": 0.681,
+        "pressure": 0.25,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "budget",
+        "bottleneck_item": "budget",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": true
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.75,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 15,
+      "run_metrics": {
+        "emotional": 0.133,
+        "coord_pressure": 0.32,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 1.9998999999999998,
+        "coord_pressure": 4.793550000000001,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.434,
+            "A3": 0.364,
+            "A4": 0.653
+          },
+          "known_items": [
+            "budget",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.138,
+            "arousal": 0.418
+          },
+          "stress": 0.209,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.043,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.47, stress:0.22)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.492,
+            "A3": 0.735,
+            "A4": 0.615
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.126,
+            "arousal": 0.414
+          },
+          "stress": 0.185,
+          "emotional_stress": 0.125,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.326,
+            "A2": 0.483,
+            "A4": 0.309
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.067,
+            "arousal": 0.419
+          },
+          "stress": 0.22,
+          "emotional_stress": 0.044,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.562,
+            "A2": 0.737,
+            "A3": 0.389
+          },
+          "known_items": [
+            "requirements",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.125,
+            "arousal": 0.413
+          },
+          "stress": 0.104,
+          "emotional_stress": 0.009,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.086,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.463
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.345
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.607
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.609
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.676
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.349
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.508,
+        "mean_valence": 0.114,
+        "mean_arousal": 0.416,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.18,
+        "stress_variance": 0.0021,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 2,
+        "bottleneck_item": "budget",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "neutral": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 3,
+        "cumulative_stalled": 12,
+        "group_tension": 0.101,
+        "group_cohesion": 0.681,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.101,
+        "cohesion": 0.681,
+        "pressure": 0.25,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "active_blocker": "budget",
+        "bottleneck_item": "budget",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": true
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.75,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 16,
+      "run_metrics": {
+        "emotional": 0.134,
+        "coord_pressure": 0.329,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 2.1488999999999994,
+        "coord_pressure": 5.263050000000001,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.434,
+            "A3": 0.364,
+            "A4": 0.653
+          },
+          "known_items": [
+            "budget",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.153,
+            "arousal": 0.415
+          },
+          "stress": 0.222,
+          "emotional_stress": 0.012,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.058,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.47, stress:0.22)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.484,
+            "A3": 0.735,
+            "A4": 0.615
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.122,
+            "arousal": 0.42
+          },
+          "stress": 0.197,
+          "emotional_stress": 0.14,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.318,
+            "A2": 0.483,
+            "A4": 0.309
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.064,
+            "arousal": 0.425
+          },
+          "stress": 0.224,
+          "emotional_stress": 0.048,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.792,
+            "A2": 0.737,
+            "A3": 0.389
+          },
+          "known_items": [
+            "requirements",
+            "budget",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.212,
+            "arousal": 0.423
+          },
+          "stress": 0.039,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.101,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.459
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.341
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.723
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.609
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.676
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.349
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A1",
+          "target": "A4",
+          "text": "Here's the draft version: $50k total, with 10% held back.",
+          "item": "budget",
+          "reason": "proactive_owner_share",
+          "partial": false,
+          "can_complete": false
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.526,
+        "mean_valence": 0.138,
+        "mean_arousal": 0.421,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.17,
+        "stress_variance": 0.0058,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "share_info": 1
+        },
+        "stalled_ticks": 3,
+        "bottleneck_item": "budget",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 4,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "neutral": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 4,
+        "cumulative_stalled": 13,
+        "group_tension": 0.09,
+        "group_cohesion": 0.704,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.09,
+        "cohesion": 0.704,
+        "pressure": 0.25,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "active_blocker": "budget",
+        "bottleneck_item": "budget",
+        "bottleneck_holder": "A1",
+        "bottleneck_age": 4
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": false,
+          "requirements": true,
+          "design": true,
+          "tech_specs": true
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 0.75,
+        "urgency_modifier": 0.25,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 17,
+      "run_metrics": {
+        "emotional": 0.133,
+        "coord_pressure": 0.311,
+        "conflict": 0.0
+      },
+      "raw_run_metrics": {
+        "emotional": 2.2628999999999992,
+        "coord_pressure": 5.29105,
+        "conflict": 0.0
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Project Manager",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A2": 0.5,
+            "A3": 0.5,
+            "A4": 0.773
+          },
+          "known_items": [
+            "budget",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.227,
+            "arousal": 0.395
+          },
+          "stress": 0.141,
+          "emotional_stress": 0.012,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.073,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.47, stress:0.22)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Developer",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.5,
+            "A3": 0.735,
+            "A4": 0.616
+          },
+          "known_items": [
+            "design",
+            "requirements"
+          ],
+          "mood": {
+            "valence": 0.161,
+            "arousal": 0.397
+          },
+          "stress": 0.095,
+          "emotional_stress": 0.14,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.071,
+          "in_conversation_with": null,
+          "last_thought": "Feeling calmer \u2014 returning to neutral (stress:0.12)"
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Designer",
+          "personality": "Creative",
+          "strategy": "avoidant",
+          "trust": {
+            "A1": 0.5,
+            "A2": 0.5,
+            "A4": 0.5
+          },
+          "known_items": [
+            "design"
+          ],
+          "mood": {
+            "valence": 0.128,
+            "arousal": 0.402
+          },
+          "stress": 0.165,
+          "emotional_stress": 0.048,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.028,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 avoidant (trust:0.34, stress:0.18)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Data Analyst",
+          "personality": "Easygoing",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.82,
+            "A2": 0.738,
+            "A3": 0.5
+          },
+          "known_items": [
+            "requirements",
+            "budget",
+            "tech_specs"
+          ],
+          "mood": {
+            "valence": 0.271,
+            "arousal": 0.39
+          },
+          "stress": 0.08,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.117,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.5
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.5
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.796
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.618
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.677
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.5
+        }
+      ],
+      "events": [
+        {
+          "type": "agree",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Yeah, that's fine.",
+          "item": "budget",
+          "reason": "office_confirm"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.599,
+        "mean_valence": 0.197,
+        "mean_arousal": 0.396,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.12,
+        "stress_variance": 0.0012,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "agree": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0,
+        "strategy_distribution": {
+          "avoidant": 2,
+          "neutral": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 4,
+        "cumulative_stalled": 13,
+        "group_tension": 0.08,
+        "group_cohesion": 0.725,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.08,
+        "cohesion": 0.725,
+        "pressure": 0.25,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "budget",
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0
+      },
+      "scenario": {
+        "id": "office_proposal",
+        "name": "Complete Project Proposal",
+        "description": "Agents must combine information to finish the proposal.",
+        "environment": "office",
+        "tasks": {
+          "budget": true,
+          "requirements": true,
+          "design": true,
+          "tech_specs": true
+        },
+        "resolved_items": [
+          "budget"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "budget"
+          ],
+          "A2": [
+            "requirements"
+          ],
+          "A3": [
+            "design"
+          ],
+          "A4": [
+            "tech_specs"
+          ]
+        },
+        "progress": 1.0,
+        "urgency_modifier": 0.25,
+        "outcome": "success",
+        "final_decision": null
+      },
+      "ended": true,
+      "end_reason": "success"
+    }
+  ],
+  "memory_summary": {
+    "total_impressions": 0,
+    "positive_count": 0,
+    "conflict_prone_count": 0,
+    "strongest_positive": null,
+    "strongest_conflict": null,
+    "all_impressions": [],
+    "no_impression_reason": "No strong impression formed in this office run. Agents had too few repeated interactions with any single partner (average 2 memories per agent) to establish a pattern."
+  },
+  "emotion_summary": {
+    "emotion_inputs": 0,
+    "dominant_emotion": null,
+    "average_valence": null,
+    "average_arousal": null,
+    "strongest_input": null,
+    "stress_impact": "+0.00",
+    "trust_impact": "+0.00",
+    "ticks_applied": [],
+    "interpretation": "No user emotion input was applied during this run.",
+    "agent_emotional_memory": {
+      "avg_pressure": 0.0,
+      "avg_positivity": 0.0,
+      "peak_pressure": 0.0,
+      "peak_pressure_tick": 1,
+      "dominant_negative": null,
+      "dominant_positive": null,
+      "interpretation": "Agents carried low emotional pressure throughout the run (avg 0% of recent memories negative)."
+    }
+  },
+  "event_counts": {
+    "messages_exchanged": 9,
+    "clues_shared": 4,
+    "questions_asked": 1,
+    "agreements": 4,
+    "challenges": 0,
+    "blockers_resolved": 4,
+    "blockers_total": 4,
+    "interventions_used": 0
+  },
+  "metric_trajectory": {
+    "trust_start": 0.416,
+    "trust_end": 0.599,
+    "trust_delta": 0.183,
+    "stress_start": 0.116,
+    "stress_peak": 0.186,
+    "stress_peak_tick": 11,
+    "stress_end": 0.12
+  },
+  "blocker_timeline": [
+    {
+      "item": "requirements",
+      "start_tick": 1,
+      "end_tick": 4,
+      "duration": 4
+    },
+    {
+      "item": "design",
+      "start_tick": 5,
+      "end_tick": 7,
+      "duration": 3
+    },
+    {
+      "item": "tech_specs",
+      "start_tick": 8,
+      "end_tick": 13,
+      "duration": 6
+    },
+    {
+      "item": "budget",
+      "start_tick": 14,
+      "end_tick": 17,
+      "duration": 4
+    }
+  ]
+}

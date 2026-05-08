@@ -1,0 +1,3180 @@
+{
+  "run_id": "5a61adfe83",
+  "scenario_id": "cafe_restaurant",
+  "scenario_name": "Choose Restaurant",
+  "team_preset": "pressure_team",
+  "seed": 1978754716,
+  "timestamp": "2026-05-07T06:59:53.595662+00:00",
+  "config": {
+    "min_events_per_tick": 0,
+    "episode_max_ticks": 20,
+    "environment": "cafe",
+    "scenario_id": "cafe_restaurant",
+    "use_nlp": false,
+    "team_type": "pressure",
+    "team_preset": "pressure_team",
+    "goal": "choose_restaurant",
+    "resolved_team_type": "pressure",
+    "agents": [
+      {
+        "E": 0.78,
+        "A": 0.34,
+        "N": 0.58
+      },
+      {
+        "E": 0.72,
+        "A": 0.3,
+        "N": 0.6
+      },
+      {
+        "E": 0.6,
+        "A": 0.28,
+        "N": 0.64
+      },
+      {
+        "E": 0.82,
+        "A": 0.32,
+        "N": 0.56
+      }
+    ],
+    "agent_personalities": [
+      "Leader",
+      "Decisive",
+      "Skeptical",
+      "Overthinker"
+    ],
+    "save_history": true,
+    "source": "interactive"
+  },
+  "outcome": "success",
+  "outcome_label": "Completed under controlled urgency \u2014 pressure team stayed effective",
+  "outcome_detail": "This low-stakes social setting run (pressure team) reached 100% completion in 12 steps. Stress stayed low with little to no conflict. Agents exchanged 3 pieces of information. Outcome: Completed under controlled urgency \u2014 pressure team stayed effective. For a Pressure Team, this run shows controlled urgency rather than conflict. Agents moved through blockers efficiently, with stress rising under pressure while cooperation remained intact.",
+  "ticks": 12,
+  "final_progress": 1.0,
+  "metrics": {
+    "avg_trust": 0.686,
+    "avg_stress": 0.113,
+    "conflict_rate": 0.077,
+    "pressure": 0.0,
+    "total_refusals": 1,
+    "total_shares": 3,
+    "stalled_ticks": 8,
+    "group_tension": 0.136,
+    "group_cohesion": 0.682
+  },
+  "group_state": {
+    "tension": 0.136,
+    "cohesion": 0.682,
+    "pressure": 0.0,
+    "stall_ticks": 0,
+    "bottleneck_item": null,
+    "bottleneck_holder": null
+  },
+  "tasks": {
+    "dietary_constraint": true,
+    "budget_constraint": true,
+    "location_constraint": true,
+    "decision": true
+  },
+  "completion_order": [
+    "dietary_constraint",
+    "budget_constraint",
+    "location_constraint",
+    "decision"
+  ],
+  "peak_tension": 0.176,
+  "time_to_first_share": 1,
+  "intervention_count": 0,
+  "interventions": [],
+  "agents": [
+    {
+      "id": "A1",
+      "name": "A1",
+      "role": "Organiser",
+      "personality": "Leader",
+      "strategy": "cooperative",
+      "final_stress": 0.08,
+      "final_valence": 0.449,
+      "known_items": [
+        "italian",
+        "budget_constraint",
+        "dietary_constraint",
+        "location_constraint"
+      ],
+      "trust": {
+        "A2": 0.78,
+        "A3": 0.78,
+        "A4": 0.771
+      }
+    },
+    {
+      "id": "A2",
+      "name": "A2",
+      "role": "Food Expert",
+      "personality": "Decisive",
+      "strategy": "cooperative",
+      "final_stress": 0.08,
+      "final_valence": 0.196,
+      "known_items": [
+        "vegan"
+      ],
+      "trust": {
+        "A1": 0.78,
+        "A3": 0.689,
+        "A4": 0.709
+      }
+    },
+    {
+      "id": "A3",
+      "name": "A3",
+      "role": "Navigator",
+      "personality": "Skeptical",
+      "strategy": "cooperative",
+      "final_stress": 0.152,
+      "final_valence": 0.202,
+      "known_items": [
+        "cheap"
+      ],
+      "trust": {
+        "A1": 0.501,
+        "A2": 0.649,
+        "A4": 0.544
+      }
+    },
+    {
+      "id": "A4",
+      "name": "A4",
+      "role": "Researcher",
+      "personality": "Overthinker",
+      "strategy": "neutral",
+      "final_stress": 0.139,
+      "final_valence": 0.198,
+      "known_items": [
+        "fancy"
+      ],
+      "trust": {
+        "A1": 0.769,
+        "A2": 0.666,
+        "A3": 0.596
+      }
+    }
+  ],
+  "history": [
+    {
+      "tick": 1,
+      "run_metrics": {
+        "emotional": 0.024,
+        "coord_pressure": 0.064,
+        "conflict": 0.02
+      },
+      "raw_run_metrics": {
+        "emotional": 0.024,
+        "coord_pressure": 0.0639,
+        "conflict": 0.02
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.52,
+            "A4": 0.635
+          },
+          "known_items": [
+            "italian",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.205,
+            "arousal": 0.315
+          },
+          "stress": 0.0,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.031,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.64,
+            "A3": 0.615,
+            "A4": 0.655
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.121,
+            "arousal": 0.299
+          },
+          "stress": 0.0,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.015,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.475,
+            "A2": 0.57,
+            "A4": 0.49
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.039,
+            "arousal": 0.309
+          },
+          "stress": 0.042,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.59,
+            "A2": 0.665,
+            "A3": 0.545
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.013,
+            "arousal": 0.309
+          },
+          "stress": 0.039,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.71
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.498
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.613
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.593
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.66
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.518
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A2",
+          "target": "A1",
+          "text": "Worth flagging \u2014 someone needs proper vegan food, so that matters.",
+          "item": "dietary_constraint",
+          "reason": "constraint_share",
+          "partial": false,
+          "can_complete": true
+        },
+        {
+          "type": "suggest",
+          "actor": "A4",
+          "target": "A1",
+          "text": "I get the nicer-place idea, but I keep coming back to cost and distance.",
+          "preference": "fancy",
+          "reason": "preference_suggestion"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.599,
+        "mean_valence": 0.088,
+        "mean_arousal": 0.308,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.02,
+        "stress_variance": 0.0004,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "share_info": 1,
+          "suggest": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": "budget_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 0,
+        "group_tension": 0.132,
+        "group_cohesion": 0.635,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.132,
+        "cohesion": 0.635,
+        "pressure": 0.0,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "dietary_constraint",
+        "bottleneck_item": "budget_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": false,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [
+          "dietary_constraint"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.25,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 2,
+      "run_metrics": {
+        "emotional": 0.023,
+        "coord_pressure": 0.108,
+        "conflict": 0.01
+      },
+      "raw_run_metrics": {
+        "emotional": 0.0457,
+        "coord_pressure": 0.2153,
+        "conflict": 0.02
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.52,
+            "A4": 0.635
+          },
+          "known_items": [
+            "italian",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.216,
+            "arousal": 0.314
+          },
+          "stress": 0.0,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.047,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.616,
+            "A4": 0.656
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.197,
+            "arousal": 0.318
+          },
+          "stress": 0.0,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.03,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "defensive",
+          "trust": {
+            "A1": 0.475,
+            "A2": 0.57,
+            "A4": 0.49
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.038,
+            "arousal": 0.318
+          },
+          "stress": 0.059,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.0,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.59,
+            "A2": 0.665,
+            "A3": 0.545
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.012,
+            "arousal": 0.318
+          },
+          "stress": 0.063,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.498
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.613
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.593
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.66
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.518
+        }
+      ],
+      "events": [
+        {
+          "type": "compliment",
+          "actor": "A1",
+          "target": "A2",
+          "text": "Okay, that helps us decide.",
+          "reason": "task completed reinforcement"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.61,
+        "mean_valence": 0.11,
+        "mean_arousal": 0.317,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.031,
+        "stress_variance": 0.0009,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "compliment": 1
+        },
+        "stalled_ticks": 1,
+        "bottleneck_item": "budget_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 1,
+          "defensive": 1
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 1,
+        "group_tension": 0.132,
+        "group_cohesion": 0.635,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.132,
+        "cohesion": 0.635,
+        "pressure": 0.0,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "budget_constraint",
+        "bottleneck_item": "budget_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": false,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.25,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 3,
+      "run_metrics": {
+        "emotional": 0.032,
+        "coord_pressure": 0.18,
+        "conflict": 0.007
+      },
+      "raw_run_metrics": {
+        "emotional": 0.09539999999999998,
+        "coord_pressure": 0.5402,
+        "conflict": 0.02
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.52,
+            "A4": 0.635
+          },
+          "known_items": [
+            "italian",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.207,
+            "arousal": 0.322
+          },
+          "stress": 0.064,
+          "emotional_stress": 0.004,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.063,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.616,
+            "A4": 0.656
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.189,
+            "arousal": 0.326
+          },
+          "stress": 0.014,
+          "emotional_stress": 0.005,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.03,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.497,
+            "A2": 0.57,
+            "A4": 0.49
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.036,
+            "arousal": 0.326
+          },
+          "stress": 0.108,
+          "emotional_stress": 0.01,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.59,
+            "A2": 0.665,
+            "A3": 0.545
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.012,
+            "arousal": 0.326
+          },
+          "stress": 0.1,
+          "emotional_stress": 0.015,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.509
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.613
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.593
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.661
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.518
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A3",
+          "text": "I need a firm number, not a range. What's the ceiling per person?",
+          "item": "budget_constraint",
+          "reason": "organiser_probe_constraint"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.612,
+        "mean_valence": 0.105,
+        "mean_arousal": 0.325,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.071,
+        "stress_variance": 0.0014,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "ask_info": 1
+        },
+        "stalled_ticks": 2,
+        "bottleneck_item": "budget_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 2,
+        "group_tension": 0.132,
+        "group_cohesion": 0.635,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.132,
+        "cohesion": 0.635,
+        "pressure": 0.0,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "active_blocker": "budget_constraint",
+        "bottleneck_item": "budget_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": false,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.25,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 4,
+      "run_metrics": {
+        "emotional": 0.04,
+        "coord_pressure": 0.234,
+        "conflict": 0.005
+      },
+      "raw_run_metrics": {
+        "emotional": 0.16049999999999998,
+        "coord_pressure": 0.9356,
+        "conflict": 0.02
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.52,
+            "A4": 0.635
+          },
+          "known_items": [
+            "italian",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.199,
+            "arousal": 0.331
+          },
+          "stress": 0.08,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.063,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.616,
+            "A4": 0.656
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.181,
+            "arousal": 0.335
+          },
+          "stress": 0.031,
+          "emotional_stress": 0.01,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.03,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.497,
+            "A2": 0.57,
+            "A4": 0.49
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.035,
+            "arousal": 0.335
+          },
+          "stress": 0.126,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.59,
+            "A2": 0.665,
+            "A3": 0.545
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.011,
+            "arousal": 0.335
+          },
+          "stress": 0.136,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.509
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.613
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.593
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.661
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.518
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.612,
+        "mean_valence": 0.101,
+        "mean_arousal": 0.334,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.093,
+        "stress_variance": 0.0017,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 3,
+        "bottleneck_item": "budget_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 4,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 1,
+        "cumulative_stalled": 3,
+        "group_tension": 0.132,
+        "group_cohesion": 0.635,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.132,
+        "cohesion": 0.635,
+        "pressure": 0.0,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "active_blocker": "budget_constraint",
+        "bottleneck_item": "budget_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 4
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": false,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.25,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 5,
+      "run_metrics": {
+        "emotional": 0.038,
+        "coord_pressure": 0.214,
+        "conflict": 0.004
+      },
+      "raw_run_metrics": {
+        "emotional": 0.18779999999999997,
+        "coord_pressure": 1.0683,
+        "conflict": 0.02
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.78,
+            "A4": 0.636
+          },
+          "known_items": [
+            "italian",
+            "budget_constraint",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.362,
+            "arousal": 0.343
+          },
+          "stress": 0.01,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.08,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.666,
+            "A4": 0.656
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.173,
+            "arousal": 0.343
+          },
+          "stress": 0.014,
+          "emotional_stress": 0.015,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.03,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.498,
+            "A2": 0.571,
+            "A4": 0.491
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.193,
+            "arousal": 0.333
+          },
+          "stress": 0.01,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.029,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.59,
+            "A2": 0.665,
+            "A3": 0.596
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.011,
+            "arousal": 0.343
+          },
+          "stress": 0.123,
+          "emotional_stress": 0.045,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.639
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.613
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.619
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.661
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.543
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A3",
+          "target": "A1",
+          "text": "Worth saying, let's keep it cheap, nothing pricey.",
+          "item": "budget_constraint",
+          "reason": "constraint_share",
+          "partial": false,
+          "can_complete": true
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.642,
+        "mean_valence": 0.179,
+        "mean_arousal": 0.341,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.039,
+        "stress_variance": 0.0024,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "share_info": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 3,
+        "group_tension": 0.116,
+        "group_cohesion": 0.664,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.116,
+        "cohesion": 0.664,
+        "pressure": 0.0,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "budget_constraint",
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": true,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [
+          "budget_constraint"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 6,
+      "run_metrics": {
+        "emotional": 0.039,
+        "coord_pressure": 0.203,
+        "conflict": 0.003
+      },
+      "raw_run_metrics": {
+        "emotional": 0.23119999999999996,
+        "coord_pressure": 1.2165,
+        "conflict": 0.02
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.78,
+            "A4": 0.636
+          },
+          "known_items": [
+            "italian",
+            "budget_constraint",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.347,
+            "arousal": 0.351
+          },
+          "stress": 0.02,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.08,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.667,
+            "A4": 0.657
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.166,
+            "arousal": 0.351
+          },
+          "stress": 0.027,
+          "emotional_stress": 0.015,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.03,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.498,
+            "A2": 0.571,
+            "A4": 0.491
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.185,
+            "arousal": 0.342
+          },
+          "stress": 0.041,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.029,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.591,
+            "A2": 0.666,
+            "A3": 0.596
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.01,
+            "arousal": 0.351
+          },
+          "stress": 0.159,
+          "emotional_stress": 0.045,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.013,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.639
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.613
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.619
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.661
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.543
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.642,
+        "mean_valence": 0.172,
+        "mean_arousal": 0.349,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.062,
+        "stress_variance": 0.0032,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 1,
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 4,
+        "group_tension": 0.116,
+        "group_cohesion": 0.664,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.116,
+        "cohesion": 0.664,
+        "pressure": 0.0,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "location_constraint",
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": true,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 7,
+      "run_metrics": {
+        "emotional": 0.044,
+        "coord_pressure": 0.213,
+        "conflict": 0.003
+      },
+      "raw_run_metrics": {
+        "emotional": 0.30679999999999996,
+        "coord_pressure": 1.4882,
+        "conflict": 0.02
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.78,
+            "A4": 0.636
+          },
+          "known_items": [
+            "italian",
+            "budget_constraint",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.332,
+            "arousal": 0.359
+          },
+          "stress": 0.083,
+          "emotional_stress": 0.004,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.098,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.687,
+            "A4": 0.657
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.159,
+            "arousal": 0.359
+          },
+          "stress": 0.06,
+          "emotional_stress": 0.02,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.498,
+            "A2": 0.646,
+            "A4": 0.491
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.195,
+            "arousal": 0.352
+          },
+          "stress": 0.075,
+          "emotional_stress": 0.04,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.613,
+            "A2": 0.666,
+            "A3": 0.596
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.01,
+            "arousal": 0.359
+          },
+          "stress": 0.216,
+          "emotional_stress": 0.06,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.639
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.624
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.667
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.661
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.543
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A4",
+          "text": "If the best option is a ten-minute walk, does that still count as close enough?",
+          "item": "location_constraint",
+          "reason": "organiser_probe_constraint"
+        },
+        {
+          "type": "suggest",
+          "actor": "A2",
+          "target": "A3",
+          "text": "Vegan-friendly. That's what we need.",
+          "preference": "vegan",
+          "reason": "preference_suggestion"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.652,
+        "mean_valence": 0.169,
+        "mean_arousal": 0.357,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.108,
+        "stress_variance": 0.0039,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "ask_info": 1,
+          "suggest": 1
+        },
+        "stalled_ticks": 1,
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 3,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 5,
+        "group_tension": 0.116,
+        "group_cohesion": 0.664,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.116,
+        "cohesion": 0.664,
+        "pressure": 0.0,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "location_constraint",
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 3
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": true,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 8,
+      "run_metrics": {
+        "emotional": 0.049,
+        "coord_pressure": 0.229,
+        "conflict": 0.003
+      },
+      "raw_run_metrics": {
+        "emotional": 0.39499999999999996,
+        "coord_pressure": 1.8304,
+        "conflict": 0.02
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.78,
+            "A4": 0.636
+          },
+          "known_items": [
+            "italian",
+            "budget_constraint",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.318,
+            "arousal": 0.367
+          },
+          "stress": 0.099,
+          "emotional_stress": 0.008,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.098,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.687,
+            "A4": 0.657
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.152,
+            "arousal": 0.367
+          },
+          "stress": 0.077,
+          "emotional_stress": 0.025,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.499,
+            "A2": 0.646,
+            "A4": 0.492
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.187,
+            "arousal": 0.36
+          },
+          "stress": 0.093,
+          "emotional_stress": 0.05,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.613,
+            "A2": 0.666,
+            "A3": 0.596
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.009,
+            "arousal": 0.367
+          },
+          "stress": 0.235,
+          "emotional_stress": 0.075,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.026,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.639
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.624
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.667
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.662
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.544
+        }
+      ],
+      "events": [],
+      "metrics": {
+        "avg_trust": 0.653,
+        "mean_valence": 0.162,
+        "mean_arousal": 0.365,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.0,
+        "avg_stress": 0.126,
+        "stress_variance": 0.0041,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {},
+        "stalled_ticks": 2,
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 4,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 2
+        },
+        "cumulative_refusals": 0,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 6,
+        "group_tension": 0.116,
+        "group_cohesion": 0.664,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.116,
+        "cohesion": 0.664,
+        "pressure": 0.0,
+        "stall_ticks": 2,
+        "success_streak": 0,
+        "active_blocker": "location_constraint",
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 4
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": true,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 9,
+      "run_metrics": {
+        "emotional": 0.074,
+        "coord_pressure": 0.265,
+        "conflict": 0.029
+      },
+      "raw_run_metrics": {
+        "emotional": 0.6692,
+        "coord_pressure": 2.3851,
+        "conflict": 0.26
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.78,
+            "A4": 0.467
+          },
+          "known_items": [
+            "italian",
+            "budget_constraint",
+            "dietary_constraint"
+          ],
+          "mood": {
+            "valence": 0.26,
+            "arousal": 0.38
+          },
+          "stress": 0.221,
+          "emotional_stress": 0.012,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.03,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.131,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.688,
+            "A4": 0.658
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.146,
+            "arousal": 0.375
+          },
+          "stress": 0.094,
+          "emotional_stress": 0.03,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.499,
+            "A2": 0.647,
+            "A4": 0.492
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.179,
+            "arousal": 0.368
+          },
+          "stress": 0.126,
+          "emotional_stress": 0.06,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.593,
+            "A2": 0.666,
+            "A3": 0.596
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": -0.079,
+            "arousal": 0.405
+          },
+          "stress": 0.382,
+          "emotional_stress": 0.09,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.052,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.639
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.53
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.667
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.662
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.544
+        }
+      ],
+      "events": [
+        {
+          "type": "ask_info",
+          "actor": "A1",
+          "target": "A4",
+          "text": "Researcher \u2014 when you say nearby, are we talking walking distance or a short tube ride?",
+          "item": "location_constraint",
+          "reason": "organiser_probe_constraint"
+        },
+        {
+          "type": "refuse",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Holding that for a moment \u2014 location depends on what kind of place we're actually going for.",
+          "item": "location_constraint",
+          "reason": "structured_refusal"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.637,
+        "mean_valence": 0.126,
+        "mean_arousal": 0.382,
+        "conflict_rate": 0.5,
+        "cumulative_conflict_rate": 0.111,
+        "avg_stress": 0.206,
+        "stress_variance": 0.0126,
+        "refusal_count": 1,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "ask_info": 1,
+          "refuse": 1
+        },
+        "stalled_ticks": 3,
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 5,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 2
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 2,
+        "cumulative_stalled": 7,
+        "group_tension": 0.176,
+        "group_cohesion": 0.624,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.176,
+        "cohesion": 0.624,
+        "pressure": 0.0,
+        "stall_ticks": 3,
+        "success_streak": 0,
+        "active_blocker": "location_constraint",
+        "bottleneck_item": "location_constraint",
+        "bottleneck_holder": null,
+        "bottleneck_age": 5
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": true,
+          "location_constraint": false,
+          "decision": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.5,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 10,
+      "run_metrics": {
+        "emotional": 0.073,
+        "coord_pressure": 0.253,
+        "conflict": 0.026
+      },
+      "raw_run_metrics": {
+        "emotional": 0.728,
+        "coord_pressure": 2.5286,
+        "conflict": 0.26
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "neutral",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.78,
+            "A4": 0.77
+          },
+          "known_items": [
+            "italian",
+            "budget_constraint",
+            "dietary_constraint",
+            "location_constraint"
+          ],
+          "mood": {
+            "valence": 0.41,
+            "arousal": 0.399
+          },
+          "stress": 0.0,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.03,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.149,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.688,
+            "A4": 0.708
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.134,
+            "arousal": 0.39
+          },
+          "stress": 0.046,
+          "emotional_stress": 0.04,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.499,
+            "A2": 0.647,
+            "A4": 0.542
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.164,
+            "arousal": 0.383
+          },
+          "stress": 0.114,
+          "emotional_stress": 0.08,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.593,
+            "A2": 0.666,
+            "A3": 0.596
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.087,
+            "arousal": 0.408
+          },
+          "stress": 0.174,
+          "emotional_stress": 0.12,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.066,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.64
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.682
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.668
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.687
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.569
+        }
+      ],
+      "events": [
+        {
+          "type": "share_info",
+          "actor": "A4",
+          "target": "A1",
+          "text": "Just flagging, distance is actually a factor here; it shouldn't be a trek.",
+          "item": "location_constraint",
+          "reason": "constraint_share_forced",
+          "partial": false,
+          "can_complete": true
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.671,
+        "mean_valence": 0.199,
+        "mean_arousal": 0.395,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.1,
+        "avg_stress": 0.084,
+        "stress_variance": 0.0044,
+        "refusal_count": 0,
+        "share_count": 1,
+        "pressure_count": 0,
+        "event_counts": {
+          "share_info": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 1,
+        "strategy_distribution": {
+          "neutral": 2,
+          "cooperative": 2
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 3,
+        "cumulative_stalled": 7,
+        "group_tension": 0.155,
+        "group_cohesion": 0.654,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.155,
+        "cohesion": 0.654,
+        "pressure": 0.0,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "location_constraint",
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 1
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": true,
+          "location_constraint": true,
+          "decision": false
+        },
+        "resolved_items": [
+          "location_constraint"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.75,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 11,
+      "run_metrics": {
+        "emotional": 0.073,
+        "coord_pressure": 0.248,
+        "conflict": 0.024
+      },
+      "raw_run_metrics": {
+        "emotional": 0.8057,
+        "coord_pressure": 2.7246,
+        "conflict": 0.26
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.78,
+            "A4": 0.771
+          },
+          "known_items": [
+            "italian",
+            "budget_constraint",
+            "dietary_constraint",
+            "location_constraint"
+          ],
+          "mood": {
+            "valence": 0.395,
+            "arousal": 0.403
+          },
+          "stress": 0.01,
+          "emotional_stress": 0.0,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.03,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.186,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.78, stress:0.01)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.689,
+            "A4": 0.709
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.127,
+            "arousal": 0.404
+          },
+          "stress": 0.068,
+          "emotional_stress": 0.04,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.06,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.5,
+            "A2": 0.648,
+            "A4": 0.543
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.151,
+            "arousal": 0.397
+          },
+          "stress": 0.158,
+          "emotional_stress": 0.08,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.769,
+            "A2": 0.666,
+            "A3": 0.596
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.158,
+            "arousal": 0.432
+          },
+          "stress": 0.206,
+          "emotional_stress": 0.12,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.081,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.64
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.77
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.668
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.688
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.57
+        }
+      ],
+      "events": [
+        {
+          "type": "compliment",
+          "actor": "A1",
+          "target": "A4",
+          "text": "Good, that narrows location constraint down.",
+          "reason": "task completed reinforcement"
+        },
+        {
+          "type": "say",
+          "actor": "A1",
+          "target": "A2",
+          "text": "Right, so we're leaning toward somewhere nearby with good vegan food that won't cost much.",
+          "reason": "cafe_summary"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.686,
+        "mean_valence": 0.208,
+        "mean_arousal": 0.409,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.083,
+        "avg_stress": 0.111,
+        "stress_variance": 0.0058,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "compliment": 1,
+          "say": 1
+        },
+        "stalled_ticks": 1,
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 2,
+        "strategy_distribution": {
+          "cooperative": 3,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 3,
+        "cumulative_stalled": 8,
+        "group_tension": 0.155,
+        "group_cohesion": 0.654,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.155,
+        "cohesion": 0.654,
+        "pressure": 0.0,
+        "stall_ticks": 1,
+        "success_streak": 0,
+        "active_blocker": "decision",
+        "bottleneck_item": "decision",
+        "bottleneck_holder": null,
+        "bottleneck_age": 2
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": true,
+          "location_constraint": true,
+          "decision": false
+        },
+        "resolved_items": [],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 0.75,
+        "urgency_modifier": 0.0,
+        "outcome": "running",
+        "final_decision": null
+      },
+      "ended": false,
+      "end_reason": ""
+    },
+    {
+      "tick": 12,
+      "run_metrics": {
+        "emotional": 0.074,
+        "coord_pressure": 0.233,
+        "conflict": 0.022
+      },
+      "raw_run_metrics": {
+        "emotional": 0.8848,
+        "coord_pressure": 2.7918000000000003,
+        "conflict": 0.26
+      },
+      "agents": [
+        {
+          "id": "A1",
+          "name": "A1",
+          "role": "Organiser",
+          "personality": "Leader",
+          "strategy": "cooperative",
+          "trust": {
+            "A2": 0.78,
+            "A3": 0.78,
+            "A4": 0.771
+          },
+          "known_items": [
+            "italian",
+            "budget_constraint",
+            "dietary_constraint",
+            "location_constraint"
+          ],
+          "mood": {
+            "valence": 0.449,
+            "arousal": 0.38
+          },
+          "stress": 0.08,
+          "emotional_stress": 0.004,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.03,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.204,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.78, stress:0.01)"
+        },
+        {
+          "id": "A2",
+          "name": "A2",
+          "role": "Food Expert",
+          "personality": "Decisive",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.78,
+            "A3": 0.689,
+            "A4": 0.709
+          },
+          "known_items": [
+            "vegan"
+          ],
+          "mood": {
+            "valence": 0.196,
+            "arousal": 0.368
+          },
+          "stress": 0.08,
+          "emotional_stress": 0.045,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.075,
+          "in_conversation_with": null,
+          "last_thought": ""
+        },
+        {
+          "id": "A3",
+          "name": "A3",
+          "role": "Navigator",
+          "personality": "Skeptical",
+          "strategy": "cooperative",
+          "trust": {
+            "A1": 0.501,
+            "A2": 0.649,
+            "A4": 0.544
+          },
+          "known_items": [
+            "cheap"
+          ],
+          "mood": {
+            "valence": 0.202,
+            "arousal": 0.371
+          },
+          "stress": 0.152,
+          "emotional_stress": 0.09,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.045,
+          "in_conversation_with": null,
+          "last_thought": "Strategy \u2192 cooperative (trust:0.52, stress:0.10)"
+        },
+        {
+          "id": "A4",
+          "name": "A4",
+          "role": "Researcher",
+          "personality": "Overthinker",
+          "strategy": "neutral",
+          "trust": {
+            "A1": 0.769,
+            "A2": 0.666,
+            "A3": 0.596
+          },
+          "known_items": [
+            "fancy"
+          ],
+          "mood": {
+            "valence": 0.198,
+            "arousal": 0.404
+          },
+          "stress": 0.139,
+          "emotional_stress": 0.135,
+          "coord_pressure": 0.0,
+          "conflict_level": 0.0,
+          "last_detected_emotion": "none",
+          "goal_progress": 0.081,
+          "in_conversation_with": null,
+          "last_thought": ""
+        }
+      ],
+      "ties": [
+        {
+          "a": "A1",
+          "b": "A2",
+          "trust": 0.78
+        },
+        {
+          "a": "A1",
+          "b": "A3",
+          "trust": 0.64
+        },
+        {
+          "a": "A1",
+          "b": "A4",
+          "trust": 0.77
+        },
+        {
+          "a": "A2",
+          "b": "A3",
+          "trust": 0.669
+        },
+        {
+          "a": "A2",
+          "b": "A4",
+          "trust": 0.688
+        },
+        {
+          "a": "A3",
+          "b": "A4",
+          "trust": 0.57
+        }
+      ],
+      "events": [
+        {
+          "type": "agree",
+          "actor": "A2",
+          "target": "A1",
+          "text": "Let's do somewhere nearby with good vegan food that won't cost much.",
+          "preference": "_finalise_",
+          "reason": "cafe_finalise"
+        }
+      ],
+      "metrics": {
+        "avg_trust": 0.686,
+        "mean_valence": 0.261,
+        "mean_arousal": 0.381,
+        "conflict_rate": 0.0,
+        "cumulative_conflict_rate": 0.077,
+        "avg_stress": 0.113,
+        "stress_variance": 0.0011,
+        "refusal_count": 0,
+        "share_count": 0,
+        "pressure_count": 0,
+        "event_counts": {
+          "agree": 1
+        },
+        "stalled_ticks": 0,
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0,
+        "strategy_distribution": {
+          "cooperative": 3,
+          "neutral": 1
+        },
+        "cumulative_refusals": 1,
+        "cumulative_shares": 3,
+        "cumulative_stalled": 8,
+        "group_tension": 0.136,
+        "group_cohesion": 0.682,
+        "emotional_memory_pressure": 0.0,
+        "emotional_memory_positivity": 0.0
+      },
+      "interventions": [],
+      "group_state": {
+        "tension": 0.136,
+        "cohesion": 0.682,
+        "pressure": 0.0,
+        "stall_ticks": 0,
+        "success_streak": 1,
+        "active_blocker": "decision",
+        "bottleneck_item": null,
+        "bottleneck_holder": null,
+        "bottleneck_age": 0
+      },
+      "scenario": {
+        "id": "cafe_restaurant",
+        "name": "Choose Restaurant",
+        "description": "Agents must agree on a restaurant choice.",
+        "environment": "cafe",
+        "tasks": {
+          "dietary_constraint": true,
+          "budget_constraint": true,
+          "location_constraint": true,
+          "decision": true
+        },
+        "resolved_items": [
+          "decision"
+        ],
+        "knowledge_map": {
+          "A1": [
+            "italian"
+          ],
+          "A2": [
+            "vegan"
+          ],
+          "A3": [
+            "cheap"
+          ],
+          "A4": [
+            "fancy"
+          ]
+        },
+        "progress": 1.0,
+        "urgency_modifier": 0.0,
+        "outcome": "success",
+        "final_decision": null
+      },
+      "ended": true,
+      "end_reason": "success"
+    }
+  ],
+  "memory_summary": {
+    "total_impressions": 1,
+    "positive_count": 1,
+    "conflict_prone_count": 1,
+    "strongest_positive": null,
+    "strongest_conflict": null,
+    "all_impressions": [
+      {
+        "observer": "A1",
+        "observer_personality": "Leader",
+        "target": "A4",
+        "patterns": {
+          "conflict_prone": 0.267,
+          "positive": 0.333,
+          "volatile": true
+        },
+        "formed_at_tick": 12,
+        "interaction_count": 3,
+        "evidence": [
+          {
+            "tick": 10,
+            "kind": "share_info",
+            "text": "Just flagging, distance is actually a factor here; it shouldn't be a trek.",
+            "item": "location_constraint"
+          }
+        ],
+        "effect": "A1 became more open to A4's preferences during negotiation.",
+        "narrative": "A1 formed a mixed impression of A4 \u2014 both cooperative and challenging at different points across 3 interactions. The opposing signals cancelled out, so this had little net effect on trust or sharing behaviour."
+      }
+    ],
+    "no_impression_reason": null
+  },
+  "emotion_summary": {
+    "emotion_inputs": 0,
+    "dominant_emotion": null,
+    "average_valence": null,
+    "average_arousal": null,
+    "strongest_input": null,
+    "stress_impact": "+0.00",
+    "trust_impact": "+0.00",
+    "ticks_applied": [],
+    "interpretation": "No user emotion input was applied during this run.",
+    "agent_emotional_memory": {
+      "avg_pressure": 0.0,
+      "avg_positivity": 0.0,
+      "peak_pressure": 0.0,
+      "peak_pressure_tick": 1,
+      "dominant_negative": null,
+      "dominant_positive": null,
+      "interpretation": "Agents carried low emotional pressure throughout the run (avg 0% of recent memories negative)."
+    }
+  },
+  "event_counts": {
+    "messages_exchanged": 13,
+    "clues_shared": 3,
+    "questions_asked": 3,
+    "agreements": 1,
+    "challenges": 1,
+    "blockers_resolved": 4,
+    "blockers_total": 4,
+    "interventions_used": 0
+  },
+  "metric_trajectory": {
+    "trust_start": 0.599,
+    "trust_end": 0.686,
+    "trust_delta": 0.087,
+    "stress_start": 0.02,
+    "stress_peak": 0.206,
+    "stress_peak_tick": 9,
+    "stress_end": 0.113
+  },
+  "blocker_timeline": [
+    {
+      "item": "dietary_constraint",
+      "start_tick": 1,
+      "end_tick": 1,
+      "duration": 1
+    },
+    {
+      "item": "budget_constraint",
+      "start_tick": 2,
+      "end_tick": 5,
+      "duration": 4
+    },
+    {
+      "item": "location_constraint",
+      "start_tick": 6,
+      "end_tick": 10,
+      "duration": 5
+    },
+    {
+      "item": "decision",
+      "start_tick": 11,
+      "end_tick": 12,
+      "duration": 2
+    }
+  ]
+}
