@@ -7,9 +7,22 @@ import math
 
 
 class EmotionalMemory:
-    # Stores emotional experiences and detects patterns in interactions. Each agent has one EmotionalMemory instance.
-    # Negativity Bias (Baumeister et al., 2001)
-    # Negative emotions are more memorable (negativity bias), extreme emotions are highly memorable
+    # Each agent has one EmotionalMemory instance. It acts as a combined short-term and
+    # long-term memory store, tracking who the agent has interacted with, how those
+    # interactions felt, and — crucially — what kind of person each partner seems to be.
+    # The memory system has two tiers:
+    #   - STM (short-term memory): a rolling deque of recent interactions, max 50 entries
+    #   - LTM (long-term memory): only the highest-importance memories survive here,
+    #     sorted by importance score, capped at 50 entries
+    # Importance is calculated separately for each memory (see _calculate_importance below).
+    # The emotional importance boosts below are grounded in psychological research:
+    #   - Negativity bias (Baumeister et al., 2001): negative events are processed more
+    #     thoroughly and remembered more strongly than equivalent positive ones
+    #   - Emotional arousal enhances memory consolidation (McGaugh, 2003): the amygdala
+    #     modulates hippocampal storage in proportion to emotional intensity
+    #   - Negative emotions are recalled with greater vividness and accuracy (Kensinger, 2007)
+    # This is why grief, fear, and anger have the highest boosts — they're the emotions
+    # most likely to produce durable behavioural change in a social agent.
     EMOTION_IMPORTANCE_BOOST = {
         # Very high impact emotions (life-changing, traumatic)
         'grief': 0.45,
@@ -110,16 +123,23 @@ class EmotionalMemory:
 
         return max(0.0, min(1.0, importance))
 
-    # With specific speaker returning list of memory dict with newest first.
+    # Returns recent interactions with a specific speaker, newest first.
+    # I store memories under the key "from" (not "speaker") because that's the field
+    # name used when agent.py writes events into the memory buffer via apply_events().
+    # Keeping these consistent was a bug fix — the original code searched for "speaker"
+    # and therefore always returned an empty list, which is why impressions never formed.
     def get_recent_interactions(self, speaker: str, limit: int = 10) -> List[Dict[str, Any]]:
-        interactions = [m for m in self.stm if m.get('speaker') == speaker]
+        interactions = [m for m in self.stm if m.get('from') == speaker]
         interactions.sort(key=lambda x: x.get('tick', 0), reverse=True)
         return interactions[:limit]
 
-    # Is this person becoming more or less [emotion] over time? If there is less than 3 interactions then we can't
-    # calculate as it's not enough. We calculate by splitting the emotion interactions list in half. Where the first
-    # half is the older interactions and the second half is the newer interaction. We calculate how many of a specific
-    # emotion shows up in the two split list. Then compare the values.
+    # Is this person becoming more or less [emotion] over time?
+    # I calculate emotional trend by splitting the interaction window in half and comparing
+    # the emotion rate in the older half vs the newer half. A positive trend means the
+    # target is showing that emotion *more* recently; negative means they've calmed down.
+    # The minimum of 3 interactions is a practical floor — two data points isn't enough
+    # to call a trend. The result is clamped to [-1, 1] and scaled by 2 so that a shift
+    # from 0% → 50% in one half maps to a trend of +1.0 (maximum detectable change).
     def get_emotional_trend(self, speaker: str, emotion: str, window: int = 20) -> float:
         interactions = self.get_recent_interactions(speaker, window)
         if len(interactions) < 3:
@@ -139,48 +159,84 @@ class EmotionalMemory:
     # Positive? Conflict-causing? Unpredictable?' It then stores these impressions so the agent knows who to trust,
     # who to avoid, and how to act around different people.
 
+    # Event-type signals used when NLP emotion data is absent (use_nlp=False).
+    # Each event kind contributes a positive or negative signal toward impression formation.
+    EVENT_SIGNAL: Dict[str, float] = {
+        "share_info":  1.0,   # cooperative, positive signal
+        "agree":       1.0,   # supportive, positive signal
+        "compliment":  0.8,   # warm, positive signal
+        "challenge":  -1.0,   # friction, negative signal
+        "refuse":     -0.8,   # blocking, negative signal
+        "complain":   -0.6,   # frustration, negative signal
+    }
+
     def update_impressions(self, current_tick: int) -> Dict[str, Any]:
+        """Build per-speaker impressions from STM using both event-type signals
+        (works without NLP) and emotion-analysis records (enriches when NLP is on).
+
+        Key fix: memories are stored under key ``"from"``, not ``"speaker"``.
+        The threshold has been lowered to 3 to support short café/office runs.
+        """
         new_impressions = {}
-        speakers = set(m.get('speaker') for m in self.stm if m.get('speaker'))
+        # FIX: memories use "from" not "speaker"
+        speakers = set(m.get('from') for m in self.stm if m.get('from'))
         for speaker in speakers:
             interactions = self.get_recent_interactions(speaker, 30)
-            if len(interactions) < 5:
+            if len(interactions) < 3:   # lowered from 5 — short runs need this
                 continue
 
-            emotion_counts = {}
-            for m in interactions:
-                emotion = m.get('primary_emotion', 'unknown')
-                emotion_counts[emotion] = emotion_counts.get(emotion, 0) + 1
-
             total = len(interactions)
-            impressions = {}
+            positive_score = 0.0
+            negative_score = 0.0
+            emotion_counts: Dict[str, int] = {}
 
-            # Anger pattern
-            anger_rate = emotion_counts.get('anger', 0) / total
-            if anger_rate > 0.3:
-                impressions['anger_prone'] = anger_rate
+            for m in interactions:
+                # ── Event-type signals (NLP-independent) ──────────────────
+                kind = m.get('kind', '')
+                sig = self.EVENT_SIGNAL.get(kind, 0.0)
+                if sig > 0:
+                    positive_score += sig
+                elif sig < 0:
+                    negative_score += abs(sig)
 
-            # Positivity pattern
-            positive_emotions = ['joy', 'gratitude', 'admiration', 'love']
-            positive_rate = sum(emotion_counts.get(e, 0) for e in positive_emotions) / total
-            if positive_rate > 0.4:
-                impressions['positive'] = positive_rate
+                # ── Emotion signals (enriches when NLP is active) ──────────
+                emotion = m.get('primary_emotion', '')
+                if emotion and emotion != 'neutral':
+                    emotion_counts[emotion] = emotion_counts.get(emotion, 0) + 1
+                    positive_nlu = ['joy', 'gratitude', 'admiration', 'love', 'approval']
+                    negative_nlu = ['anger', 'disgust', 'annoyance', 'fear', 'disappointment']
+                    if emotion in positive_nlu:
+                        positive_score += 1.5
+                    elif emotion in negative_nlu:
+                        negative_score += 1.5
 
-            # Conflict pattern
-            negative_emotions = ['anger', 'disgust', 'annoyance', 'fear']
-            negative_rate = sum(emotion_counts.get(e, 0) for e in negative_emotions) / total
-            if negative_rate > 0.3:
-                impressions['conflict_prone'] = negative_rate
+            pos_rate = positive_score / total
+            neg_rate = negative_score / total
 
-            # Emotional volatility (mix of positive and negative)
-            if positive_rate > 0.2 and negative_rate > 0.2:
+            impressions: Dict[str, Any] = {}
+
+            # Conflict / negativity pattern
+            if neg_rate > 0.25:
+                impressions['conflict_prone'] = round(neg_rate, 3)
+
+            # Positivity / cooperative pattern
+            if pos_rate > 0.30:
+                impressions['positive'] = round(pos_rate, 3)
+
+            # Anger-specific (NLP enriched)
+            anger_count = emotion_counts.get('anger', 0)
+            if anger_count / total > 0.25:
+                impressions['anger_prone'] = round(anger_count / total, 3)
+
+            # Emotional volatility (mix of strong positive and negative)
+            if pos_rate > 0.20 and neg_rate > 0.20:
                 impressions['volatile'] = True
 
             if impressions:
                 self.impressions[speaker] = {
                     'formed_at': current_tick,
                     'patterns': impressions,
-                    'interaction_count': total
+                    'interaction_count': total,
                 }
                 new_impressions[speaker] = self.impressions[speaker]
 
@@ -191,9 +247,13 @@ class EmotionalMemory:
     def get_impression(self, speaker: str) -> Optional[Dict[str, Any]]:
         return self.impressions.get(speaker)
 
-    # When someone says something, this function searches through the agent's memory for similar past conversations
-    # - ones with the same emotion or that mentioned the same topics. It then brings back the most relevant memories so
-    # the agent can learn from past experiences.
+    # When an agent encounters new dialogue, this function searches their memory for similar
+    # past conversations — matching on the same emotion label or overlapping topic keywords.
+    # The idea is loosely based on cue-dependent retrieval (Tulving & Thomson, 1973): the
+    # emotion present in a new situation acts as a retrieval cue that surfaces memories
+    # formed in similar emotional contexts. In practice this means an agent who previously
+    # had a tense exchange about the "budget" item will surface that memory when a new
+    # budget conversation starts — which can subtly influence how cautiously they respond.
     def recall_similar(self, current_text: str, current_emotion: str, limit: int = 5) -> List[Dict[str, Any]]:
 
         # Simple keyword extraction from current text

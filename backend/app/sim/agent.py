@@ -24,6 +24,7 @@ class AgentState(TypedDict):
     in_conversation_with: Optional[str]
     last_thought: Optional[str]
 
+import logging
 import random
 import mesa
 
@@ -32,6 +33,8 @@ from app.sim.emotions_analyser import EmotionAnalyser
 from app.sim.memory import EmotionalMemory
 from app.sim.scenario_logic.base_logic import get_env_rules, get_env_dialogue, ENVIRONMENT_DIALOGUE
 from app.sim.dialogue_banks import pick_line, get_tone
+
+logger = logging.getLogger(__name__)
 
 
 def _lbl(item: str) -> str:
@@ -50,7 +53,7 @@ def clamp(x: float, lo: float, hi: float) -> float:
 TRUST_DELTA_BASE = {
     "say": +0.01,
     "help": +0.15,
-    "compliment": +0.10,
+    "compliment": +0.16,
     "ignore": -0.09,
     "insult": -0.18,
     "ask_info": +0.02,
@@ -76,7 +79,7 @@ TRUST_DELTA_REASON = {
     "overthinker_hesitate": -0.03,
     "micro_drama_response": -0.04,
     "user_reveal_info": +0.10,
-    "user_nudge_strategy": +0.02,
+    "user_nudge_strategy": +0.06,
     "user_boost_urgency": -0.01,
     "user_inject_tension": -0.06,
     "user_force_meeting": +0.03,
@@ -85,7 +88,7 @@ TRUST_DELTA_REASON = {
 VALENCE_DELTA = {
     "say": +0.01,
     "help": +0.18,
-    "compliment": +0.12,
+    "compliment": +0.18,
     "ignore": -0.10,
     "insult": -0.22,
     "ask_info": 0.0,
@@ -94,6 +97,55 @@ VALENCE_DELTA = {
     "agree": +0.06,
     "challenge": -0.11,
     "suggest": +0.04,
+}
+
+# ── Behavioural tuning constants ─────────────────────────────────────────────
+# Named here so they are easy to find, adjust, and explain during review.
+
+# Initial agent state noise — gives each run slight natural variation.
+INITIAL_VALENCE_RANGE: tuple = (-0.05, 0.08)
+INITIAL_STRESS_RANGE: tuple = (0.05, 0.18)
+
+# Probability that a completed agent emits a short wrap-up line each tick.
+POST_COMPLETION_WRAPUP_CHANCE: float = 0.20
+
+# Ticks of silence before an ongoing conversation is abandoned.
+# The bottleneck holder gets extra patience because they are the critical path.
+CONVERSATION_TIMEOUT_DEFAULT: int = 6
+CONVERSATION_TIMEOUT_BOTTLENECK: int = 10
+
+# Emotional-trend signal strength required to override the candidate strategy
+# (e.g. rising anger from the most-interacted partner → switch to defensive).
+EMOTIONAL_TREND_THRESHOLD: float = 0.35
+
+# Probability that a strategy change actually commits (dampens rapid oscillation).
+STRATEGY_SWITCH_PROBABILITY: float = 0.70
+
+# Importance score at or above which a short-term memory entry is also stored
+# in long-term memory (cued for later retrieval).
+LTM_IMPORTANCE_THRESHOLD: float = 0.48
+
+# Trust thresholds that promote/demote a relationship to ally or rival.
+TRUST_ALLY_THRESHOLD: float = 0.83
+TRUST_RIVAL_THRESHOLD: float = 0.24
+
+# Number of ticks a bottleneck holder must be stalled before observers start
+# losing trust in them (simulates rising frustration over time).
+BOTTLENECK_AGE_TRUST_PENALTY_TICKS: int = 6
+
+# Minimum number of recurring negative-emotion memories required before
+# the pattern amplification stress bonus is applied.
+MEMORY_RECURRENCE_MIN: int = 2
+
+# Post-completion wrap-up dialogue pools per personality type.
+# Moved to module level so they are easy to extend without editing method logic.
+WRAPUP_POOLS: dict = {
+    "Leader":      ["Good. That's everything.", "All done. Nice work.", "Completed. Good work."],
+    "Decisive":    ["Done. That's it.", "Finished. Move on.", "All set. Next."],
+    "Easygoing":   ["Nice, we got there.", "Good, all sorted.", "That worked out well."],
+    "Skeptical":   ["Well. We got there.", "Done. That should do it.", "Alright. Looks right."],
+    "Overthinker": ["I think that's everything.", "Okay, I'm pretty sure we're done.", "Alright, I think we got there."],
+    "Creative":    ["That came together nicely.", "Good, we got it.", "Done. That turned out well."],
 }
 
 STRATEGY_PROFILES: Dict[str, Dict[str, float]] = {
@@ -168,10 +220,10 @@ class SimAgent(mesa.Agent):
         self.C = traits.get("C", 0.5)
         self.O = traits.get("O", 0.5)
 
-        self.valence = random.uniform(-0.05, 0.08)
+        self.valence = random.uniform(*INITIAL_VALENCE_RANGE)
         self.arousal = 0.3
         self.energy = 100
-        self.stress = random.uniform(0.05, 0.18)
+        self.stress = random.uniform(*INITIAL_STRESS_RANGE)
         self.long_goal = long_goal
         self.goal_progress = 0.0
 
@@ -263,8 +315,45 @@ class SimAgent(mesa.Agent):
         else:
             candidate = "avoidant"
 
+        # ── Emotional-trend override ──────────────────────────────────────────
+        # If our memory shows a clear emotional pattern with our most-interacted
+        # partner, let it nudge the candidate strategy:
+        #   • rising anger/disapproval from them → push toward defensive
+        #   • rising positive emotions from them  → relax toward cooperative
+        if hasattr(self, "memory") and self.trust:
+            try:
+                most_interacted = max(
+                    self.trust.keys(),
+                    key=lambda k: len(self.memory.get_recent_interactions(k, 20)),
+                )
+                anger_trend    = self.memory.get_emotional_trend(most_interacted, "anger",       window=12)
+                disapproval_t  = self.memory.get_emotional_trend(most_interacted, "disapproval", window=12)
+                joy_trend      = self.memory.get_emotional_trend(most_interacted, "joy",         window=12)
+                approval_t     = self.memory.get_emotional_trend(most_interacted, "approval",    window=12)
+                neg_trend = max(anger_trend, disapproval_t)
+                pos_trend = max(joy_trend, approval_t)
+                if neg_trend > EMOTIONAL_TREND_THRESHOLD and candidate not in ("defensive", "confrontational"):
+                    candidate = "defensive"
+                    self.last_thought = (
+                        f"Emotional pattern from {most_interacted} turning hostile "
+                        f"(trend:{neg_trend:.2f}) → defensive"
+                    )
+                elif pos_trend > EMOTIONAL_TREND_THRESHOLD and candidate in ("avoidant", "neutral") and self.stress < 0.45:
+                    candidate = "cooperative"
+                    self.last_thought = (
+                        f"Warm pattern from {most_interacted} (trend:{pos_trend:.2f}) "
+                        f"→ cooperative"
+                    )
+            except Exception as exc:
+                logger.warning(
+                    "Agent %s: emotional trend calculation failed — skipping trend override: %s",
+                    getattr(self, "public_id", "unknown"),
+                    exc,
+                )
+
         if candidate != self.strategy:
-            if random.random() < 0.70:
+            # Don't commit every tick — dampens rapid oscillation between strategies.
+            if random.random() < STRATEGY_SWITCH_PROBABILITY:
                 return
             self.strategy = candidate
             self.last_thought = (
@@ -292,6 +381,20 @@ class SimAgent(mesa.Agent):
         self.model._pending_events.append(event)
 
     def decide_event(self, others: List["SimAgent"]) -> Optional[Dict[str, Any]]:
+        """Choose one social event to emit this tick, or return None.
+
+        Priority stack (highest → lowest):
+        1. Forced-meeting exclusion  — agents outside the forced pair are silenced.
+        2. Post-completion wrap-up   — scenario is done; only light chatter allowed.
+        3. Conversation timeout      — stale conversation is ended before anything new.
+        4. Office pending-confirm    — clears a stuck awaiting_reply_from state.
+        5. Awaiting-reply handling   — respond to the last message received.
+        6. Ongoing conversation      — continue an active multi-turn exchange.
+        7. Forced-pair topic follow-up — push a meeting toward its focus item.
+        8. Availability check        — yield if another agent is mid-conversation.
+        9. Scenario logic            — delegate to scenario-specific choose_action().
+        10. Scenario fallback        — last-resort fallback from scenario logic.
+        """
         env = self.model.environment
         urgency = getattr(env, "urgency_modifier", 1.0)
         tick = getattr(self.model, "tick", 0)
@@ -306,6 +409,7 @@ class SimAgent(mesa.Agent):
 
         logic = getattr(self.model, "behaviour", None)
 
+        # ── 1. Forced-meeting exclusion ───────────────────────────────────────
         if forced_agents and tick <= forced_until and self.public_id not in forced_agents:
             return None
 
@@ -326,26 +430,19 @@ class SimAgent(mesa.Agent):
         else:
             forced_partner = None
 
+        # ── 2. Post-completion wrap-up ────────────────────────────────────────
         if self.model.scenario.progress_ratio() >= 1.0:
             if logic and hasattr(logic, "post_completion_action"):
                 action = logic.post_completion_action(self, others)
                 if action is not None:
                     return action
 
-            if random.random() < 0.20:
+            if random.random() < POST_COMPLETION_WRAPUP_CHANCE:
                 available = [ag for ag in self.model.agents if ag != self]
                 if available:
                     tgt = random.choice(available)
                     ptype = getattr(self, "personality_type", "Easygoing")
-                    wrapup_pools = {
-                        "Leader":      ["Good. That's everything.", "All done. Nice work.", "Completed. Good work."],
-                        "Decisive":    ["Done. That's it.", "Finished. Move on.", "All set. Next."],
-                        "Easygoing":   ["Nice, we got there.", "Good, all sorted.", "That worked out well."],
-                        "Skeptical":   ["Well. We got there.", "Done. That should do it.", "Alright. Looks right."],
-                        "Overthinker": ["I think that's everything.", "Okay, I'm pretty sure we're done.", "Alright, I think we got there."],
-                        "Creative":    ["That came together nicely.", "Good, we got it.", "Done. That turned out well."],
-                    }
-                    txt = random.choice(wrapup_pools.get(ptype, wrapup_pools["Easygoing"]))
+                    txt = random.choice(WRAPUP_POOLS.get(ptype, WRAPUP_POOLS["Easygoing"]))
                     return {
                         "type": "say",
                         "actor": self.public_id,
@@ -355,15 +452,18 @@ class SimAgent(mesa.Agent):
                     }
             return None
 
-        timeout = 6
+        # ── 3. Conversation timeout ───────────────────────────────────────────
+        timeout = CONVERSATION_TIMEOUT_DEFAULT
         if self.current_conversation_with:
             bottleneck = getattr(self.model, "bottleneck_holder", None)
             if bottleneck and self.current_conversation_with == bottleneck:
-                timeout = 10
+                # Bottleneck holder is the critical path — give them extra time to reply.
+                timeout = CONVERSATION_TIMEOUT_BOTTLENECK
         if self.current_conversation_with and tick - self.last_reply_tick > timeout:
             self._end_conversation()
             return None
 
+        # ── 4. Office pending-confirm clear ──────────────────────────────────
         if (
             self.awaiting_reply_from
             and logic
@@ -377,6 +477,7 @@ class SimAgent(mesa.Agent):
                 self.awaiting_reply_from = None
                 self.current_conversation_with = None
 
+        # ── 5. Awaiting-reply handling ────────────────────────────────────────
         if self.awaiting_reply_from:
             reply_prob = profile["reply_chance_mult"] * 0.4
             if logic and getattr(logic, "scenario_type", "") == "office":
@@ -401,6 +502,7 @@ class SimAgent(mesa.Agent):
                 self.awaiting_reply_from = None
                 return None
 
+        # ── 6. Ongoing conversation ───────────────────────────────────────────
         if self.current_conversation_with:
             target = next(
                 (a for a in others if a.public_id == self.current_conversation_with),
@@ -412,6 +514,7 @@ class SimAgent(mesa.Agent):
                 return self._continue_conversation(target)
             self._end_conversation()
 
+        # ── 7. Forced-pair topic follow-up ────────────────────────────────────
         if forced_pair_active and forced_partner is not None:
             focus_item = (
                 self._active_forced_topic()
@@ -432,17 +535,22 @@ class SimAgent(mesa.Agent):
                 if event is not None:
                     return event
 
+        # ── 8. Availability check ─────────────────────────────────────────────
+        # Yield if any other agent is currently mid-conversation with someone else;
+        # prevents simultaneous overlapping dialogues that would feel incoherent.
         if any(
             a.current_conversation_with and a.current_conversation_with != self.public_id
             for a in others if a != self
         ):
             return None
 
+        # ── 9. Scenario logic ─────────────────────────────────────────────────
         if logic:
             result = logic.choose_action(self, others)
             if result is not None:
                 return result
 
+        # ── 10. Scenario fallback ─────────────────────────────────────────────
         if logic and hasattr(logic, "fallback_action"):
             result = logic.fallback_action(self, others)
             if result is not None:
@@ -732,6 +840,47 @@ class SimAgent(mesa.Agent):
             additive += 0.18
         if self.public_id == getattr(self.model, "bottleneck_holder", None):
             additive += 0.10
+
+        # ── Emotional impression modifier ─────────────────────────────────────
+        # Consult accumulated emotional memory about the target: if we've built
+        # up a picture of them as hostile/conflict-prone, we're more reluctant
+        # to share; if they've been cooperative, we're more open.
+        if hasattr(self, "memory") and self.memory:
+            try:
+                self.memory.update_impressions(getattr(self.model, "tick", 0))
+                target_imp = self.memory.get_impression(target.public_id)
+                if target_imp:
+                    patterns = target_imp.get("patterns", {})
+                    if "conflict_prone" in patterns:
+                        # Stronger penalty the worse the conflict rate
+                        cp = min(patterns["conflict_prone"], 1.0)
+                        additive -= 0.10 + cp * 0.08
+                    if "positive" in patterns:
+                        pp = min(patterns["positive"], 1.0)
+                        additive += 0.07 + pp * 0.05
+                    if "volatile" in patterns:
+                        additive -= 0.04   # unpredictable → slight caution
+                    if "anger_prone" in patterns:
+                        additive -= 0.08   # explicit anger history → defensiveness
+                # Positive recall: remembered successful shares of this item
+                # boost confidence to give again (cue-dependent retrieval)
+                if item:
+                    similar = self.memory.recall_similar(item, "approval", limit=4)
+                    positive_recalls = sum(
+                        1 for m in similar
+                        if m.get("from") == target.public_id
+                        and m.get("kind") in {"share_info", "agree"}
+                    )
+                    if positive_recalls >= 1:
+                        additive += min(positive_recalls * 0.04, 0.10)
+            except Exception as exc:
+                logger.warning(
+                    "Agent %s: emotional impression lookup for target %s failed — "
+                    "sharing decision will proceed without memory modifier: %s",
+                    getattr(self, "public_id", "unknown"),
+                    getattr(target, "public_id", "unknown"),
+                    exc,
+                )
 
         final_prob = additive * strat_mult * cooperation * env_coop
         final_prob = clamp(final_prob, 0.10, 0.94)
@@ -1049,23 +1198,79 @@ class SimAgent(mesa.Agent):
                 f"We're stuck on {spoken}. Let's sort that first.",
             ])
         elif scenario_type == "cafe":
-            text = self._pick_fresh([
+            # Blocker-specific coordination phrases so dialogue matches the active topic.
+            # "item" is intentionally NOT set on these pure-coordination say events —
+            # setting it would cause the frontend to render "X is now resolved" even
+            # when the event only coordinates (no resolving content was shared).
+            _blocker_coord_pools = {
+                "dietary_constraint": [
+                    "We still need to nail down the food requirements.",
+                    "The dietary side hasn't been settled yet — let's get that clear.",
+                    "Food requirements are still open. Let's sort that out.",
+                    "We can't pick a place without knowing what people can actually eat.",
+                    "The dietary part is still the gap. Who can fill it?",
+                    "We're missing the food requirement piece — let's get it on the table.",
+                    "Before anything else, the dietary needs haven't been confirmed.",
+                    "What people can eat still isn't settled — that has to come first.",
+                    "Dietary requirements are still floating. Let's pin them down.",
+                    "We need the food constraint sorted before we can move on.",
+                    "The eating side of this is still open — can we close it now?",
+                    "Until we know the dietary requirements, we can't narrow the options down.",
+                ],
+                "budget_constraint": [
+                    "We still don't have a number on cost. What are we working with?",
+                    "Budget hasn't been confirmed yet — that's still the gap.",
+                    "The spend limit is still open. We need that before we can commit.",
+                    "We can't pick somewhere without knowing the price ceiling.",
+                    "Cost side is still unresolved. What's the actual limit?",
+                    "We need the budget figure before we rule anything in or out.",
+                    "How much we can spend is still unclear — let's settle that.",
+                    "Without a budget number, we're just guessing at options.",
+                    "The money side hasn't been confirmed. Let's get that clear now.",
+                    "Price ceiling is still missing from this conversation.",
+                    "We've been going back and forth without a firm spend figure.",
+                    "Until the budget is on the table, we can't make a real call.",
+                ],
+                "location_constraint": [
+                    "Distance hasn't been settled yet — how far are we willing to go?",
+                    "The location side is still open. Close or flexible?",
+                    "We still don't know how far is too far. Let's sort that.",
+                    "Proximity hasn't been confirmed. Is walking distance the limit?",
+                    "Location constraint is still unclear — we need that to shortlist anything.",
+                    "How close it needs to be is still an open question.",
+                    "Travel distance hasn't been agreed yet. That's still the gap.",
+                    "We can't shortlist places without knowing the distance limit.",
+                    "The how-far question is still unanswered. Let's close it.",
+                    "Location requirements are still floating. Near or flexible?",
+                    "We haven't landed on a travel limit yet — that matters for the choice.",
+                    "Until we know what counts as too far, we can't narrow this down.",
+                ],
+            }
+            _default_coord = [
                 f"We still need the {spoken} part. Let's sort that out.",
-                f"The {spoken} bit is still open. Let's settle it.",
-                f"We haven't closed {spoken} yet. Let's do that.",
-            ])
+                f"The {spoken} side hasn't been settled. Let's get it on the table.",
+                f"We're missing the {spoken} piece — can we close that now?",
+                f"{spoken.title()} is still the open question here.",
+                f"We haven't confirmed {spoken} yet — that's what's holding us back.",
+                f"The {spoken} gap is still there. Who can fill it?",
+            ]
+            _coord_pool = _blocker_coord_pools.get(focus_item, _default_coord)
+            text = self._pick_fresh(_coord_pool)
         else:
             text = self._pick_fresh([
                 f"We still need {spoken}. Let's close it between us.",
                 f"{spoken.title()} is still open. Let's settle it.",
                 f"We haven't closed {spoken} yet. Let's fix that first.",
             ])
+        # NOTE: "item" is intentionally omitted from pure coordination "say" events.
+        # Adding item=focus_item here causes the frontend to render "X is now resolved"
+        # whenever tasks[item] flips True in the same tick — even though this say event
+        # only coordinates rather than actually sharing resolving content.
         return {
             "type": "say",
             "actor": self.public_id,
             "target": target.public_id,
             "text": text,
-            "item": focus_item,
             "reason": reason,
         }
 
@@ -1368,7 +1573,7 @@ class SimAgent(mesa.Agent):
                         tick_now = getattr(self.model, "tick", 0)
                         self.help_expiry_tick = tick_now + 2
                 elif etype == "compliment":
-                    self.stress = clamp(self.stress - 0.012 / stress_sens, 0.0, 1.0)
+                    self.stress = clamp(self.stress - 0.022 / stress_sens, 0.0, 1.0)
                 elif etype in ("share_info", "agree"):
                     self.stress = clamp(self.stress - 0.008 / stress_sens, 0.0, 1.0)
 
@@ -1464,7 +1669,7 @@ class SimAgent(mesa.Agent):
                     "importance": clamp(abs(VALENCE_DELTA.get(etype, 0.0)) + abs(dt), 0.0, 1.0),
                 }
                 self.stm.append(mem)
-                if mem["importance"] >= 0.48:
+                if mem["importance"] >= LTM_IMPORTANCE_THRESHOLD:
                     self.ltm.append(mem)
 
             if actor_id == self.public_id:
@@ -1590,7 +1795,7 @@ class SimAgent(mesa.Agent):
 
                 if (
                     self.public_id == getattr(self.model, "bottleneck_holder", None)
-                    and getattr(self.model, "bottleneck_age", 0) >= 6
+                    and getattr(self.model, "bottleneck_age", 0) >= BOTTLENECK_AGE_TRUST_PENALTY_TICKS
                 ):
                     for other_ag in list(self.model.agents):
                         if other_ag.public_id != self.public_id:
@@ -1693,6 +1898,41 @@ class SimAgent(mesa.Agent):
                 self.stress = clamp(self.stress - 0.012 * score, 0.0, 1.0)
                 self.valence = clamp(self.valence + 0.05 * score, -1.0, 1.0)
 
+        # ── Recurring-pattern amplification ──────────────────────────────────
+        # Cue-dependent retrieval (Tulving & Thomson, 1973): encountering the
+        # same emotional signal repeatedly from the same person amplifies its
+        # effect.  If we've seen this negative/uncertain emotion from this
+        # speaker before, the unresolved pattern raises stress further.
+        if va.get("valence", 0.0) < -0.20 or primary_emotion in {
+            "nervousness", "fear", "confusion", "anger", "disappointment"
+        }:
+            try:
+                similar = self.memory.recall_similar(text, primary_emotion, limit=5)
+                recurring = [
+                    m for m in similar
+                    if m.get("from") == speaker
+                    and m.get("primary_emotion") == primary_emotion
+                ]
+                if len(recurring) >= MEMORY_RECURRENCE_MIN:
+                    # Escalate: each recurrence adds a small extra stress hit.
+                    # Capped at 4 recurrences to prevent runaway stress spirals.
+                    extra = 0.018 * min(len(recurring), 4)
+                    self.stress        = clamp(self.stress        + extra,       0.0, 1.0)
+                    self.emotional_stress = clamp(
+                        getattr(self, "emotional_stress", 0.0) + extra * 0.6, 0.0, 1.0
+                    )
+                    # And shorten trust slightly — pattern is becoming a concern
+                    if speaker in self.trust:
+                        self.trust[speaker] = clamp(self.trust[speaker] - 0.015 * len(recurring), 0.0, 1.0)
+            except Exception as exc:
+                logger.warning(
+                    "Agent %s: recurring-pattern memory recall failed — "
+                    "pattern amplification skipped for speaker %s: %s",
+                    getattr(self, "public_id", "unknown"),
+                    speaker,
+                    exc,
+                )
+
         tone = "more tense" if self.stress > 0.2 else "okay"
         self.last_thought = f"{speaker} came across as {primary_emotion}; I feel {tone}."
 
@@ -1712,18 +1952,21 @@ class SimAgent(mesa.Agent):
             ),
         }
         self.stm.append(mem)
-        if mem["importance"] >= 0.48:
+        if mem["importance"] >= LTM_IMPORTANCE_THRESHOLD:
             self.ltm.append(mem)
 
         return emotions
 
     def update_relationships(self, tick: int) -> None:
+        # Classify relationships based on trust thresholds.
+        # These align with TRUST_CAPS in game_config so the upper bound is reachable
+        # in easy scenarios but represents genuinely strong cohesion.
         for oid, tv in list(self.trust.items()):
-            if tv > 0.83:
+            if tv > TRUST_ALLY_THRESHOLD:
                 self.relationship_status[oid] = "ally"
                 if oid not in self.allies:
                     self.allies.append(oid)
-            elif tv < 0.24:
+            elif tv < TRUST_RIVAL_THRESHOLD:
                 self.relationship_status[oid] = "rival"
                 if oid not in self.rivals:
                     self.rivals.append(oid)

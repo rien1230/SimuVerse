@@ -31,17 +31,17 @@ def normalize_events(
 
     # Keep this order stable: trim duplicates first, then remove contradictions,
     # then polish the final text that actually reaches the UI/replay log.
-    initialised = model._dedupe_same_actor_events(collected_events)
-    initialised = filter_events(model, initialised)
-    initialised = model._dedupe_by_phrase_and_text(
-        initialised,
+    normalized = model._dedupe_same_actor_events(collected_events)
+    normalized = filter_events(model, normalized)
+    normalized = model._dedupe_by_phrase_and_text(
+        normalized,
         existing_events=existing_events,
     )
-    for ev in initialised:
+    for ev in normalized:
         raw = ev.get("text")
         if isinstance(raw, str) and raw:
             ev["text"] = _polish_dialogue(raw)
-    return initialised
+    return normalized
 
 
 def filter_events(

@@ -66,19 +66,21 @@ def apply_tick_stress(agent: "SimAgent", env_rules: dict, model: "SimModel") -> 
     if logic and hasattr(logic, "apply_passive_tick_effects"):
         logic.apply_passive_tick_effects(agent, tick)
 
-    # Bottleneck pressure
+    # Bottleneck pressure — scaled by environment stress multiplier so
+    # escape-room runs feel urgently stuck while cafe runs stay relaxed.
     bottleneck_holder = getattr(model, "bottleneck_holder", None)
     bottleneck_age = getattr(model, "bottleneck_age", 0)
+    sm = env_rules.get("stress_multiplier", 1.0)
 
     if model.scenario.progress_ratio() < 1.0 and bottleneck_age >= 2:
-        agent.stress = clamp(agent.stress + 0.006, 0.0, 1.0)
+        agent.stress = clamp(agent.stress + 0.006 * sm, 0.0, 1.0)
 
     if (
         model.scenario.progress_ratio() < 1.0
         and agent.public_id == bottleneck_holder
         and bottleneck_age >= 2
     ):
-        agent.stress = clamp(agent.stress + 0.015, 0.0, 1.0)
+        agent.stress = clamp(agent.stress + 0.015 * sm, 0.0, 1.0)
 
     if bottleneck_age >= 2 and model.scenario.progress_ratio() < 1.0:
         ptype_bn = getattr(agent, "personality_type", "Easygoing")

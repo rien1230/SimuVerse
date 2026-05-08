@@ -33,8 +33,8 @@ def reveal_info(model, agent_id: str, item: str, complete_task: bool = False) ->
     else:
         message = f"{agent_id} now knows '{item}'."
 
-    agent.valence = min(1.0, agent.valence + 0.10)
-    agent.stress = max(0.0, agent.stress - 0.05)
+    agent.valence = min(1.0, agent.valence + 0.14)
+    agent.stress = max(0.0, agent.stress - 0.10)
 
     target = None
     if not task_already_complete and not already_known:
@@ -100,6 +100,9 @@ def reveal_info(model, agent_id: str, item: str, complete_task: bool = False) ->
                     _set_intervention_focus(model, item, focus_until, quiet_ticks=2)
                     _prime_focus_agents([agent], item, focus_until)
                 if target is not None:
+                    # No "item" on this coordination say — it doesn't share resolving
+                    # content so adding item would cause the frontend to generate
+                    # "X is now resolved" if the task completes in the same tick.
                     _queue_event(
                         model,
                         {
@@ -107,7 +110,6 @@ def reveal_info(model, agent_id: str, item: str, complete_task: bool = False) ->
                             "actor": agent.public_id,
                             "target": target.public_id,
                             "text": _delayed_reveal_coordination_text(agent, item),
-                            "item": item,
                             "reason": "user_reveal_info",
                         },
                     )
@@ -308,10 +310,21 @@ def boost_urgency(model, amount: float) -> Dict[str, Any]:
     amount = max(0.0, min(1.0, amount))
 
     env = model.environment
-    current = getattr(env, "urgency_modifier", 1.0)
-    env.urgency_modifier = min(3.0, current + amount)
+    pressure_before = float(getattr(env, "urgency_modifier", 1.0))
+    env.urgency_modifier = min(3.0, pressure_before + amount)
+    pressure_after = float(env.urgency_modifier)
 
     model.progress_stall_ticks = max(0, model.progress_stall_ticks - 5)
+
+    # Direct stress bump so urgency is visible on agents immediately
+    for _agent in model.agents:
+        _agent.stress = min(1.0, _agent.stress + 0.08 * amount)
+
+    # Set a model-level urgency flag that scenario logics read to boost
+    # the probability of blocker owners sharing their information.
+    tick_now = getattr(model, "tick", 0)
+    model._urgency_share_boost = min(1.0, getattr(model, "_urgency_share_boost", 0.0) + 0.35 * amount)
+    model._urgency_share_boost_until = tick_now + 3
 
     speaker = _pick_leaderish_agent(model)
     focus_item = _current_blocker_item(model)
@@ -332,7 +345,6 @@ def boost_urgency(model, amount: float) -> Dict[str, Any]:
                 )
                 event_type = "ask_info"
             elif focus_item in getattr(speaker, "known_items", set()) and focus_item not in getattr(target, "known_items", set()) and _item_ready_for_immediate_surface(model, focus_item):
-                text = speaker._generate_share_text(focus_item, target.public_id)
                 text = _direct_intervention_share_text(speaker, focus_item, target.public_id)
                 event_type = "share_info"
             else:
@@ -348,21 +360,97 @@ def boost_urgency(model, amount: float) -> Dict[str, Any]:
             text = "Quick pace now — let's keep momentum up."
             event_type = "say"
 
+        # Only attach "item" to events that actually share resolving content
+        # (share_info / ask_info). Pure "say" coordination events must NOT carry
+        # item so the frontend does not misread them as "X is now resolved."
+        ev_dict: Dict[str, Any] = {
+            "type": event_type,
+            "actor": speaker.public_id,
+            "target": target.public_id,
+            "text": text,
+            "reason": "user_boost_urgency",
+        }
+        if event_type in ("share_info", "ask_info") and focus_item:
+            ev_dict["item"] = focus_item
+        _queue_event(model, ev_dict)
+
+    return {
+        "success": True,
+        "message": f"Urgency boosted by {amount:.2f}. Environment urgency now {env.urgency_modifier:.2f}.",
+        "pressure_before": round(pressure_before, 4),
+        "pressure_after":  round(pressure_after, 4),
+    }
+
+
+def ease_pressure(model, amount: float) -> Dict[str, Any]:
+    """
+    Lower group-level urgency without changing scenario order or completion rules.
+    Also queues a visible calming line around the current focus.
+
+    The floor is the scenario's initial urgency_modifier (café=0.0, office=0.25,
+    escape=0.80).  Easing cannot push displayed pressure below that baseline because
+    each scenario has an inherent tension level that is independent of user actions.
+    """
+    amount = max(0.0, min(1.0, amount))
+
+    env = model.environment
+    # Scenario baseline: the urgency_modifier value the environment started with.
+    base_modifier = float(env.config.get("urgency_modifier", 0.0))
+    pressure_before = float(getattr(env, "urgency_modifier", base_modifier))
+
+    if pressure_before <= base_modifier + 1e-6:
+        return {
+            "success": True,
+            "message": "Pressure is already at the scenario baseline.",
+            "pressure_before": round(pressure_before, 4),
+            "pressure_after":  round(pressure_before, 4),
+        }
+
+    env.urgency_modifier = max(base_modifier, pressure_before - amount)
+    pressure_after = float(env.urgency_modifier)
+
+    for _agent in model.agents:
+        _agent.stress = max(0.0, _agent.stress - 0.08 * amount)
+
+    tick_now = getattr(model, "tick", 0)
+    model._urgency_share_boost = max(0.0, getattr(model, "_urgency_share_boost", 0.0) - 0.35 * amount)
+    model._urgency_share_boost_until = tick_now + 3
+
+    speaker = _pick_leaderish_agent(model)
+    focus_item = _current_blocker_item(model)
+    target = _pick_focus_partner(model, speaker, focus_item) if speaker and focus_item else (
+        _pick_other_agent(model, speaker.public_id) if speaker else None
+    )
+
+    if speaker and target:
+        if focus_item:
+            _set_intervention_focus(model, focus_item, getattr(model, "tick", 0) + 2, quiet_ticks=2)
+            _prime_focus_agents([speaker, target], focus_item, getattr(model, "tick", 0) + 2)
+            spoken = _spoken_item(focus_item)
+            text = (
+                f"Take a breath — let's handle {spoken} carefully."
+                if amount >= 0.1
+                else f"Steady now — let's make sure {spoken} is right."
+            )
+        else:
+            text = "Take a breath — let's slow down and make sure this is right."
+
         _queue_event(
             model,
             {
-                "type": event_type,
+                "type": "say",
                 "actor": speaker.public_id,
                 "target": target.public_id,
                 "text": text,
-                "item": focus_item,
-                "reason": "user_boost_urgency",
+                "reason": "user_ease_pressure",
             },
         )
 
     return {
         "success": True,
-        "message": f"Urgency boosted by {amount:.2f}. Environment urgency now {env.urgency_modifier:.2f}.",
+        "message": f"Pressure eased by {amount:.2f}. Environment urgency now {env.urgency_modifier:.2f}.",
+        "pressure_before": round(pressure_before, 4),
+        "pressure_after": round(pressure_after, 4),
     }
 
 
@@ -373,10 +461,18 @@ def inject_tension(model, amount: float) -> Dict[str, Any]:
     """
     amount = max(0.0, min(1.0, amount))
     model.group_tension = min(1.0, model.group_tension + amount)
+    model._tension_impulse_floor = max(
+        float(getattr(model, "_tension_impulse_floor", 0.0) or 0.0),
+        float(model.group_tension),
+    )
+    model._tension_impulse_remaining = max(
+        int(getattr(model, "_tension_impulse_remaining", 0) or 0),
+        2,
+    )
 
     for agent in model.agents:
         agent.env_tension_modifier = model.group_tension
-        agent.stress = min(1.0, agent.stress + amount * 0.3)
+        agent.stress = min(1.0, agent.stress + amount * 0.5)
 
     actor = _pick_high_stress_agent(model)
     focus_item = _current_blocker_item(model)
@@ -389,14 +485,19 @@ def inject_tension(model, amount: float) -> Dict[str, Any]:
             _set_intervention_focus(model, focus_item, getattr(model, "tick", 0) + 2, quiet_ticks=2)
             _prime_focus_agents([actor, target], focus_item, getattr(model, "tick", 0) + 2)
             event_type, text = _scenario_tension_line(model, focus_item, amount)
-            event = {
+            event: Dict[str, Any] = {
                 "type": event_type,
                 "actor": actor.public_id,
                 "target": target.public_id,
                 "text": text,
-                "item": focus_item,
                 "reason": "user_inject_tension",
             }
+            # Only attach item to challenge events — not to "say" events.
+            # A tension "say" event doesn't share resolving content, so carrying
+            # item would cause the frontend to show "X is now resolved" if the
+            # task happens to complete in the same tick.
+            if event_type != "say" and focus_item:
+                event["item"] = focus_item
         elif amount >= 0.5:
             event = {
                 "type": "challenge",
@@ -648,6 +749,15 @@ def _direct_intervention_share_text(agent, item: str, target_id: str) -> str:
             f"Right — {spoken}: {info}",
         ]
     elif scenario_type == "cafe":
+        # For the decision item, build a concrete summary from the resolved constraints
+        # rather than falling back to the generic "important context" placeholder text.
+        if item == "decision" and "important context for the next step" in (info or ""):
+            try:
+                decision = agent.model.behaviour.build_final_decision(agent.model)
+                if decision:
+                    info = f"choose {decision}."
+            except Exception:
+                info = "choose a venue that fits the dietary need, budget, and is nearby."
         options = [
             f"Here's what I've got on {spoken}: {info}",
             f"Right, on {spoken}: {info}",
@@ -671,8 +781,16 @@ def _current_blocker_item(model, prefer_agents=None) -> Optional[str]:
     scenario = getattr(model, "scenario", None)
     tasks = getattr(scenario, "tasks", {}) or {}
     bottleneck = getattr(model, "bottleneck_item", None)
-    if bottleneck and bottleneck in tasks and not tasks.get(bottleneck, False) and bottleneck != "unlock":
-        return bottleneck
+    canonical = None
+    if hasattr(model, "_active_blocker_from_tasks"):
+        canonical = model._active_blocker_from_tasks(tasks)
+    if bottleneck and bottleneck != "unlock":
+        if canonical is not None and bottleneck == canonical and not bool(tasks.get(bottleneck, False)):
+            return bottleneck
+        if canonical is None and bottleneck in tasks and not tasks.get(bottleneck, False):
+            return bottleneck
+    if canonical is not None:
+        return canonical
     return _pick_blocked_item(model, prefer_agents=prefer_agents)
 
 
@@ -1063,6 +1181,10 @@ def _delayed_reveal_coordination_text(agent, item: str) -> str:
                 f"I've got {spoken} covered and ready to use.",
             ]
     else:
+        # Requirements has content-specific wording that names the actual deliverables
+        # rather than the generic "X piece ready / once Y lands" template.
+        if item == "requirements" and scenario_type == "office":
+            return "I've got the requirements ready: mobile access and offline mode support."
         if blocker_spoken:
             options = [
                 f"I've got the {spoken} piece ready. Once {blocker_spoken} lands, I'll slot it straight in.",

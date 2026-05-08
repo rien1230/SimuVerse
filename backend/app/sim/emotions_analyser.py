@@ -1,4 +1,18 @@
-"""Turns raw emotion signals into the smaller scores the sim works with."""
+"""Turns raw emotion signals into the smaller scores the sim works with.
+
+Public API for user-facing emotion input:
+  classify_user_emotion(text, tick=0) -> dict
+      Classifies a user-provided text string using GoEmotions (or keyword
+      fallback) and returns a fully-structured result ready for injection
+      into the simulation via SimModel.inject_user_emotion().
+
+I built this module in two layers. The inner layer (EmotionAnalyser) handles
+raw text classification and has three modes: rule_based (VADER + lexical cues,
+fully deterministic), ml (GoEmotions transformer), and hybrid. The outer layer
+(classify_user_emotion) is the public entry point used by the simulation and API —
+it always returns the same structured schema regardless of which backend is running,
+and degrades gracefully when the ML model isn't available.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +24,204 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from app.core.emotion_model import get_emotion_classifier
 
 logger = logging.getLogger(__name__)
+
+
+# ── Keyword-based fallback ────────────────────────────────────────────────────
+# I added a keyword fallback table because the GoEmotions transformer is a ~250 MB
+# download and won't always be available (offline environments, CI pipelines, etc.).
+# When the model can't be loaded, simple string matching is used as a last resort.
+# The confidence values are deliberately conservative (0.55–0.65) to reflect that
+# keyword matching is far less nuanced than transformer-based classification —
+# "I'm fine" and "I'm doing fine despite everything" both hit "calm", but only the
+# transformer knows they carry different emotional weight.
+# Used when the GoEmotions model is unavailable AND the rule-based analyser
+# returns only "neutral".  Each entry maps a keyword list → (emotion, confidence).
+
+_KEYWORD_FALLBACK: List[tuple] = [
+    (["anxious", "anxiety", "nervous", "scared", "frightened", "terrified"], "nervousness", 0.60),
+    (["angry", "furious", "rage", "outraged", "livid"],                       "anger",       0.65),
+    (["annoyed", "annoying", "frustrated", "irritated", "irritating"],        "annoyance",   0.60),
+    (["sad", "upset", "unhappy", "miserable", "down"],                        "sadness",     0.60),
+    (["disappointed", "let down", "letdown"],                                 "disappointment", 0.60),
+    (["happy", "joyful", "delighted", "thrilled"],                            "joy",         0.65),
+    (["excited", "exhilarated", "pumped"],                                    "excitement",  0.60),
+    (["grateful", "thankful", "appreciate"],                                   "gratitude",   0.65),
+    (["calm", "relaxed", "fine", "okay", "ok", "alright"],                    "relief",      0.55),
+    (["hopeful", "optimistic", "positive"],                                    "optimism",    0.58),
+    (["proud", "accomplished", "achieved"],                                    "pride",       0.58),
+    (["sorry", "regret", "regretful"],                                         "remorse",     0.60),
+    (["confused", "unsure", "uncertain"],                                      "confusion",   0.55),
+    (["surprised", "shocked", "stunned"],                                      "surprise",    0.58),
+]
+
+
+def _keyword_fallback(text: str) -> Optional[tuple]:
+    """Return (emotion, confidence) from keyword scan, or None."""
+    lower = text.lower()
+    for keywords, emotion, confidence in _KEYWORD_FALLBACK:
+        if any(kw in lower for kw in keywords):
+            return emotion, confidence
+    return None
+
+
+# ── Interpretation builder ────────────────────────────────────────────────────
+# I deliberately grouped the 28 GoEmotions labels into four functional categories
+# rather than giving every emotion its own unique simulation response. This keeps
+# the effects testable and avoids over-engineering — the distinction that matters
+# for group dynamics isn't whether the user feels "annoyance" vs "disapproval",
+# but whether the emotional signal is activating-negative, depleting-negative,
+# positive, or neutral. The four categories map directly to what the stress and
+# trust parameters in the simulation actually respond to:
+#   - neg_high  (anger/fear/nervousness): activating, increases group stress, erodes trust
+#   - neg_low   (sadness/disappointment): depleting, mild stress drag, no major trust hit
+#   - positive  (joy/gratitude/approval): reduces stress, small trust boost
+#   - neutral   : no change applied
+
+def _build_emotion_interpretation(emotion: str, valence: float, arousal: float, intensity: float) -> str:
+    """Generate a plain-English explanation of an emotion and its sim effect."""
+    valence_label = "positive" if valence > 0.2 else "negative" if valence < -0.2 else "neutral"
+    arousal_label = "high-arousal" if arousal > 0.5 else "low-arousal"
+
+    # Category-aware effect descriptions
+    negative_high = {"anger", "annoyance", "fear", "nervousness", "disgust", "disapproval"}
+    negative_low  = {"sadness", "disappointment", "remorse", "grief", "embarrassment"}
+    positive_any  = {"joy", "gratitude", "approval", "admiration", "optimism", "relief",
+                     "amusement", "excitement", "love", "pride"}
+
+    if emotion in negative_high:
+        effect = (
+            "increases group stress and makes agents more cautious or challenging, "
+            "with a slight reduction in trust if the signal is strong."
+        )
+    elif emotion in negative_low:
+        effect = (
+            "mildly reduces agent confidence and group energy, "
+            "slowing cooperation slightly without a major trust impact."
+        )
+    elif emotion in positive_any:
+        effect = (
+            "reduces group stress slightly, increases cooperation likelihood, "
+            "and provides a small trust boost across the team."
+        )
+    elif emotion == "neutral":
+        effect = "has minimal effect on the simulation."
+    else:
+        effect = f"has a {valence_label} / {arousal_label} effect on the simulation."
+
+    return (
+        f"{emotion.capitalize()} is mapped to {valence_label} valence ({valence:+.2f}) "
+        f"and {arousal_label} arousal ({arousal:.2f}), so it {effect}"
+    )
+
+
+# ── Public entry point ────────────────────────────────────────────────────────
+# I designed classify_user_emotion() as a standalone function (rather than just
+# a method on EmotionAnalyser) because the API endpoint and the simulation model
+# both need a single, clean entry point that always returns the same schema —
+# regardless of whether the ML model loaded or not.
+# The function handles three degradation levels in order of preference:
+#   1. GoEmotions transformer (best) — 28-label fine-grained classification
+#   2. VADER + lexical rule-based — fast and deterministic, good for testing
+#   3. Keyword fallback — last resort when ML confidence < 0.25
+# The low-confidence guard (< 0.25) is important because the transformer
+# sometimes spreads probability mass thinly across many labels, producing a
+# "winner" that isn't actually a confident prediction. Keyword matching is
+# a better signal in those edge cases than accepting a weak ML label.
+
+def classify_user_emotion(text: str, tick: int = 0) -> Dict[str, Any]:
+    """Classify user-provided emotional text into a structured result.
+
+    Uses the GoEmotions transformer when available; falls back to the
+    rule-based VADER + keyword classifier if the model cannot be loaded.
+    The returned dict matches the schema required by SimModel.inject_user_emotion().
+
+    Parameters
+    ----------
+    text : str
+        Free-text emotion input from the user.
+    tick : int
+        Simulation tick at which this emotion will be / was applied.
+
+    Returns
+    -------
+    dict with keys:
+        text, top_emotion, confidence, top_labels, fallback_used,
+        fallback_reason, tick_applied, valence, arousal, intensity,
+        interpretation
+    """
+    if not text or not text.strip():
+        return {
+            "text": text or "",
+            "top_emotion": "neutral",
+            "confidence": 0.0,
+            "top_labels": [{"label": "neutral", "score": 0.0}],
+            "fallback_used": True,
+            "fallback_reason": "Empty input — defaulting to neutral.",
+            "tick_applied": tick,
+            "valence": 0.0,
+            "arousal": 0.0,
+            "intensity": 0.0,
+            "interpretation": "No text provided; no emotional influence applied.",
+        }
+
+    classifier = get_emotion_classifier()
+    model_available = classifier is not None
+
+    if model_available:
+        analyser = EmotionAnalyser(mode="ml")
+        fallback_used = False
+        fallback_reason = None
+    else:
+        analyser = EmotionAnalyser(mode="rule_based")
+        fallback_used = True
+        fallback_reason = "GoEmotions model unavailable; keyword fallback used."
+
+    emotions = analyser.analyse(text)
+    top_sorted = sorted(emotions.items(), key=lambda x: x[1], reverse=True)
+
+    if not top_sorted:
+        top_sorted = [("neutral", 1.0)]
+
+    top_emotion, confidence = top_sorted[0]
+    top_3 = top_sorted[:3]
+
+    # Low-confidence guard: if best score < 0.25 and emotion is not neutral,
+    # check keyword fallback before accepting the weak prediction.
+    if confidence < 0.25 and top_emotion != "neutral":
+        kw = _keyword_fallback(text)
+        if kw:
+            kw_emotion, kw_conf = kw
+            top_emotion = kw_emotion
+            confidence  = kw_conf
+            top_3 = [(kw_emotion, kw_conf)] + [t for t in top_3 if t[0] != kw_emotion][:2]
+            if not fallback_used:
+                fallback_used = True
+                fallback_reason = (
+                    f"GoEmotions confidence was low ({confidence:.2f}); "
+                    "keyword matching used to confirm top emotion."
+                )
+        else:
+            # Accept neutral when nothing is confident
+            top_emotion = "neutral"
+            confidence  = 1.0
+            top_3 = [("neutral", 1.0)]
+
+    # Valence / arousal from the canonical map
+    v, a = EmotionAnalyser.VALENCE_AROUSAL_MAP.get(top_emotion, (0.0, 0.0))
+
+    return {
+        "text": text,
+        "top_emotion": top_emotion,
+        "confidence": round(float(confidence), 4),
+        "top_labels": [{"label": e, "score": round(float(s), 4)} for e, s in top_3],
+        "fallback_used": fallback_used,
+        "fallback_reason": fallback_reason,
+        "tick_applied": tick,
+        "valence": round(float(v), 3),
+        "arousal": round(float(a), 3),
+        "intensity": round(float(confidence), 3),   # intensity = classifier confidence
+        "interpretation": _build_emotion_interpretation(top_emotion, v, a, float(confidence)),
+    }
 
 
 class EmotionAnalyser:
@@ -119,6 +331,19 @@ class EmotionAnalyser:
         "neutral": 0.35,
     }
 
+    # I mapped each of the 28 GoEmotions labels to a coordinate in Russell's (1980)
+    # circumplex model of affect, which defines emotions along two independent axes:
+    #   - Valence: how pleasant (+1.0) or unpleasant (-1.0) the emotion feels
+    #   - Arousal: how activating (1.0 = high energy) or deactivating (0.0 = calm)
+    # This gives the simulation a way to translate any detected emotion into a
+    # quantifiable effect on agent behaviour, rather than treating labels as opaque
+    # categories. For example, anger is highly negative (-0.7) and highly activating
+    # (0.8), which the sim maps to increased stress and reduced trust. By contrast,
+    # gratitude is highly positive (+0.8) but low-arousal (0.3) — it improves
+    # cooperation without spiking energy levels. The coordinate values are based on
+    # published dimensional ratings for emotion words:
+    #   - Russell (1980) — original circumplex model
+    #   - Warriner, Kuperman & Brysbaert (2013) — large-scale valence/arousal norms
     VALENCE_AROUSAL_MAP = {
         "admiration": (0.7, 0.4),
         "amusement": (0.8, 0.5),
@@ -261,6 +486,16 @@ class EmotionAnalyser:
     # ------------------------------------------------------------------
     # Rule-based deterministic mode
     # ------------------------------------------------------------------
+    # I kept a rule-based mode as the default for simulation runs because
+    # reproducibility matters — seeded simulations should produce the same
+    # output every time, and transformer models can behave non-deterministically
+    # across library versions. The rule-based mode uses VADER (Hutto & Gilbert, 2014)
+    # for overall sentiment polarity and then overlays explicit lexical cues for
+    # specific emotion labels. The lexical cues are intentionally high-precision
+    # and low-recall: I'd rather miss a weak signal than wrongly fire an emotion
+    # that changes the simulation state. VADER's compound score handles the
+    # cases where no explicit keyword fires, mapping strong positive/negative
+    # polarity to joy/anger and milder polarity to approval/disapproval.
 
     def _rule_based_analysis(self, text: str) -> Dict[str, float]:
         scores = self.rule_analyzer.polarity_scores(text)

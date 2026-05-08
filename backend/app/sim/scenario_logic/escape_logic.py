@@ -2,792 +2,35 @@
 
 from __future__ import annotations
 
+import logging
 import random
 from collections import deque
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Set, Tuple
 
+logger = logging.getLogger(__name__)
+
 from app.sim.scenario_logic.base_logic import BaseLogic, get_env_modifiers
+from app.sim.game_config import PRESET_CHALLENGE_BIAS, PRESET_AGREE_BIAS
 
 if TYPE_CHECKING:
     from app.sim.agent import SimAgent
     from app.sim.model import SimModel
 
+from app.sim.scenario_logic.escape_support import (
+    _lbl, _spoken,
+    ESCAPE_CLUE_OWNER, ROLE_NAMES, ESCAPE_PROGRESS_TASKS, ESCAPE_PRIORITY,
+    _logic, _creativity, _patience, _confidence, _trust_trait,
+    SHARE_TEXTS, CONFIRM_TEXTS, DOUBT_TEXTS, RUSH_TEXTS,
+    REFUSAL_TEXTS, REFUSAL_REASONS, PROGRESS_TEXTS, URGENCY_PULSES,
+    RECHECK_TEXTS, INTERRUPT_TEXTS, WRONG_ASSUMPTION_TEXTS,
+    WRAPUP_FAST, WRAPUP_MESSY, WRAPUP_INTENSE, WRAPUP_NEUTRAL,
+    UNLOCK_ATTEMPT_TEXTS, DOOR_OPEN_TEXTS,
+    _pick, _ESCAPE_CLUE_ORDER, _CONTEXT_BRIDGES, _context_bridge_prefix, _voice,
+)
+from app.sim.scenario_logic.escape_actions import (
+    _pressure_personality_ids, _stress_profile, _apply_escape_tick_stress,
+)
 
-# ──────────────────────────────────────────────────────────────────────────────
-# labels
-# ──────────────────────────────────────────────────────────────────────────────
-
-def _lbl(item: str) -> str:
-    """Formal display label — use for logging/UI only."""
-    label_map = {
-        "map": "Room Map",
-        "lock": "Lock Pattern",
-        "key": "Key Location",
-        "door": "Door Code",
-        "unlock": "Final Unlock",
-        "digit_1": "Door Digit 1",
-        "digit_2": "Door Digit 2",
-        "digit_3": "Door Digit 3",
-        "order": "Digit Order",
-    }
-    return label_map.get(item, item.replace("_", " ").title())
-
-
-def _spoken(item: str) -> str:
-    """Natural spoken alias — use in all dialogue generation."""
-    spoken_map = {
-        "map": "the map",
-        "lock": "the pattern",
-        "key": "the key",
-        "door": "the code",
-        "unlock": "the door",
-        "digit_1": "the first digit",
-        "digit_2": "the second digit",
-        "digit_3": "the third digit",
-        "order": "the order",
-    }
-    return spoken_map.get(item, item.replace("_", " "))
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# ownership + progress model
-# ──────────────────────────────────────────────────────────────────────────────
-
-ESCAPE_CLUE_OWNER = {
-    "map": "A1",   # Team Leader
-    "lock": "A3",  # Puzzle Solver
-    "key": "A2",   # Code Breaker
-    "door": "A4",  # Scout
-}
-
-ROLE_NAMES = {
-    "A1": "Team Leader",
-    "A2": "Code Breaker",
-    "A3": "Puzzle Solver",
-    "A4": "Scout",
-}
-
-ESCAPE_PROGRESS_TASKS = {
-    "map": False,
-    "lock": False,
-    "key": False,
-    "door": False,
-    "unlock": False,  # final two-tick door-open sequence
-}
-
-ESCAPE_PRIORITY = ["map", "lock", "key", "door"]
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# traits
-# ──────────────────────────────────────────────────────────────────────────────
-
-def _logic(agent) -> float:
-    return agent.traits.get("C", 0.5)
-
-
-def _creativity(agent) -> float:
-    return agent.traits.get("O", 0.5)
-
-
-def _patience(agent) -> float:
-    return 1.0 - agent.traits.get("N", 0.5)
-
-
-def _confidence(agent) -> float:
-    return agent.traits.get("E", 0.5)
-
-
-def _trust_trait(agent) -> float:
-    return agent.traits.get("A", 0.5)
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# dialogue pools
-# ──────────────────────────────────────────────────────────────────────────────
-
-SHARE_TEXTS = {
-    "Leader": [
-        "Here: {info}",
-        "Going with this: {info}",
-        "Call it: {info}",
-        "This is what we have: {info}",
-    ],
-    "Skeptical": [
-        "I'll say it, but I'm not fully sold: {info}",
-        "Here's my read — check it: {info}",
-        "Tentative, but: {info}",
-        "This is what I've got. Check it: {info}",
-    ],
-    "Overthinker": [
-        "Could be wrong, but {info}",
-        "It keeps fitting when I check: {info}",
-        "Saying it before I lose my nerve: {info}",
-        "Okay, {info}",
-    ],
-    "Creative": [
-        "Try this angle: {info}",
-        "This might be it: {info}",
-        "What if it's this: {info}",
-        "I'm seeing this: {info}",
-    ],
-    "Decisive": [
-        "Got it. {info}",
-        "That's it. {info}",
-        "Here: {info}",
-        "Done. {info}",
-    ],
-    "Easygoing": [
-        "Okay, {info}",
-        "Right, got one: {info}",
-        "Here's mine: {info}",
-        "Think I've got it — {info}",
-    ],
-}
-
-CONFIRM_TEXTS = {
-    "Leader": [
-        "That lines up. Keep going.",
-        "Good. Move on it.",
-        "That checks out. Keep the chain moving.",
-        "Alright, we've got that. What are we missing?",
-        "Good. Push the next clue.",
-        "That's solid. Keep going.",
-        "Locked in. Go.",
-        "Good. Don't slow down.",
-    ],
-    "Skeptical": [
-        "Alright. I can buy that.",
-        "I'll take it. That holds up.",
-        "Fine. Use it.",
-        "Okay. Bring it in.",
-    ],
-    "Overthinker": [
-        "Okay... I think that's right.",
-        "Alright... I think we're okay.",
-        "That looks right. Go with it.",
-        "Yeah... okay. Hold onto that.",
-    ],
-    "Creative": [
-        "Yeah, there it is.",
-        "Nice, that's the missing piece.",
-        "There — that's what was missing.",
-        "Oh, that fits better than I expected.",
-    ],
-    "Decisive": [
-        "Good. Move to the next one.",
-        "Confirmed. Move.",
-        "Confirmed. Go.",
-        "That's it — don't stall here.",
-    ],
-    "Easygoing": [
-        "Yeah, that actually makes sense now.",
-        "Nice one — that helps a lot.",
-        "Cool, that slots in.",
-        "Alright, good — I can work with that.",
-    ],
-}
-
-DOUBT_TEXTS = {
-    "Leader": [
-        "{role}, lock {item} down — no ambiguity.",
-        "{item} is the blocker. Clean answer.",
-        "{role}, confirm {item} before we move.",
-        "No drift on {item}, {role}.",
-    ],
-    "Skeptical": [
-        "{role}, run {item} past me one more time.",
-        "Are we actually sure on {item}, or guessing?",
-        "I don't trust {item} yet.",
-        "Convince me on {item}, {role}.",
-    ],
-    "Overthinker": [
-        "What if {item} is a red herring?",
-        "It fits, but — one more pass on {item}?",
-        "I'm not fully settled on {item}.",
-        "Could we be misreading {item}?",
-    ],
-    "Creative": [
-        "What if we've been reading {item} backwards?",
-        "What if we're reading {item} wrong?",
-        "{item} might mean something else entirely.",
-        "I think {item} might mean something else.",
-    ],
-    "Decisive": [
-        "{role}, {item}. Now.",
-        "Stop stalling — give me {item}.",
-        "{item} — direct answer.",
-        "We're blocked on {item}, {role}. Move.",
-    ],
-    "Easygoing": [
-        "Hmm — you sure on {item}?",
-        "Quick sanity check on {item}?",
-        "{item} — right, yeah?",
-        "One more look at {item}?",
-    ],
-}
-
-RUSH_TEXTS = {
-    "Leader": [
-        "We do not have time to stall here.",
-        "Enough delay — move.",
-        "{role}, whatever you've got, use it now.",
-        "We need action, not more waiting.",
-    ],
-    "Skeptical": [
-        "At this point, we need action.",
-        "Enough thinking. Act.",
-        "{role}, stop holding back and move.",
-        "We're losing time here.",
-    ],
-    "Overthinker": [
-        "I know we need to be careful, but we have to move.",
-        "We're running out of time — we need something now.",
-        "I hate rushing this, but we need action.",
-        "At this point, movement is better than silence.",
-    ],
-    "Creative": [
-        "Stop circling it. Pick a direction.",
-        "We need movement more than theories right now.",
-        "Enough circling. Try something.",
-        "We can't keep talking about it. Try something.",
-    ],
-    "Decisive": [
-        "We're overthinking this. Just move.",
-        "Do it now.",
-        "Enough thinking. Act.",
-        "{role}, move.",
-    ],
-    "Easygoing": [
-        "Come on, let's move this forward.",
-        "We need to keep going now.",
-        "Alright, no more waiting — try it.",
-        "Let's not stall here.",
-    ],
-}
-
-REFUSAL_TEXTS = {
-    "Easygoing": [
-        "Hang on — I want to verify {item} one more time before I say it.",
-        "Give me a second. I don't want to share {item} until I'm sure.",
-        "Not quite yet — I want to be certain about {item} first.",
-    ],
-    "Decisive": [
-        "Not yet — I want {item} locked in properly.",
-        "Give me one second. I need to be certain on {item}.",
-        "I'll share it, but I want to check {item} once more first.",
-    ],
-    "Leader": [
-        "Hold on. I want to verify {item} before we commit to it.",
-        "Not yet — I need confidence on {item} before I put it out there.",
-        "I'm nearly there on {item}. Give me a moment.",
-    ],
-    "Creative": [
-        "Wait — I think there's one more angle on {item} I want to check.",
-        "Give me a moment. {item} doesn't feel complete to me yet.",
-        "I want to look at {item} from another direction before I commit.",
-    ],
-    "Skeptical": [
-        "Not yet — I still have doubts about {item}.",
-        "I want {item} properly verified before I put it forward.",
-        "I'm not satisfied with {item} yet. Give me a tick.",
-    ],
-    "Overthinker": [
-        "Wait — I'm not ready to call {item} yet.",
-        "I need one more pass on {item} before I share it.",
-        "Something about {item} still doesn't sit right. Just a moment.",
-    ],
-}
-
-REFUSAL_REASONS = {
-    "map": [
-        ("I want to verify the route first", 1),
-        ("I need to check the room layout one more time", 1),
-    ],
-    "lock": [
-        ("I want to verify the lock pattern first", 1),
-        ("I need to confirm the symbol order", 1),
-    ],
-    "key": [
-        ("I want to be sure on the key clue first", 1),
-        ("I need to verify where the key actually points", 1),
-    ],
-    "door": [
-        ("I want to verify the door code first", 1),
-        ("I need to confirm the door digits properly", 1),
-    ],
-}
-
-PROGRESS_TEXTS = [
-    "Nice — that clears one blocker.",
-    "Good. One piece down.",
-    "Alright, that gives us momentum.",
-    "Good — we're getting somewhere now.",
-    "Nice. That narrows the room down.",
-]
-
-URGENCY_PULSES = {
-    "Leader": [
-        "Clock's against us — we need to keep the pressure on.",
-        "Time's bleeding — if we stall here we're stuck.",
-        "We've burned through too much time already — focus.",
-        "This room isn't going to give us a second chance. Move.",
-    ],
-    "Decisive": [
-        "Enough. Clock's running — every second matters now.",
-        "We're losing time. Decide and go.",
-        "Less thinking, more doing — now.",
-        "We don't have time to hesitate.",
-    ],
-    "Skeptical": [
-        "We're dragging — I don't love it, but we have to push.",
-        "Time's not on our side. I'm uneasy but we can't wait.",
-        "Every minute we hesitate we're worse off.",
-    ],
-    "Overthinker": [
-        "I know I'm slowing us down, but... we really have to move.",
-        "I keep second-guessing — we don't have time for that.",
-        "Okay, okay — I know. We need to act. The clock.",
-    ],
-    "Creative": [
-        "Feels like the walls are closing in. Pick a direction.",
-        "We can't keep guessing. The room's counting us out.",
-        "Let's stop spiralling — we're on the clock.",
-    ],
-    "Easygoing": [
-        "Right, okay — this is actually getting tight. Let's push.",
-        "We're running thin on time now, genuinely.",
-        "Alright, no more stalling — time's actually against us.",
-    ],
-}
-
-RECHECK_TEXTS = {
-    "Skeptical": [
-        "Wait — {item}. Did we actually read that right?",
-        "Back to {item} for a second. Something's off.",
-        "Not convinced on {item}. Sanity-check?",
-        "Before we push on — {item}, anyone else want to look again?",
-    ],
-    "Overthinker": [
-        "I keep snagging on {item} — did we confirm it properly?",
-        "Something about {item} is off. Moved on too fast?",
-        "{item} — I think we jumped on that one.",
-    ],
-    "Creative": [
-        "What if {item} isn't what we thought? Worth a second look.",
-        "Reading {item} again — there might be more to it.",
-    ],
-}
-
-INTERRUPT_TEXTS = {
-    "Leader": [
-        "— just get to the answer. We don't have time.",
-        "— skip the caveats. What's the read?",
-        "— shorter. What do you have?",
-    ],
-    "Decisive": [
-        "— cut to it.",
-        "— the answer. Now.",
-        "— skip the preamble.",
-    ],
-}
-
-WRONG_ASSUMPTION_TEXTS = [
-    "Wait — that doesn't actually fit. We need to look at {item} again.",
-    "Hold on, that doesn't add up. Back to {item}.",
-    "No, that's off — the {item} read has to be wrong.",
-    "That can't be right — we're misreading {item}.",
-]
-
-WRAPUP_FAST = [
-    "Door's open. Clean run — nobody panicked, nobody froze. Textbook.",
-    "That was sharp. Out before the clock even threatened us.",
-    "Beautiful. Straight through, no wasted moves. Let's go.",
-]
-
-WRAPUP_MESSY = [
-    "Door's open. That took longer than it should have — but we're out.",
-    "We got there. Messy, loud, and I don't want to talk about the middle ten minutes.",
-    "Out. Barely held it together, but out.",
-]
-
-WRAPUP_INTENSE = [
-    "Door's open. That was the wire — any longer and we were cooked.",
-    "We got out. I could feel the seconds burning. Don't want to do that again.",
-    "Out — breathe. That one nearly had us.",
-]
-
-WRAPUP_NEUTRAL = [
-    "That's the last piece. Door's open — we're out.",
-    "Got there. Not pretty, not slow — just done.",
-    "Right — we cracked it. Let's move.",
-    "Door's open. Good work, everyone.",
-    "That's it. We're clear.",
-]
-
-# Two-tick final unlock sequence
-UNLOCK_ATTEMPT_TEXTS = {
-    "Leader": [
-        "Entering {code}. Hold.",
-        "Code's {code} — I'm putting it in. Stand by.",
-        "Alright — {code}. Everyone hold.",
-        "{code}. Entering now. Don't move.",
-    ],
-    "Decisive": [
-        "{code}. Going in now.",
-        "Entering {code}. Stand clear.",
-        "{code} — doing it.",
-    ],
-    "Easygoing": [
-        "Right, trying {code}. Everyone hold tight.",
-        "Okay — entering {code} now. Fingers crossed.",
-        "{code}. Here goes.",
-    ],
-    "Skeptical": [
-        "Entering {code}. If this is wrong, we're back to square one.",
-        "Trying {code}. I hope we read it right.",
-        "{code} — going in. We'd better have this right.",
-    ],
-    "Overthinker": [
-        "Okay, {code} — I think that's it. Entering now. Everyone just… hold.",
-        "It's {code}. I keep second-guessing it, but — entering.",
-        "Right. {code}. Here goes. Please be right.",
-    ],
-    "Creative": [
-        "Alright, {code}. Let's try it.",
-        "{code}. Moment of truth.",
-        "Entering {code}. This should be the last piece.",
-    ],
-}
-
-DOOR_OPEN_TEXTS = {
-    "Leader": [
-        "Door's open. Out.",
-        "We're through. Good work.",
-        "That's it — door's open. Let's go.",
-    ],
-    "Decisive": [
-        "Door's open. Go.",
-        "Through. Move now.",
-        "That's it. Out.",
-    ],
-    "Easygoing": [
-        "It worked — door's open! Let's go!",
-        "We're out! Nice one.",
-        "Door clicked — we're through!",
-    ],
-    "Skeptical": [
-        "It worked. Door's open.",
-        "Right, we're out. Door's open.",
-        "Okay, we did it. Door's open.",
-    ],
-    "Overthinker": [
-        "Oh — it worked! Door's open! I can't believe it.",
-        "Door's open — we actually did it!",
-        "We got it — door clicked! Out, everyone, out!",
-    ],
-    "Creative": [
-        "Door's open — brilliant. Let's move.",
-        "It clicked! Door's open — we did it.",
-        "Yes — door's open. That was the last piece.",
-    ],
-}
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# helpers
-# ──────────────────────────────────────────────────────────────────────────────
-
-def _pick(pool_map: Dict[str, List[str]], personality: str, fallback: List[str], **fmt) -> str:
-    pool = pool_map.get(personality) or fallback
-    text = random.choice(pool)
-    return text.format(**fmt)
-
-
-_ESCAPE_CLUE_ORDER = ["map", "lock", "key", "door"]
-
-_CONTEXT_BRIDGES: dict = {
-    ("map",  "lock"): [
-        "Map's cleared. Pattern's what we need now — {info}",
-        "East wall's done. Lock pattern next: {info}",
-        "Map's sorted. Here's what I have on the pattern: {info}",
-        "Room map done. Pattern: {info}",
-    ],
-    ("lock", "key"):  [
-        "Pattern's confirmed. Key location: {info}",
-        "Lock's down. Key clue: {info}",
-        "Pattern cleared. Key location: {info}",
-        "Lock done. Here's the key clue: {info}",
-    ],
-    ("key",  "door"): [
-        "Key's in. Code should be {info}",
-        "Got the key. Door code: {info}",
-        "Key confirmed. Code is {info}",
-        "Last bit — the code is {info}",
-    ],
-}
-
-
-def _context_bridge_prefix(agent: "SimAgent", item: str, info: str) -> str:
-    """Return a contextual share line that references the prior solved clue, or empty string."""
-    model = agent.model
-    idx = _ESCAPE_CLUE_ORDER.index(item) if item in _ESCAPE_CLUE_ORDER else -1
-    if idx <= 0:
-        return ""
-    prev_item = _ESCAPE_CLUE_ORDER[idx - 1]
-    if not model.scenario.tasks.get(prev_item, False):
-        return ""
-    import random as _r
-    if _r.random() > 0.45:
-        return ""
-    options = _CONTEXT_BRIDGES.get((prev_item, item), [])
-    if not options:
-        return ""
-    template = _r.choice(options)
-    return template.format(info=info)
-
-
-def _voice(text: str, personality: str) -> str:
-    """Light personality tone filter — makes each personality sound distinct."""
-    if not text:
-        return text
-    if personality == "Decisive":
-        # Short, sharp — strip trailing softeners
-        text = text.replace(", if that makes sense", "").replace(", I think", "").strip()
-    elif personality == "Overthinker":
-        # Add hedging prefix occasionally
-        hedges = ["I think ", "Maybe — ", "I could be wrong, but "]
-        # Skip hedging if text starts with a direct address (role name, comma) — lowercasing breaks it
-        _is_direct_address = len(text) > 2 and text[0].isupper() and ", " in text[:25]
-        if random.random() < 0.28 and not text.startswith(("I think", "Maybe", "I could", "Back", "That seems", "Okay", "Could be")) and not _is_direct_address:
-            text = random.choice(hedges) + text[0].lower() + text[1:]
-    elif personality == "Easygoing":
-        # Slightly warmer — soften imperatives
-        text = text.replace("We need ", "We probably need ").replace("Give me ", "Just give me ")
-    elif personality == "Skeptical":
-        # Add verification tag only to neutral statements — never to acceptances or confirmations
-        _is_acceptance = any(w in text for w in ("I'll take", "I'll go", "I'll accept", "that holds", "Moving on", "enough.", "keep going"))
-        if random.random() < 0.14 and not _is_acceptance and not text.endswith(("?", "yet.", "now.")) and len(text) < 40:
-            suffix = random.choice(["Check it once.", "I want to confirm that.", "Let's be sure."])
-            text = text.rstrip(".") + ". " + suffix
-    elif personality == "Creative":
-        # Creative should stay natural, not sound like a narrator.
-        _is_direct_address = len(text) > 2 and text[0].isupper() and ", " in text[:25]
-        if random.random() < 0.08 and not text.startswith(("What if", "Maybe", "Try this", "Or maybe")) and not _is_direct_address:
-            creative_preamble = random.choice([
-                "Try this: ",
-                "What if ",
-                "Or maybe ",
-            ])
-            if creative_preamble.endswith(" "):
-                text = creative_preamble + text[0].lower() + text[1:]
-            else:
-                text = creative_preamble + text[0].lower() + text[1:]
-    return text
-
-
-def _pressure_personality_ids(model) -> Set[str]:
-    ids: Set[str] = set()
-    for agent in getattr(model, "agents", []):
-        if getattr(agent, "personality_type", "") in {"Decisive", "Leader"}:
-            ids.add(agent.public_id)
-    return ids
-
-
-def _stress_profile(model) -> str:
-    """
-    Leader + Decisive alone should not auto-create a pressure team.
-    Pressure needs at least one tense ingredient too.
-    """
-    personalities = [getattr(a, "personality_type", "") for a in getattr(model, "agents", [])]
-    counts = {p: personalities.count(p) for p in set(personalities)}
-
-    if counts.get("Skeptical", 0) >= 2 and counts.get("Overthinker", 0) >= 1:
-        return "tension"
-
-    if (
-        counts.get("Leader", 0) >= 1
-        and counts.get("Decisive", 0) >= 1
-        and (counts.get("Skeptical", 0) >= 1 or counts.get("Overthinker", 0) >= 1)
-    ):
-        return "pressure"
-
-    if counts.get("Creative", 0) >= 2 or (
-        counts.get("Creative", 0) >= 1 and counts.get("Overthinker", 0) >= 1
-    ):
-        return "creative"
-
-    return "smooth"
-
-
-def _apply_escape_tick_stress(agent: "SimAgent") -> None:
-    from app.sim.agent import clamp
-    from app.sim.scenario_logic.base_logic import get_env_rules
-
-    model = agent.model
-    tick = getattr(model, "tick", 0)
-    max_ticks = max(1, getattr(model, "episode_max_ticks", 20))
-    tick_pct = tick / max_ticks
-
-    logic = agent.traits.get("C", 0.5)
-    neuroticism = agent.traits.get("N", 0.5)
-    profile = _stress_profile(model)
-
-    # Base tick stress: time pressure escalates as tick_pct rises
-    base_tick_stress = (0.010 + 0.014 * tick_pct) * (0.65 + neuroticism) - (logic * 0.040)
-
-    if profile == "pressure":
-        base_tick_stress += 0.018
-    elif profile == "tension":
-        base_tick_stress += 0.010
-    elif profile == "creative":
-        base_tick_stress += 0.004
-    elif profile == "smooth":
-        # Smooth teams are calmer — but escape is still an escape room.
-        # A small floor ensures some baseline urgency regardless of team fit.
-        base_tick_stress -= 0.008  # was -0.048; reduced so smooth doesn't become a spa
-
-    # Ensure escape always has at least a tiny positive tick stress floor
-    # (the room's time pressure exists regardless of team personality)
-    base_tick_stress = max(base_tick_stress, 0.004)
-
-    # Scale by environment stress multiplier so physics are consistent with apply_events
-    env_stress_mult = get_env_rules(model).get("stress_multiplier", 1.0)
-    base_tick_stress *= env_stress_mult
-
-    agent.stress = clamp(agent.stress + base_tick_stress, 0.0, 1.0)
-
-    blocker_age = getattr(model, "_escape_bottleneck_age", 0)
-    bottleneck_mult = {
-        "smooth": 0.30,
-        "creative": 0.70,
-        "tension": 0.65,
-        "pressure": 1.25,
-    }[profile]
-
-    if blocker_age >= 2:
-        agent.stress = clamp(agent.stress + 0.012 * bottleneck_mult * (0.7 + neuroticism), 0.0, 1.0)
-    if blocker_age >= 4:
-        agent.stress = clamp(agent.stress + 0.020 * bottleneck_mult * (0.7 + neuroticism), 0.0, 1.0)
-    if blocker_age >= 6:
-        agent.stress = clamp(agent.stress + 0.028 * bottleneck_mult * (0.7 + neuroticism), 0.0, 1.0)
-
-    # ── No-progress stall penalty ────────────────────────────────────────────
-    # If no task has been completed in a while, every agent feels the freeze.
-    items_done = sum(1 for v in model.scenario.tasks.values() if v)
-    last_done = getattr(model, "_escape_last_items_done", 0)
-    if items_done > last_done:
-        model._escape_last_items_done = items_done
-        model._escape_last_progress_tick = tick
-    stall_ticks = tick - getattr(model, "_escape_last_progress_tick", 0)
-    if stall_ticks >= 4:
-        stall_mult = {"smooth": 0.30, "creative": 0.60, "tension": 0.70, "pressure": 1.40}[profile]
-        stall_penalty = 0.022 * stall_mult * (0.6 + neuroticism)
-        agent.stress = clamp(agent.stress + stall_penalty, 0.0, 1.0)
-
-    prev = getattr(model, "prev_events", [])
-    pressure_ids = _pressure_personality_ids(model)
-
-    recent_share = any(
-        e.get("type") == "share_info" and e.get("target") == agent.public_id
-        for e in prev[-8:]
-    )
-    if recent_share:
-        relief = {
-            "smooth": 0.055,
-            "creative": 0.028,
-            "tension": 0.018,
-            "pressure": 0.010,
-        }[profile]
-        agent.stress = clamp(agent.stress - relief, 0.0, 1.0)
-
-    for e in prev[-6:]:
-        if e.get("target") != agent.public_id:
-            continue
-
-        etype = e.get("type", "")
-        reason = e.get("reason", "")
-        actor_id = e.get("actor", "")
-
-        if etype == "refuse":
-            hit = {"smooth": 0.020, "creative": 0.035, "tension": 0.050, "pressure": 0.060}[profile]
-            agent.stress = clamp(agent.stress + hit, 0.0, 1.0)
-
-        elif reason == "escape_rush":
-            hit = 0.050 if actor_id in pressure_ids else 0.038
-            if profile == "pressure":
-                hit *= 1.25
-            elif profile == "tension":
-                hit *= 1.05
-            elif profile == "smooth":
-                hit *= 0.45
-            agent.stress = clamp(agent.stress + hit, 0.0, 1.0)
-
-        elif etype == "challenge" and reason == "escape_doubt":
-            hit = 0.020
-            if profile == "pressure":
-                hit *= 1.20
-            elif profile == "tension":
-                hit *= 1.05
-            elif profile == "creative":
-                hit *= 0.85
-            elif profile == "smooth":
-                hit *= 0.30
-            agent.stress = clamp(agent.stress + hit, 0.0, 1.0)
-
-        elif etype == "ask_info" and reason == "escape_ask_owner":
-            hit = 0.010
-            if actor_id in pressure_ids:
-                hit += 0.012
-            if profile == "pressure":
-                hit *= 1.15
-            elif profile == "tension":
-                hit *= 1.05
-            elif profile == "creative":
-                hit *= 0.85
-            elif profile == "smooth":
-                hit *= 0.30
-            agent.stress = clamp(agent.stress + hit, 0.0, 1.0)
-
-    rush_count = sum(
-        1
-        for e in prev[-10:]
-        if e.get("target") == agent.public_id and e.get("reason") == "escape_rush"
-    )
-    if rush_count >= 2:
-        stack = {
-            "smooth": 0.012,
-            "creative": 0.026,
-            "tension": 0.032,
-            "pressure": 0.075,
-        }[profile]
-        agent.stress = clamp(agent.stress + stack, 0.0, 1.0)
-
-    ask_count = sum(
-        1
-        for e in prev[-8:]
-        if e.get("target") == agent.public_id
-        and e.get("type") == "ask_info"
-        and e.get("reason") == "escape_ask_owner"
-    )
-    if ask_count >= 2:
-        extra = {
-            "smooth": 0.001,
-            "creative": 0.006,
-            "tension": 0.012,
-            "pressure": 0.026,
-        }[profile] * (ask_count - 1)
-        agent.stress = clamp(agent.stress + extra, 0.0, 1.0)
-
-    # Slow trust decay — relationships drift without positive interaction
-    if hasattr(agent, "trust") and agent.trust:
-        for other_id in agent.trust:
-            agent.trust[other_id] = clamp(agent.trust[other_id] * 0.995, 0.0, 1.0)
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# logic
-# ──────────────────────────────────────────────────────────────────────────────
 
 class EscapeLogic(BaseLogic):
     scenario_type = "escape"
@@ -864,10 +107,10 @@ class EscapeLogic(BaseLogic):
             "base_trust_delta": -0.08,
             "arousal_rate": 1.3,
             "refusal_weight": 1.1,
-            "cooperation_weight": 1.1,
-            "initial_tension_delta": 0.12,
+            "cooperation_weight": 1.2,
+            "initial_tension_delta": 0.16,
             "initial_cohesion_delta": -0.10,
-            "initial_stress_delta": 0.14,
+            "initial_stress_delta": 0.18,
         }
 
     def accumulate_run_metrics(
@@ -993,6 +236,17 @@ class EscapeLogic(BaseLogic):
         if not hasattr(model, "_escape_pending_confirm"):
             model._escape_pending_confirm = {}
 
+        if not hasattr(model, "_escape_evidence"):
+            model._escape_evidence = {
+                key: {
+                    "shared_by": set(),
+                    "endorsed_by": set(),
+                    "first_shared_tick": None,
+                    "last_evidence_tick": -99,
+                }
+                for key in ESCAPE_PROGRESS_TASKS
+            }
+
         if not hasattr(model, "_escape_last_urgency_tick"):
             model._escape_last_urgency_tick = -99
 
@@ -1032,7 +286,7 @@ class EscapeLogic(BaseLogic):
         self._init_state(model)
         missing = [key for key in ESCAPE_PRIORITY if not model.scenario.tasks.get(key, False)]
         focus_item = self._active_intervention_focus_item(model)
-        if focus_item and focus_item in missing:
+        if focus_item and missing and focus_item == missing[0]:
             return [focus_item] + [key for key in missing if key != focus_item]
         return missing
 
@@ -1060,11 +314,18 @@ class EscapeLogic(BaseLogic):
     def _update_bottleneck(self, model: "SimModel") -> None:
         missing = self._priority_missing(model)
         current = missing[0] if missing else None
+        tick_now = getattr(model, "tick", 0)
         if current == getattr(model, "_escape_bottleneck_item", None):
-            model._escape_bottleneck_age += 1
+            # Only increment once per tick — multiple agents call this per tick
+            # and each call would otherwise inflate the age counter artificially,
+            # causing _should_force_owner_release to fire in tick 1.
+            if tick_now != getattr(model, "_escape_bottleneck_tick", -1):
+                model._escape_bottleneck_age += 1
+                model._escape_bottleneck_tick = tick_now
         else:
             model._escape_bottleneck_item = current
             model._escape_bottleneck_age = 0
+            model._escape_bottleneck_tick = tick_now
 
     def _ask_key(self, asker: str, target: str, item: str) -> Tuple[str, str, str]:
         return (asker, target, item)
@@ -1360,6 +621,82 @@ class EscapeLogic(BaseLogic):
             return True
         return False
 
+    def _evidence_record(self, model: "SimModel", item: str) -> Dict[str, Any]:
+        self._init_state(model)
+        rec = model._escape_evidence.setdefault(item, {
+            "shared_by": set(),
+            "endorsed_by": set(),
+            "first_shared_tick": None,
+            "last_evidence_tick": -99,
+        })
+        rec.setdefault("shared_by", set())
+        rec.setdefault("endorsed_by", set())
+        rec.setdefault("first_shared_tick", None)
+        rec.setdefault("last_evidence_tick", -99)
+        return rec
+
+    def _record_current_blocker_evidence(
+        self,
+        model: "SimModel",
+        blocker: str,
+        events: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        tick_now = getattr(model, "tick", 0)
+        rec = self._evidence_record(model, blocker)
+
+        for event in events:
+            item = event.get("item") or event.get("preference")
+            if item != blocker:
+                continue
+
+            actor = event.get("actor")
+            etype = str(event.get("type", "")).lower()
+
+            if etype in {"share_info", "share"}:
+                if event.get("partial", False):
+                    continue
+                if event.get("can_complete", True) is False:
+                    continue
+                if actor:
+                    rec["shared_by"].add(actor)
+                if rec["first_shared_tick"] is None:
+                    rec["first_shared_tick"] = tick_now
+                rec["last_evidence_tick"] = tick_now
+                continue
+
+            if etype in {"agree", "confirm"}:
+                if actor:
+                    rec["endorsed_by"].add(actor)
+                rec["last_evidence_tick"] = tick_now
+                continue
+
+            if etype == "suggest":
+                # Suggest only counts as endorsement once the blocker is already
+                # in the conversation; it can never establish blocker evidence on its own.
+                if rec["first_shared_tick"] is not None or model._escape_revealed.get(blocker, False):
+                    if actor:
+                        rec["endorsed_by"].add(actor)
+                    rec["last_evidence_tick"] = tick_now
+
+        return rec
+
+    def _mark_item_confirmed(self, model: "SimModel", item: str) -> bool:
+        if model._escape_confirmed.get(item, False):
+            return False
+        model._escape_confirmed[item] = True
+        model._escape_pending_confirm.pop(item, None)
+        model._escape_revealed[item] = True
+        if not model.scenario.tasks.get(item, False):
+            model.scenario.complete_task(item)
+        model._escape_metrics["agreements"] += 1
+        model._escape_last_progress_item = item
+        model._intervention_quiet_item = item
+        model._intervention_quiet_until = max(
+            getattr(model, "_intervention_quiet_until", -1),
+            getattr(model, "tick", 0) + 2,
+        )
+        return True
+
     def _maybe_wrong_target(self, agent: "SimAgent", correct_target, others: List["SimAgent"]):
         personality = getattr(agent, "personality_type", "Easygoing")
         if personality in {"Leader", "Easygoing", "Decisive"}:
@@ -1486,7 +823,7 @@ class EscapeLogic(BaseLogic):
                 if similar:
                     base += min(0.08, len(similar) * 0.02)
             except Exception:
-                pass
+                logger.debug("Escape share-prob: memory recall_similar skipped", exc_info=True)
         # ── Profile adjustments ───────────────────────────────────────
         # Memory-influenced sharing: if the agent has a negative impression of the
         # primary asker (conflict-prone), they hold back slightly
@@ -1536,6 +873,12 @@ class EscapeLogic(BaseLogic):
 
         if self._should_force_owner_release(agent, item):
             return True
+
+        # boost_urgency intervention: owner shares sooner when urgency is active
+        _urgency_boost = getattr(model, "_urgency_share_boost", 0.0)
+        _urgency_until = getattr(model, "_urgency_share_boost_until", -1)
+        if _urgency_boost > 0 and getattr(model, "tick", 0) <= _urgency_until:
+            base += _urgency_boost * 0.40
 
         return random.random() < min(base, 0.98)
 
@@ -1600,7 +943,7 @@ class EscapeLogic(BaseLogic):
                     if "conflict_prone" in imp.get("patterns", {}):
                         refuse_prob *= 1.25   # distrust increases refusal
             except Exception:
-                pass
+                logger.debug("Escape refuse-prob: memory get_impression skipped", exc_info=True)
 
         if random.random() < max(0.0, refuse_prob):
             _, base_eta = random.choice(REFUSAL_REASONS[item])
@@ -1720,17 +1063,7 @@ class EscapeLogic(BaseLogic):
                            if e.get("reason") == "escape_confirm" and e.get("preference") == item]
         if recent_confirms:
             return None
-        model._escape_confirmed[item] = True
-        model._escape_pending_confirm.pop(item, None)
-        if not model.scenario.tasks.get(item, False):
-            model.scenario.complete_task(item)
-        model._escape_metrics["agreements"] += 1
-        model._escape_last_progress_item = item
-        model._intervention_quiet_item = item
-        model._intervention_quiet_until = max(
-            getattr(model, "_intervention_quiet_until", -1),
-            getattr(model, "tick", 0) + 2,
-        )
+        self._mark_item_confirmed(model, item)
 
         personality = getattr(agent, "personality_type", "Easygoing")
         text = _voice(_pick(CONFIRM_TEXTS, personality, CONFIRM_TEXTS["Easygoing"]), personality)
@@ -1748,6 +1081,104 @@ class EscapeLogic(BaseLogic):
             "preference": item,
             "reason": "escape_confirm",
         }
+
+    def _resolve_current_blocker_from_evidence(
+        self,
+        model: "SimModel",
+        events: List[Dict[str, Any]],
+        extra_events: List[Dict[str, Any]],
+    ) -> None:
+        missing = self._priority_missing(model)
+        blocker = missing[0] if missing else None
+        if not blocker or blocker == "unlock":
+            return
+        if model.scenario.tasks.get(blocker, False):
+            return
+
+        rec = self._record_current_blocker_evidence(model, blocker, events)
+        if not rec["shared_by"]:
+            return
+
+        tick_now = getattr(model, "tick", 0)
+        owner_id = self._owner_for(blocker)
+        blocker_age = getattr(model, "_escape_bottleneck_age", 0)
+        share_age = (
+            tick_now - rec["first_shared_tick"]
+            if rec["first_shared_tick"] is not None else -1
+        )
+
+        endorse_actors = {aid for aid in rec["endorsed_by"] if aid and aid != owner_id}
+        share_actors = {aid for aid in rec["shared_by"] if aid}
+        current_endorse = next(
+            (
+                ev for ev in events
+                if (ev.get("item") or ev.get("preference")) == blocker
+                and str(ev.get("type", "")).lower() in {"agree", "confirm", "suggest"}
+            ),
+            None,
+        )
+
+        enough_evidence = (
+            bool(endorse_actors)
+            or len(share_actors) >= 2
+            or (share_age >= 2 and blocker_age >= 3 and rec["last_evidence_tick"] >= rec["first_shared_tick"])
+        )
+        if not enough_evidence:
+            return
+
+        # If the step already contains an endorsement, close the blocker now.
+        # This lets intervention-driven share+agree patterns advance the state
+        # without depending on the exact pending-confirm actor pair.
+        if current_endorse is not None:
+            self._mark_item_confirmed(model, blocker)
+            return
+
+        # Otherwise synthesise one clean confirm event from a non-owner teammate
+        # so the visible timeline shows why the blocker closed.
+        busy_actors = {e.get("actor") for e in events}
+        confirmer = next(
+            (
+                a for a in model.agents
+                if a.public_id != owner_id and a.public_id not in busy_actors
+            ),
+            None,
+        )
+        if confirmer is None:
+            self._mark_item_confirmed(model, blocker)
+            return
+
+        # When the original share happened more than one tick ago, prepend a brief
+        # reminder share event so the timeline shows evidence → confirmation in the
+        # same tick rather than a confirmation that appears to come from nowhere.
+        current_tick_share = next(
+            (
+                ev for ev in events
+                if str(ev.get("type", "")).lower() in {"share_info", "share"}
+                and (ev.get("item") or ev.get("preference")) == blocker
+            ),
+            None,
+        )
+        if current_tick_share is None and share_age >= 2:
+            owner_agent = next(
+                (a for a in model.agents if a.public_id == owner_id), None
+            )
+            if owner_agent is not None:
+                info = self.info_text(blocker, model=model)
+                if info:
+                    reminder_text = _voice(f"Just to confirm — {info}", getattr(owner_agent, "personality_type", "Easygoing"))
+                    extra_events.append({
+                        "type": "share_info",
+                        "actor": owner_id,
+                        "target": confirmer.public_id,
+                        "item": blocker,
+                        "text": reminder_text,
+                        "reason": "escape_reminder_share",
+                    })
+
+        confirm_event = self._confirm_event(confirmer, owner_id, blocker)
+        if confirm_event is not None:
+            confirm_event["reason"] = "escape_evidence_resolve"
+            extra_events.append(confirm_event)
 
     def _can_doubt(self, agent: "SimAgent", item: str) -> bool:
         model = agent.model
@@ -1830,7 +1261,7 @@ class EscapeLogic(BaseLogic):
                 tick_now = getattr(agent.model, "tick", 0)
                 agent.memory.update_impressions(tick_now)
         except Exception:
-            pass
+            logger.debug("Escape end-of-run: memory update_impressions skipped", exc_info=True)
 
     def is_failed(self, model: "SimModel") -> bool:
         """True if the episode timed out with tasks still incomplete."""
@@ -1872,13 +1303,27 @@ class EscapeLogic(BaseLogic):
 
         tick_now = getattr(model, "tick", 0)
 
-        # Refresh memory impressions every 5 ticks
-        if hasattr(agent, "memory") and tick_now - getattr(model, "_escape_impression_tick", -99) >= 5:
-            try:
-                agent.memory.update_impressions(tick_now)
-                model._escape_impression_tick = tick_now
-            except Exception:
-                pass
+        # Refresh memory impressions every 4 ticks (per-agent)
+        if hasattr(agent, "memory") and agent.memory:
+            if tick_now >= 4 and tick_now - getattr(agent, "_memory_impression_tick", -99) >= 4:
+                try:
+                    agent.memory.update_impressions(tick_now)
+                    agent._memory_impression_tick = tick_now
+                    # Feed impression patterns back into trust (subtle drift)
+                    from app.sim.agent import clamp as _iclamp
+                    for _oid, _imp in (agent.memory.impressions or {}).items():
+                        _pats = _imp.get("patterns", {})
+                        _td = 0.0
+                        if "positive" in _pats:
+                            _td += 0.015
+                        if "conflict_prone" in _pats or "anger_prone" in _pats:
+                            _td -= 0.015
+                        if _td != 0.0:
+                            agent.trust[_oid] = _iclamp(
+                                agent.trust.get(_oid, 0.5) + _td, 0.0, 1.0
+                            )
+                except Exception:
+                    logger.debug("Escape per-tick: memory impression trust drift skipped", exc_info=True)
         max_t = getattr(model, "episode_max_ticks", 120)
         tick_pct = tick_now / max(1, max_t)
 
@@ -1915,11 +1360,10 @@ class EscapeLogic(BaseLogic):
                                 f"I've seen {_spoken(blocker)} before — let me place it.",
                                 f"{_spoken(blocker)} rings a bell. Hold on.",
                             ]),
-                            "item": blocker,
                             "reason": "escape_memory_recall",
                         }
             except Exception:
-                pass
+                logger.debug("Escape choose_action: memory recall_similar skipped", exc_info=True)
 
         # 1) owner responds to asks/challenges about current blocker
         if agent.public_id == blocker_owner and not model._escape_revealed.get(blocker, False):
@@ -2008,6 +1452,63 @@ class EscapeLogic(BaseLogic):
             share_age = tick_now - pending.get("share_tick", tick_now)
             if personality in {"Skeptical", "Overthinker"} and share_age <= 0 and random.random() < 0.12:
                 return None
+
+            # ── Tension/pressure teams: scrutiny challenge before confirming ────
+            # Fires once per blocker item (guarded by _escape_scrutinized_<item>).
+            # Progress never permanently stalls — scrutiny defers confirm by 1 tick.
+            _esc_confirm_preset = getattr(model, "team_preset", "balanced_team") or "balanced_team"
+            _esc_scrutiny_bias = PRESET_CHALLENGE_BIAS.get(_esc_confirm_preset, 1.0)
+            _esc_scrutiny_key = f"_escape_scrutinized_{blocker}"
+            if (
+                not getattr(model, _esc_scrutiny_key, False)
+                and _esc_scrutiny_bias > 1.0
+                and random.random() < (_esc_scrutiny_bias - 1.0) * 0.35
+            ):
+                setattr(model, _esc_scrutiny_key, True)
+                model._escape_metrics["conflicts"] += 1
+                _owner_id = pending.get("owner", "")
+                return {
+                    "type": "challenge",
+                    "actor": agent.public_id,
+                    "target": _owner_id,
+                    "text": self._pick_fresh_phrase(agent, [
+                        f"Hold on — I need to be sure about {_spoken(blocker)} before we accept it.",
+                        f"Wait. Are we certain {_spoken(blocker)} is right? Something still feels off.",
+                        f"{_spoken(blocker).capitalize()} — let's not rush this. Check it again.",
+                        f"I'm not ready to confirm {_spoken(blocker)} yet. Does everyone agree it's correct?",
+                    ]),
+                    "item": blocker,
+                    "reason": "pre_confirm_scrutiny",
+                }
+
+            # ── Smooth/creative teams: appreciative acknowledgment after confirm ─
+            # Generates an extra agree for smooth teams to reflect warm cooperation.
+            _esc_agree_bias = PRESET_AGREE_BIAS.get(_esc_confirm_preset, 1.0)
+            _esc_apprec_key = f"_escape_appreciated_{blocker}"
+            if (
+                _esc_agree_bias > 1.0
+                and not getattr(model, _esc_apprec_key, False)
+                and random.random() < (_esc_agree_bias - 1.0) * 0.55
+            ):
+                setattr(model, _esc_apprec_key, True)
+                _owner_id = pending.get("owner", "")
+                _apprec_ev = {
+                    "type": "agree",
+                    "actor": agent.public_id,
+                    "target": _owner_id,
+                    "text": self._pick_fresh_phrase(agent, [
+                        f"Good — {_spoken(blocker)} makes sense now. Thanks.",
+                        f"That's the piece we needed on {_spoken(blocker)}. Nice work.",
+                        f"Perfect — {_spoken(blocker)} is clear. Let's keep going.",
+                        f"Right, {_spoken(blocker)} is sorted. Good find.",
+                    ]),
+                    "item": blocker,
+                    "reason": "cooperative_appreciation",
+                }
+                if not hasattr(model, "_pending_appreciation_events"):
+                    model._pending_appreciation_events = []
+                model._pending_appreciation_events.append(_apprec_ev)
+
             return self._confirm_event(agent, pending["owner"], blocker)
 
         # 2b) Memory recall — occasionally surface a relevant past experience
@@ -2033,11 +1534,10 @@ class EscapeLogic(BaseLogic):
                             "actor": agent.public_id,
                             "target": tgt.public_id,
                             "text": recall_text,
-                            "item": blocker,
                             "reason": "escape_memory_recall",
                         }
             except Exception:
-                pass  # memory recall is best-effort
+                logger.debug("Escape wrapup: memory recall_similar skipped", exc_info=True)
 
         # 3) short progress follow-up only right after the progress happened
         last_progress_item = getattr(model, "_escape_last_progress_item", None)
@@ -2057,7 +1557,6 @@ class EscapeLogic(BaseLogic):
                     "actor": agent.public_id,
                     "target": target.public_id,
                     "text": self._progress_followup_text(agent, last_progress_item),
-                    "item": last_progress_item,
                     "reason": "escape_progress_followup",
                 }
 
@@ -2139,7 +1638,7 @@ class EscapeLogic(BaseLogic):
         # 5) ask correct owner for current blocker
         # Guard: skip if agent already has the item (covers forced-meeting shares that bypass
         # _share_event and therefore don't set _escape_revealed, so known_items is the
-        # authoritative check for "I received this already").
+        # reliable check for "I received this already").
         if (not model._escape_revealed.get(blocker, False)
                 and agent.public_id != blocker_owner
                 and blocker not in getattr(agent, "known_items", set())):
@@ -2185,6 +1684,18 @@ class EscapeLogic(BaseLogic):
                     else:  # creative
                         rush_threshold = 5
                         doubt_threshold = 3
+
+                    # Fine-tune thresholds by team_preset so the preset is
+                    # always directionally consistent even when _stress_profile
+                    # doesn't perfectly match the assigned preset.
+                    _esc_preset = getattr(model, "team_preset", "balanced_team") or "balanced_team"
+                    _esc_chal_bias = PRESET_CHALLENGE_BIAS.get(_esc_preset, 1.0)
+                    if _esc_chal_bias > 1.0 and doubt_threshold > 1:
+                        # Tension/pressure preset: lower threshold → doubts fire sooner
+                        doubt_threshold = max(1, round(doubt_threshold / _esc_chal_bias))
+                    elif _esc_chal_bias < 1.0 and doubt_threshold < 9999:
+                        # Smooth/creative preset: raise threshold → doubts fire later
+                        doubt_threshold = min(8, round(doubt_threshold / _esc_chal_bias))
 
                     if personality in {"Decisive", "Leader"} and ask_count >= 3 and profile != "smooth":
                         model._escape_metrics["conflicts"] += 1
@@ -2258,7 +1769,6 @@ class EscapeLogic(BaseLogic):
                             "actor": agent.public_id,
                             "target": target.public_id,
                             "text": rush_text,
-                            "item": blocker,
                             "reason": "escape_rush",
                         }
 
@@ -2266,8 +1776,24 @@ class EscapeLogic(BaseLogic):
                     recent_rushes_for_doubt = self._recent_intent_count(model, agent.public_id, "escape_rush", within=3)
                     suppress_doubt = profile == "pressure" and recent_rushes_for_doubt >= 1
 
+                    # ── Probabilistic gate at the doubt-threshold boundary ────────────
+                    # Root cause of deterministic openings: _note_ask() is called before
+                    # ask_count is read, so ask_count == doubt_threshold on the very first
+                    # ask.  For tension (threshold=1) and pressure (threshold=1) teams
+                    # this made every seed produce a challenge as the opening event.
+                    #
+                    # The gate fires a seeded random draw only when ask_count is AT or
+                    # just above the threshold (boundary window = threshold + 1).  Beyond
+                    # that window the gate is always open so doubts eventually fire.
+                    # Uses the simulation's own random module so the outcome is fully
+                    # seed-reproducible — same seed → same opening every time.
+                    _doubt_at_boundary = ask_count <= doubt_threshold + 1
+                    _doubt_fire_prob = {"tension": 0.42, "pressure": 0.18}.get(profile, 1.0)
+                    _doubt_gate = (not _doubt_at_boundary) or (random.random() < _doubt_fire_prob)
+
                     can_escalate_doubt = (
-                        target.public_id == owner_agent.public_id
+                        _doubt_gate
+                        and target.public_id == owner_agent.public_id
                         and ask_count >= doubt_threshold
                         and self._can_doubt(agent, blocker)
                         and self._can_doubt_again(model, agent.public_id, target.public_id, blocker)
@@ -2331,7 +1857,6 @@ class EscapeLogic(BaseLogic):
                             "actor": agent.public_id,
                             "target": target.public_id,
                             "text": self._build_flow_text(agent, text, item=blocker),
-                            "item": blocker,
                             "reason": "creative_speculation_delay",
                         }
 
@@ -2357,7 +1882,6 @@ class EscapeLogic(BaseLogic):
                             "actor": agent.public_id,
                             "target": target.public_id,
                             "text": self._build_flow_text(agent, text, item=blocker),
-                            "item": blocker,
                             "reason": "escape_coordination",
                         }
 
@@ -2377,7 +1901,6 @@ class EscapeLogic(BaseLogic):
                             "actor": agent.public_id,
                             "target": target.public_id,
                             "text": self._build_flow_text(agent, text, item=blocker),
-                            "item": blocker,
                             "reason": "escape_coordination",
                         }
 
@@ -2415,7 +1938,6 @@ class EscapeLogic(BaseLogic):
                         "actor": agent.public_id,
                         "target": target.public_id,
                         "text": text,
-                        "item": blocker,
                         "reason": "escape_nonowner_speculation",
                     }
 
@@ -2532,6 +2054,13 @@ class EscapeLogic(BaseLogic):
         max_ticks = getattr(model, "episode_max_ticks", 120)
         extra_events: List[Dict[str, Any]] = []
 
+        # ─── Flush smooth-team cooperative-appreciation agrees queued during the
+        # confirm path.  These are deferred so they don't collide with the confirm
+        # event on the same tick; post_tick is the right place to emit them.
+        if getattr(model, "_pending_appreciation_events", None):
+            extra_events.extend(model._pending_appreciation_events)
+            model._pending_appreciation_events = []
+
         # If a valid share landed and the intended confirmer stayed quiet,
         # confirm it automatically rather than leaving the blocker hanging.
         for item, pending in list(model._escape_pending_confirm.items()):
@@ -2552,10 +2081,33 @@ class EscapeLogic(BaseLogic):
             if not confirmer_id or not owner_id:
                 continue
 
-            if (not final_deadline_close) and any(e.get("actor") == confirmer_id for e in events):
+            confirmer_spoke = any(e.get("actor") == confirmer_id for e in events)
+            confirmer = next((a for a in model.agents if a.public_id == confirmer_id), None)
+
+            # Escape-specific stall guard:
+            # if the designated confirmer keeps speaking for unrelated reasons
+            # (urgency, coordination, micro-reaction), the blocker can get stuck
+            # in a reveal/re-share loop until the pending confirm expires.
+            #
+            # After at least one full tick of share_age, allow any other free
+            # teammate to close the blocker from the already-shared evidence.
+            # This preserves the same clue content and blocker order without
+            # requiring an exact actor pair to stay available.
+            if confirmer_spoke and not final_deadline_close and share_age < 2:
                 continue
 
-            confirmer = next((a for a in model.agents if a.public_id == confirmer_id), None)
+            if confirmer_spoke or confirmer is None:
+                busy_actors = {e.get("actor") for e in events}
+                fallback_pool = [
+                    a for a in model.agents
+                    if a.public_id not in busy_actors
+                    and a.public_id != owner_id
+                ]
+                if confirmer is not None:
+                    fallback_pool = [a for a in fallback_pool if a.public_id != confirmer.public_id] + [
+                        a for a in fallback_pool if a.public_id == confirmer.public_id
+                    ]
+                confirmer = fallback_pool[0] if fallback_pool else None
             if confirmer is None:
                 continue
 
@@ -2563,6 +2115,11 @@ class EscapeLogic(BaseLogic):
             if confirm_event is not None:
                 confirm_event["reason"] = "escape_confirm_fallback"
                 extra_events.append(confirm_event)
+
+        # Robust evidence-based closure for the CURRENT blocker only.
+        # This catches intervention-heavy runs where a valid share + endorse
+        # sequence occurs but the exact pending-confirm handshake is missed.
+        self._resolve_current_blocker_from_evidence(model, events + extra_events, extra_events)
 
         # ─── Urgency pulse: time-pressure broadcast that makes escape feel
         # distinctively different from office. Fires on milestone ticks when the
@@ -3048,7 +2605,6 @@ class EscapeLogic(BaseLogic):
                         f"Let's get {_spoken(blocker)} closed before anything else.",
                     ],
                 ),
-                "item": blocker,
                 "reason": "escape_blocker_guard",
             }
 
@@ -3070,7 +2626,6 @@ class EscapeLogic(BaseLogic):
                                 f"Have a look at {_spoken(item)} and tell me if it looks right.",
                             ],
                         ),
-                        "item": item,
                         "reason": "escape_awaiting_confirm",
                     }
 
@@ -3086,7 +2641,6 @@ class EscapeLogic(BaseLogic):
                             f"{self.role(confirmer_id)} is closing that out — let them finish.",
                         ],
                     ),
-                    "item": item,
                     "reason": "escape_awaiting_confirm",
                 }
 
@@ -3104,7 +2658,6 @@ class EscapeLogic(BaseLogic):
                             f"Hold on — I'm already on {_spoken(item)} with {self.role(active_requester_id)}.",
                         ],
                     ),
-                    "item": item,
                     "reason": "escape_active_requester_guard",
                 }
 
@@ -3142,7 +2695,6 @@ class EscapeLogic(BaseLogic):
                     f"Ask {self.role(owner_id)} for {_spoken(item)}.",
                 ],
             ),
-            "item": item,
             "reason": "escape_owner_guard",
         }
 

@@ -1,20 +1,23 @@
-"""Game balance constants — single source of truth for all tuning values."""
-from typing import Dict, Tuple
+"""Game balance constants — all tuning values live here so they're easy to find and adjust."""
+from typing import Dict, List, Tuple
 
 # ── Stress caps per (scenario_type, team_preset) ─────────────────────────────
 # Prevents agent stress from exceeding scenario-appropriate ceilings.
 STRESS_CAPS: Dict[Tuple[str, str], float] = {
     ("office", "smooth_team"):   0.24,
+    ("office", "balanced_team"): 0.35,
     ("office", "tension_team"):  0.42,
     ("office", "creative_team"): 0.36,
     ("office", "pressure_team"): 0.36,
 
-    ("cafe", "smooth_team"):   0.15,
-    ("cafe", "tension_team"):  0.30,
-    ("cafe", "creative_team"): 0.24,
-    ("cafe", "pressure_team"): 0.34,
+    ("cafe", "smooth_team"):   0.23,
+    ("cafe", "balanced_team"): 0.20,
+    ("cafe", "tension_team"):  0.33,
+    ("cafe", "creative_team"): 0.32,
+    ("cafe", "pressure_team"): 0.42,
 
-    ("escape", "smooth_team"):   0.38,
+    ("escape", "smooth_team"):   0.46,
+    ("escape", "balanced_team"): 0.56,
     ("escape", "tension_team"):  0.65,
     ("escape", "creative_team"): 0.52,
     ("escape", "pressure_team"): 0.58,
@@ -22,12 +25,41 @@ STRESS_CAPS: Dict[Tuple[str, str], float] = {
 
 # ── Initial group state (tension, cohesion) per team preset ───────────────────
 # Seeds group_tension and group_cohesion before scenario offsets are applied.
+# Values are derived from the balanced_team baseline (0.20, 0.55) plus small
+# per-preset deltas applied once at model initialisation:
+#   smooth_team:   −0.05 tension, +0.08 cohesion
+#   balanced_team:  0.00 tension,  0.00 cohesion  (reference)
+#   creative_team: +0.02 tension, +0.04 cohesion
+#   pressure_team: +0.06 tension, −0.04 cohesion
+#   tension_team:  +0.10 tension, −0.08 cohesion
+# Scenario env_mod offsets (initial_tension_delta / initial_cohesion_delta) are
+# applied on top of these values in model.py.  Pressure is unaffected here.
 PRESET_INITIAL_STATE: Dict[str, Tuple[float, float]] = {
-    "smooth_team":   (0.08, 0.75),
-    "balanced_team": (0.20, 0.55),
-    "creative_team": (0.15, 0.62),
-    "pressure_team": (0.38, 0.35),
-    "tension_team":  (0.50, 0.28),
+    "smooth_team":   (0.15, 0.63),   # baseline −0.05 tension, +0.08 cohesion
+    "balanced_team": (0.20, 0.55),   # reference — no change
+    "creative_team": (0.22, 0.59),   # baseline +0.02 tension, +0.04 cohesion
+    "pressure_team": (0.26, 0.51),   # baseline +0.06 tension, −0.04 cohesion
+    "tension_team":  (0.30, 0.47),   # baseline +0.10 tension, −0.08 cohesion
+}
+
+# ── Residual tension floors ───────────────────────────────────────────────────
+# Prevent perfect 0.00 tension even after successful, calm runs.
+# Applied every tick in _update_group_state as max(team_floor, scenario_floor).
+# Tension Team / Pressure Team have elevated floors because their starting
+# character means some ambient friction always remains.
+# final floor = max(PRESET_TENSION_FLOOR[team], SCENARIO_TENSION_FLOOR[scenario])
+PRESET_TENSION_FLOOR: Dict[str, float] = {
+    "smooth_team":   0.00,   # scenario floor dominates
+    "balanced_team": 0.00,
+    "creative_team": 0.00,
+    "pressure_team": 0.10,
+    "tension_team":  0.12,
+}
+
+SCENARIO_TENSION_FLOOR: Dict[str, float] = {
+    "cafe":   0.02,
+    "office": 0.03,
+    "escape": 0.08,
 }
 
 # ── Trust deltas per team preset ─────────────────────────────────────────────
@@ -54,6 +86,49 @@ PRESET_STRESS_SEED: Dict[str, float] = {
 # Prevents trust from rising unrealistically high in low-stakes scenarios.
 TRUST_CAPS: Dict[str, float] = {
     "office": 0.82,
-    "cafe":   0.60,   # low-stakes social scene — keep trust in a steady band
+    "cafe":   0.78,   # warm cooperation encouraged — let trust build naturally
     "escape": 0.85,
 }
+
+# ── Challenge probability bias per team preset ───────────────────────────────
+# Direct multiplier on the base challenge-event probability in each scenario.
+# Tension/pressure teams escalate faster; smooth teams de-escalate naturally.
+PRESET_CHALLENGE_BIAS: Dict[str, float] = {
+    "smooth_team":   0.55,
+    "balanced_team": 1.00,
+    "creative_team": 0.80,
+    "pressure_team": 1.30,
+    "tension_team":  1.60,
+}
+
+# ── Agree/compromise probability bias per team preset ────────────────────────
+# Direct multiplier on the base agree/compromise probability in each scenario.
+# Smooth teams converge easily; tension teams resist agreement longer.
+PRESET_AGREE_BIAS: Dict[str, float] = {
+    "smooth_team":   1.50,
+    "balanced_team": 1.00,
+    "creative_team": 1.20,
+    "pressure_team": 0.80,
+    "tension_team":  0.60,
+}
+
+# ── Outcome label taxonomy ────────────────────────────────────────────────────
+# Human-readable run outcome strings produced by classify_run_outcome().
+# Listed here so the frontend and exports can reference canonical values.
+OUTCOME_LABELS: List[str] = [
+    "In progress",
+    "Completed smoothly — high-trust cooperative run",
+    "Completed smoothly — low-stress cooperative run",
+    "Completed cooperatively",
+    "Completed after intervention",
+    "Completed with moderate friction",
+    "Completed under moderate pressure",
+    "Completed under pressure — intervention helped",
+    "Completed with tension — high conflict run",
+    "Completed with tension — intervention helped",
+    "Partial completion",
+    "Partial completion — high friction",
+    "Partial completion after intervention",
+    "Incomplete — unresolved blocker",
+    "Incomplete — high conflict",
+]

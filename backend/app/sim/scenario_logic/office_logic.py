@@ -18,6 +18,7 @@ from collections import deque
 from typing import TYPE_CHECKING, Optional, List, Dict, Any
 
 from app.sim.scenario_logic.base_logic import BaseLogic, get_env_modifiers
+from app.sim.game_config import PRESET_CHALLENGE_BIAS, PRESET_AGREE_BIAS
 
 if TYPE_CHECKING:
     from app.sim.agent import SimAgent
@@ -530,7 +531,8 @@ class OfficeProposalLogic(BaseLogic):
         focus_until = getattr(model, "_intervention_focus_until", -1)
         if (
             focus_item
-            and focus_item in missing
+            and missing
+            and focus_item == missing[0]
             and getattr(model, "tick", 0) <= focus_until
         ):
             return [focus_item] + [k for k in missing if k != focus_item]
@@ -1504,11 +1506,83 @@ class OfficeProposalLogic(BaseLogic):
         cooldown_mult = 0.65 if recent_actions >= 2 else (0.80 if recent_actions == 1 else 1.0)
         tension_penalty = agent.env_tension_modifier * 0.3
 
+        # ── Refresh memory impressions every 4 ticks (per-agent) ─────────
+        if hasattr(agent, "memory") and agent.memory:
+            if tick >= 4 and tick - getattr(agent, "_memory_impression_tick", -99) >= 4:
+                try:
+                    agent.memory.update_impressions(tick)
+                    agent._memory_impression_tick = tick
+                    # Feed impression patterns back into trust (subtle drift)
+                    from app.sim.agent import clamp as _iclamp
+                    for _oid, _imp in (agent.memory.impressions or {}).items():
+                        _pats = _imp.get("patterns", {})
+                        _td = 0.0
+                        if "positive" in _pats:
+                            _td += 0.015
+                        if "conflict_prone" in _pats or "anger_prone" in _pats:
+                            _td -= 0.015
+                        if _td != 0.0:
+                            agent.trust[_oid] = _iclamp(
+                                agent.trust.get(_oid, 0.5) + _td, 0.0, 1.0
+                            )
+                except Exception:
+                    pass
+
         missing = self._priority_missing(agent.model)
         if not missing:
             return None
 
         current_blocker = missing[0]
+
+        # ── Smooth/creative team: proactive appreciation after a recent share ─────
+        # Fires before any ask/confirm logic so it reads as genuine team warmth, not
+        # a post-task ritual.  Only one appreciation agree per item, ever.
+        _apprec_preset = getattr(agent.model, "team_preset", "balanced_team") or "balanced_team"
+        _apprec_bias = PRESET_AGREE_BIAS.get(_apprec_preset, 1.0)
+        if _apprec_bias > 1.0:
+            _recent_share_for_me = next(
+                (e for e in getattr(agent.model, "prev_events", [])[-5:]
+                 if e.get("type") == "share_info"
+                 and e.get("target") == agent.public_id
+                 and e.get("item") in agent.model.scenario.tasks),
+                None,
+            )
+            if _recent_share_for_me:
+                _sitem = _recent_share_for_me.get("item")
+                _sactor = _recent_share_for_me.get("actor")
+                _apprec_key = f"_office_appreciated_{_sitem}"
+                _share_agent = next((o for o in others if o.public_id == _sactor), None)
+                if (
+                    _share_agent
+                    and not getattr(agent.model, _apprec_key, False)
+                    and random.random() < (_apprec_bias - 1.0) * 0.55
+                ):
+                    setattr(agent.model, _apprec_key, True)
+                    _apprec_pools = {
+                        "Leader":      [f"Good. That puts {self._doc_ref(_sitem, short=True)} in order.",
+                                        f"Right. {self._doc_ref(_sitem, definite=True).capitalize()} — that's what we needed."],
+                        "Easygoing":   [f"Thanks, {self._role_name(_sactor)} — that's exactly what I needed.",
+                                        f"Good, that clears up {self._doc_ref(_sitem, short=True)}."],
+                        "Creative":    [f"Nice — {self._doc_ref(_sitem, short=True)} makes a lot more sense now.",
+                                        f"Thanks, that helps. {self._doc_ref(_sitem, definite=True).capitalize()} fits."],
+                        "Decisive":    [f"Good. {self._doc_ref(_sitem, short=True)} confirmed.",
+                                        f"That's it for {self._doc_ref(_sitem, short=True)}. Thanks."],
+                        "Skeptical":   [f"Alright — that finally makes {self._doc_ref(_sitem, short=True)} clear.",
+                                        f"Okay. That lines up with what I needed on {self._doc_ref(_sitem, short=True)}."],
+                        "Overthinker": [f"Good — I kept second-guessing {self._doc_ref(_sitem, short=True)}, but that settles it.",
+                                        f"Okay, that makes {self._doc_ref(_sitem, short=True)} clearer. Thanks."],
+                    }
+                    _apprec_text = random.choice(_apprec_pools.get(ptype, [
+                        f"Thanks — {self._doc_ref(_sitem, short=True)} is clear now.",
+                    ]))
+                    return {
+                        "type": "agree",
+                        "actor": agent.public_id,
+                        "target": _sactor,
+                        "text": _apprec_text,
+                        "item": _sitem,
+                        "reason": "cooperative_appreciation",
+                    }
 
         # Track how long the current blocker has been stuck (for final-item fast release)
         _bac = getattr(agent.model, "_office_blocker_age", {})
@@ -1518,6 +1592,9 @@ class OfficeProposalLogic(BaseLogic):
         blocker_age = tick - _bac.get(current_blocker, tick)
 
         # 1) Confirm pending owner share — check current blocker first, then any other missing item
+        _confirm_preset = getattr(agent.model, "team_preset", "balanced_team") or "balanced_team"
+        _scrutiny_chal_bias = PRESET_CHALLENGE_BIAS.get(_confirm_preset, 1.0)
+
         for _ci in ([current_blocker] + [m for m in missing if m != current_blocker]):
             _cp = self._pending_confirm_for_item(agent.model, _ci)
             confirmer_owner_id = _cp.get("owner") if _cp else None
@@ -1530,6 +1607,40 @@ class OfficeProposalLogic(BaseLogic):
             ):
                 _ct = next((o for o in others if o.public_id == _cp.get("owner")), None)
                 if _ct:
+                    # ── Tension/pressure teams scrutinize before accepting ──────────
+                    # Fire a challenge instead of a confirm (once per item), then let
+                    # the confirm proceed on the next tick.  Progress never permanently
+                    # stalls — the scrutiny just adds one tick of friction.
+                    _scrutiny_key = f"_office_scrutinized_{_ci}"
+                    if (
+                        not getattr(agent.model, _scrutiny_key, False)
+                        and _scrutiny_chal_bias > 1.0
+                        and random.random() < (_scrutiny_chal_bias - 1.0) * 0.35
+                    ):
+                        setattr(agent.model, _scrutiny_key, True)
+                        self._mark_conflict(agent, 0.01)
+                        _scrutiny_pools = {
+                            "Skeptical":   [f"Before we lock {self._doc_ref(_ci, short=True)} in — has everyone actually checked this?",
+                                            f"I need more convincing on {self._doc_ref(_ci, short=True)}. Does this really hold?"],
+                            "Decisive":    [f"Let's not rush {self._doc_ref(_ci, short=True)} — I want to validate it first.",
+                                            f"{self._doc_ref(_ci, definite=True).capitalize()} needs one more look before we confirm it."],
+                            "Overthinker": [f"I keep second-guessing {self._doc_ref(_ci, short=True)}. Can we just confirm it's right?",
+                                            f"Something about {self._doc_ref(_ci, short=True)} still feels unresolved to me."],
+                            "Leader":      [f"Hold on — {self._doc_ref(_ci, short=True)} needs to be solid before we move on.",
+                                            f"I want the team to challenge {self._doc_ref(_ci, short=True)} before we confirm it."],
+                        }
+                        _scrutiny_text = random.choice(_scrutiny_pools.get(ptype, [
+                            f"Let's double-check {self._doc_ref(_ci, short=True)} before confirming.",
+                        ]))
+                        return {
+                            "type": "challenge",
+                            "actor": agent.public_id,
+                            "target": _ct.public_id,
+                            "text": _scrutiny_text,
+                            "item": _ci,
+                            "reason": "pre_confirm_scrutiny",
+                        }
+
                     _ce = self._confirm_event(agent, _ct, _ci)
                     if _ce:
                         return _ce
@@ -1616,6 +1727,20 @@ class OfficeProposalLogic(BaseLogic):
                 base_refuse_prob *= 0.72
             elif trust_to_asker <= 0.32:
                 base_refuse_prob *= 1.20
+
+            # ── Memory: impression of the asker modulates refusal ──────────
+            if hasattr(agent, "memory") and agent.memory:
+                try:
+                    _asker_id = getattr(primary_asker, "public_id", None)
+                    if _asker_id:
+                        _imp = agent.memory.get_impression(_asker_id)
+                        if _imp:
+                            if "positive" in _imp.get("patterns", {}):
+                                base_refuse_prob *= 0.75  # familiar helper → less reluctant
+                            if "conflict_prone" in _imp.get("patterns", {}):
+                                base_refuse_prob *= 1.20  # friction history → more resistant
+                except Exception:
+                    pass
 
             # Post-refusal recovery: boost share probability in the 2 ticks after owner refused
             _lrt = getattr(agent.model, "_office_last_refusal_tick", {}).get(item, -99)
@@ -1794,11 +1919,22 @@ class OfficeProposalLogic(BaseLogic):
                     }
 
                 threshold = CHALLENGE_ASK_THRESHOLD.get(ptype, 4)
+                # Team preset: tension/pressure teams challenge after fewer asks;
+                # smooth teams are patient and need more asks before escalating.
+                _chal_preset_bias = PRESET_CHALLENGE_BIAS.get(
+                    getattr(agent.model, "team_preset", "balanced_team") or "balanced_team", 1.0
+                )
+                if _chal_preset_bias > 1.2:
+                    threshold = max(1, threshold - 2)   # tension: challenge sooner
+                elif _chal_preset_bias > 1.0:
+                    threshold = max(1, threshold - 1)   # pressure: challenge a bit sooner
+                elif _chal_preset_bias < 0.8:
+                    threshold = threshold + 1           # smooth: patient, more asks needed
                 if trust_to_target <= 0.32:
                     threshold = max(1, threshold - 1)
                 elif trust_to_target >= 0.68:
                     threshold += 1
-                if ask_count >= threshold and random.random() < _style(agent, "challenge", 0.12):
+                if ask_count >= threshold and random.random() < _style(agent, "challenge", 0.12 * _chal_preset_bias):
                     self._mark_conflict(agent, 0.01)
                     return {
                         "type": "challenge",
@@ -1942,6 +2078,11 @@ class OfficeProposalLogic(BaseLogic):
             proactive_share_prob += 0.08
         if trust_to_preferred >= 0.58:
             proactive_share_prob += 0.08
+        # boost_urgency intervention: raise the chance the owner shares now
+        _urgency_boost = getattr(agent.model, "_urgency_share_boost", 0.0)
+        _urgency_until = getattr(agent.model, "_urgency_share_boost_until", -1)
+        if _urgency_boost > 0 and getattr(agent.model, "tick", 0) <= _urgency_until:
+            proactive_share_prob += _urgency_boost * 0.45
         proactive_share_prob = max(0.02, min(0.95, proactive_share_prob))
 
         if own_incomplete and random.random() < proactive_share_prob:
@@ -2166,7 +2307,6 @@ class OfficeProposalLogic(BaseLogic):
                                     f"Take a look at {doc} when you get a moment and we'll close {self._doc_pronoun(doc)} out.",
                                 ],
                             ),
-                            "item": item,
                             "reason": "awaiting_confirm",
                         }
                 # Already shared — don't refuse or produce noise for other requesters
@@ -2194,7 +2334,6 @@ class OfficeProposalLogic(BaseLogic):
                             f"{self._role_name(primary_requester_id)} has the thread on {self._doc_ref(item, definite=True)}. I'll close it there.",
                         ],
                     ),
-                    "item": item,
                     "reason": "active_requester_loop",
                 }
 
@@ -2299,7 +2438,6 @@ class OfficeProposalLogic(BaseLogic):
             "actor": agent.public_id,
             "target": target.public_id,
             "text": self._owner_or_delegate_text(agent, item),
-            "item": item,
             "reason": "ownership_guard",
         }
 

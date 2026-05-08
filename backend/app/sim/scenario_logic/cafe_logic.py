@@ -17,6 +17,7 @@ import random
 from typing import TYPE_CHECKING, Optional, List, Dict, Any
 
 from app.sim.scenario_logic.base_logic import BaseLogic, get_env_modifiers
+from app.sim.game_config import PRESET_CHALLENGE_BIAS, PRESET_AGREE_BIAS
 
 if TYPE_CHECKING:
     from app.sim.agent import SimAgent
@@ -53,19 +54,43 @@ CONSTRAINT_LABELS = {
 
 CONSTRAINT_TEXT = {
     "dietary_constraint": [
+        # ── originals first (seed-compatible) ──
         "we need proper vegan options, not just one salad.",
         "we need somewhere with proper vegan options.",
         "someone needs proper vegan food, so that matters.",
+        # ── additional phrases ──
+        "the dietary requirement here is fully vegan — it's not negotiable.",
+        "one of us is strictly vegan, so that has to drive the food choice.",
+        "vegan isn't just a preference here, it's an actual requirement.",
+        "the food side needs to cover a strict vegan diet — that's the hard constraint.",
+        "we can't just pick somewhere and hope it has one vegan dish.",
+        "the dietary constraint is vegan-only — that needs to come first.",
     ],
     "budget_constraint": [
+        # ── originals first (seed-compatible) ──
         "we should keep it under about £15 per person.",
         "we need to keep it affordable, around £15 each at most.",
         "let's keep it cheap, nothing pricey.",
+        # ── additional phrases ──
+        "the budget ceiling is £15 a head — going above that isn't really an option.",
+        "we're working with a tight spend limit, so nothing that stretches past £15 each.",
+        "cost matters here — it needs to be somewhere affordable for the whole group.",
+        "we can't pick somewhere expensive; the budget limit is around £15 per person.",
+        "nothing that makes people feel the pinch — keep it under £15 a head.",
+        "the budget constraint is real: roughly £15 per person is the ceiling.",
     ],
     "location_constraint": [
+        # ── originals first (seed-compatible) ──
         "somewhere close would be better.",
-        "distance matters, so it should be easy to get to.",
+        "it needs to be nearby and easy to reach.",
         "somewhere nearby sounds best, maybe just a short walk away.",
+        # ── additional phrases ──
+        "it needs to be within walking distance — nothing that requires a commute.",
+        "the location constraint is proximity; it should be easy to get to from here.",
+        "we need somewhere close — ideally no more than ten minutes away.",
+        "distance is actually a factor here; it shouldn't be a trek.",
+        "close by is the main requirement — easy to reach on foot or a very short trip.",
+        "it has to be nearby; getting somewhere far defeats the point.",
     ],
 }
 
@@ -86,40 +111,79 @@ STRUCTURED_REFUSALS = {
 
 PRESSURE_TEXTS = {
     "dietary_constraint": [
+        # ── originals first (seed-compatible) ──
         "Food Expert, what are the dietary constraints? I need a concrete answer now.",
         "Food Expert, this is the blocker right now — give me the dietary constraint clearly.",
+        # ── additional phrases ──
+        "The dietary side is still open and it's holding us back — Food Expert, I need that answer.",
+        "We can't progress until we know the food requirement — Food Expert, what is it?",
     ],
     "budget_constraint": [
+        # ── originals first (seed-compatible) ──
         "Navigator, give me the budget constraint. I need a concrete answer now.",
         "Navigator, this is the blocker right now — give me the budget clearly.",
+        # ── additional phrases ──
+        "Budget is the blocker. Navigator — what's the actual ceiling in pounds?",
+        "I still don't have a number from you, Navigator. What are we working with?",
     ],
     "location_constraint": [
+        # ── originals first (seed-compatible) ──
         "Researcher, I still need the location constraint. What is it?",
         "Researcher, location constraint — give me something concrete.",
+        # ── additional phrases ──
+        "Distance is still unresolved — Researcher, is proximity a hard limit or not?",
+        "We're stuck on location. Researcher — walking distance or not, what's the rule?",
     ],
 }
 
 ASK_TEXTS = {
     "dietary_constraint": [
+        # ── originals first (seed-compatible) ──
         "Before we decide anything else — what are the actual dietary requirements here?",
         "Do we need to account for a dietary constraint before we lock anything in?",
         "Food Expert, are there any must-have dietary requirements?",
         "What dietary restrictions are we working around? I need that first.",
         "Are there dietary needs we haven't locked down yet?",
+        # ── additional phrases ──
+        "Food Expert — before we go any further, I need to know what the food requirements actually are.",
+        "Is there a dietary requirement we need to build the whole choice around?",
+        "Let's nail down the dietary side first — what are we working with?",
+        "I need to know about dietary constraints before we get into food preferences.",
     ],
     "budget_constraint": [
+        # ── originals first (seed-compatible) ──
         "What budget are we actually working with here?",
         "Before we go further — what's the realistic spend per person?",
         "What's our ceiling on cost? I need that before we narrow this down.",
         "Give me a number — what are we targeting budget-wise?",
         "Navigator, what's the upper limit on spend?",
+        # ── additional phrases ──
+        "Are we thinking under £15, or is there a bit more flex on the budget?",
+        "Navigator — what's the actual spend limit per person before we rule places out?",
+        "I'd rather know the budget now before we get attached to an option we can't afford.",
+        "What's the hard limit on cost? I want a number before we go further.",
     ],
     "location_constraint": [
+        # ── originals first (seed-compatible) ──
         "Do we need something nearby, or is distance not the main issue?",
         "What's the actual location constraint here — does it need to be close?",
         "How far is too far? I need to know before we commit to anything.",
         "Researcher, are there location restrictions I should factor in?",
         "Is proximity a real constraint, or are we flexible on distance?",
+        # ── additional phrases ──
+        "Does it need to be walking distance, or can we be flexible on how far?",
+        "Researcher — how much does location actually matter here? Walking distance only?",
+        "What's the travel limit we're working with? I need that to rule places in or out.",
+        "Is there an actual location restriction, or are we just preferring nearby?",
+    ],
+    "decision": [
+        "Organiser, which option fits all the constraints we've agreed on?",
+        "Given everything we've said — which place actually works?",
+        "We've covered diet, budget, and location — which option clears all three?",
+        "Organiser, can we make the call now? Which one are we going with?",
+        "It sounds like we're close — which venue are we locking in?",
+        "We have the constraints on the table. Which option satisfies them all?",
+        "Organiser, which place checks every box we've discussed?",
     ],
 }
 
@@ -129,20 +193,37 @@ ASK_TEXTS = {
 # cafe doesn't loop "are there dietary needs?" with the same wording.
 FOLLOWUP_ASK_TEXTS = {
     "dietary_constraint": [
+        # ── originals first (seed-compatible) ──
         "Food Expert — do we actually have enough vegan options, or is it more of a preference?",
         "Is the dietary thing a hard must-have, or just something we'd prefer?",
         "Food Expert, vegan came up — is that a requirement or just a preference?",
         "Can you be specific on the dietary side — is it strict vegan, vegetarian, or flexible?",
+        # ── additional phrases ──
+        "Just to be clear: is it full vegan-only, or does vegetarian cover it?",
+        "Food Expert — I need to know if this is a hard rule before we pick anywhere.",
+        "Is the food requirement strict, or is there a bit of flex on what counts?",
     ],
     "budget_constraint": [
+        # ── originals first (seed-compatible) ──
         "Navigator — we've floated cheap, but what's the actual ceiling in pounds?",
         "Is the budget point a firm cap, or more of a guideline?",
         "Navigator, can you give me a concrete number rather than 'affordable'?",
+        # ── additional phrases ──
+        "Is £15 the hard limit, or can we stretch a little for the right place?",
+        "Navigator — does that budget include drinks, or just food?",
+        "I need a firm number, not a range. What's the ceiling per person?",
+        "If the right place is a pound or two over, do we still go — or is it a firm cap?",
     ],
     "location_constraint": [
+        # ── originals first (seed-compatible) ──
         "Researcher — when you say nearby, are we talking walking distance or a short tube ride?",
         "Is the distance thing a hard limit, or can we stretch it for the right place?",
         "Researcher, can you pin down what 'close' actually means here?",
+        # ── additional phrases ──
+        "So walking distance specifically — or is five minutes on public transport fine?",
+        "What's the actual maximum you're comfortable with, in minutes?",
+        "If the best option is a ten-minute walk, does that still count as close enough?",
+        "Researcher — is the location limit a real constraint, or more of a preference?",
     ],
 }
 
@@ -499,7 +580,7 @@ class CafeRestaurantLogic(BaseLogic):
             "refusal_weight": 0.8,
             "cooperation_weight": 1.2,
             "initial_tension_delta": -0.06,
-            "initial_cohesion_delta": 0.10,
+            "initial_cohesion_delta": 0.12,
             "initial_stress_delta": -0.04,
         }
 
@@ -515,6 +596,14 @@ class CafeRestaurantLogic(BaseLogic):
     # ──────────────────────────────────────────────────────────────────────────
     # state
     # ──────────────────────────────────────────────────────────────────────────
+
+    def init_scenario_state(self, model: "SimModel") -> None:
+        """Called once at model-init time (model.py line 387).
+        Expand the sparse scenario tasks dict (which starts with only {"decision": False}
+        from scenario_data.py) to the full four-item constraint chain immediately,
+        so _tick_active_blocker and metric_history are correct from the very first tick.
+        """
+        self._ensure_progress_tasks(model)
 
     def _init_state(self, model: "SimModel") -> None:
         if not hasattr(model, "_cafe_decision_state"):
@@ -565,11 +654,19 @@ class CafeRestaurantLogic(BaseLogic):
         if not hasattr(model, "_cafe_last_ask_text"):
             model._cafe_last_ask_text = {}
 
+        if not hasattr(model, "_cafe_last_constraint_text"):
+            model._cafe_last_constraint_text = {}
+
         if not hasattr(model, "_cafe_ask_count"):
             model._cafe_ask_count = {}
 
         if not hasattr(model, "_cafe_revealed_constraints"):
             model._cafe_revealed_constraints = {
+                item: False for item in CONSTRAINT_ITEMS
+            }
+
+        if not hasattr(model, "_cafe_stored_constraints"):
+            model._cafe_stored_constraints = {
                 item: False for item in CONSTRAINT_ITEMS
             }
 
@@ -682,14 +779,25 @@ class CafeRestaurantLogic(BaseLogic):
         self._init_state(model)
         return all(model._cafe_revealed_constraints.values())
 
-    def _mark_constraint_revealed(self, model: "SimModel", item: str) -> None:
+    def _mark_constraint_revealed(self, model: "SimModel", item: str) -> bool:
         self._init_state(model)
+        active_item = next(
+            (constraint for constraint in CONSTRAINT_ITEMS if not model._cafe_revealed_constraints.get(constraint, False)),
+            None,
+        )
+        if active_item and item != active_item:
+            if item in model._cafe_stored_constraints:
+                model._cafe_stored_constraints[item] = True
+            return False
         if item in model._cafe_revealed_constraints:
             model._cafe_revealed_constraints[item] = True
+        if item in model._cafe_stored_constraints:
+            model._cafe_stored_constraints[item] = False
         if item in model.scenario.tasks and not model.scenario.tasks[item]:
-            model.scenario.complete_task(item)
+            model.mark_task_complete(item)
         self._reduce_stress_after_progress(model, amount=0.09)
         self._clamp_cafe_state(model)
+        return True
 
     def _can_ask_again(
         self,
@@ -790,18 +898,19 @@ class CafeRestaurantLogic(BaseLogic):
 
     def _choose_missing_constraint(self, model: "SimModel") -> Optional[str]:
         self._init_state(model)
+        current = next(
+            (item for item in CONSTRAINT_ITEMS if not model._cafe_revealed_constraints.get(item, False)),
+            None,
+        )
         focus_item = getattr(model, "_intervention_focus_item", None)
         focus_until = getattr(model, "_intervention_focus_until", -1)
         if (
             focus_item in CONSTRAINT_ITEMS
-            and not model._cafe_revealed_constraints.get(focus_item, False)
+            and focus_item == current
             and getattr(model, "tick", 0) <= focus_until
         ):
             return focus_item
-        for item in CONSTRAINT_ITEMS:
-            if not model._cafe_revealed_constraints.get(item, False):
-                return item
-        return None
+        return current
 
     def _owner_ready_to_share(self, agent: "SimAgent", item: str) -> bool:
         model = agent.model
@@ -849,6 +958,31 @@ class CafeRestaurantLogic(BaseLogic):
         # otherwise the late forced-share in post_tick is the only escape hatch.
         if tick_now >= 14 and personality in ("Skeptical", "Overthinker"):
             base += 0.30
+        # boost_urgency intervention raises the chance of sharing immediately.
+        urgency_boost = getattr(model, "_urgency_share_boost", 0.0)
+        urgency_until = getattr(model, "_urgency_share_boost_until", -1)
+        if urgency_boost > 0 and tick_now <= urgency_until:
+            base += urgency_boost * 0.5  # up to +0.175 for a full-amount boost
+
+        # ── Memory: impression of the most recent asker affects willingness ──
+        if hasattr(agent, "memory") and agent.memory:
+            try:
+                _stm_slice = list(agent.stm)[-6:]
+                _recent_asker = next(
+                    (m.get("from") for m in reversed(_stm_slice)
+                     if m.get("item") == item
+                     and m.get("kind") in {"ask_info", "challenge"}),
+                    None,
+                )
+                if _recent_asker:
+                    _imp = agent.memory.get_impression(_recent_asker)
+                    if _imp:
+                        if "positive" in _imp.get("patterns", {}):
+                            base += 0.08   # trust this person → more willing to share
+                        if "conflict_prone" in _imp.get("patterns", {}):
+                            base -= 0.10   # friction history → hold back a bit
+            except Exception:
+                pass
 
         return random.random() < min(base, 0.98)
 
@@ -900,6 +1034,18 @@ class CafeRestaurantLogic(BaseLogic):
             if tick_now >= 12:
                 refuse_prob = 0.0
 
+        # ── Memory: impression of the asker modulates refusal ────────────────
+        if hasattr(agent, "memory") and agent.memory:
+            try:
+                _imp = agent.memory.get_impression(asker_id)
+                if _imp:
+                    if "positive" in _imp.get("patterns", {}):
+                        refuse_prob *= 0.70   # good relationship → less likely to refuse
+                    if "conflict_prone" in _imp.get("patterns", {}):
+                        refuse_prob *= 1.25   # friction history → more resistant
+            except Exception:
+                pass
+
         if random.random() < max(0.0, refuse_prob):
             model._cafe_metrics["refusals"] += 1
             self._add_conflict(model, 1)
@@ -933,25 +1079,50 @@ class CafeRestaurantLogic(BaseLogic):
             return None  # another constraint already shared this tick
 
         model._cafe_last_constraint_tick = tick_now
-        self._mark_constraint_revealed(model, item)
+        if not self._mark_constraint_revealed(model, item):
+            return None
         model._cafe_owner_last_share_tick[(agent.public_id, item)] = tick_now
 
-        constraint_fact = random.choice(CONSTRAINT_TEXT[item])
+        # Deduplicate: avoid repeating the same constraint fact on consecutive shares.
+        _pool = CONSTRAINT_TEXT[item]
+        _last_fact = model._cafe_last_constraint_text.get(item)
+        _fact_choices = [t for t in _pool if t != _last_fact] or _pool
+        constraint_fact = random.choice(_fact_choices)
+        model._cafe_last_constraint_text[item] = constraint_fact
+
         share_intros = {
             "dietary_constraint": [
+                # ── originals (seed-compatible) ──
                 f"Right, {constraint_fact}",
                 f"The thing is, {constraint_fact}",
                 f"I should say, {constraint_fact}",
+                # ── additional ──
+                f"Okay so, {constraint_fact}",
+                f"Worth flagging — {constraint_fact}",
+                f"Just to be clear, {constraint_fact}",
+                f"For what it's worth, {constraint_fact}",
             ],
             "budget_constraint": [
+                # ── originals (seed-compatible) ──
                 f"Right, {constraint_fact}",
                 f"Budget-wise, {constraint_fact}",
                 f"Look, {constraint_fact}",
+                # ── additional ──
+                f"On the money side, {constraint_fact}",
+                f"To be straight with you, {constraint_fact}",
+                f"Just so we're aligned, {constraint_fact}",
+                f"Worth saying, {constraint_fact}",
             ],
             "location_constraint": [
+                # ── originals (seed-compatible) ──
                 f"Right, {constraint_fact}",
                 f"Okay, {constraint_fact}",
                 f"Actually, {constraint_fact}",
+                # ── additional ──
+                f"In terms of location, {constraint_fact}",
+                f"Distance-wise, {constraint_fact}",
+                f"Worth knowing, {constraint_fact}",
+                f"Just flagging, {constraint_fact}",
             ],
         }
         intros = share_intros.get(item, [f"Okay, {constraint_fact}"])
@@ -1343,6 +1514,7 @@ class CafeRestaurantLogic(BaseLogic):
                 others,
                 key=lambda a: self._commitment(model, a.public_id) + a.trust.get(organiser.public_id, 0.5),
             )
+            model._cafe_closer_id = closer.public_id  # stored for warm-affirmation below
             self._reduce_stress_after_progress(model, amount=0.10)
             self._clamp_cafe_state(model)
             extra_events.append({
@@ -1371,6 +1543,7 @@ class CafeRestaurantLogic(BaseLogic):
                 others,
                 key=lambda a: self._commitment(model, a.public_id) + a.trust.get(organiser.public_id, 0.5),
             )
+            model._cafe_closer_id = closer.public_id  # stored for warm-affirmation below
             self._reduce_stress_after_progress(model, amount=0.10)
             self._clamp_cafe_state(model)
             extra_events.append({
@@ -1381,6 +1554,50 @@ class CafeRestaurantLogic(BaseLogic):
                 "preference": "_finalise_",
                 "reason": "cafe_finalise",
             })
+
+        # ── Smooth/creative teams: warm group affirmation after decision ─────
+        # When the group reaches a decision, smooth-culture teams have other
+        # members explicitly voice agreement — a realistic social behaviour.
+        # Tension/pressure teams stay quieter (one voice confirms, others nod
+        # silently) so they produce fewer agree events overall.
+        # Guard: once per run, fires only on the tick finalise is set.
+        if model._cafe_finalised and not getattr(model, "_cafe_affirm_done", False):
+            model._cafe_affirm_done = True  # unconditional guard — prevents repeated check
+            _aff_preset = getattr(model, "team_preset", "balanced_team") or "balanced_team"
+            _aff_bias = PRESET_AGREE_BIAS.get(_aff_preset, 1.0)
+            if _aff_bias > 1.0:
+                # n_affirm: smooth always gets 1 extra, creative gets ~50%
+                _n_affirm = 0
+                if _aff_bias >= 1.50:      # smooth_team
+                    _n_affirm = 1
+                elif _aff_bias >= 1.20:    # creative_team
+                    _n_affirm = 1 if random.random() < 0.55 else 0
+                if _n_affirm > 0:
+                    _closer_id = getattr(model, "_cafe_closer_id", None)
+                    _affirm_used = {e.get("actor") for e in extra_events}
+                    _affirm_candidates = [
+                        a for a in others
+                        if a.public_id not in _affirm_used
+                        and a.public_id != _closer_id
+                        and a.public_id != organiser.public_id
+                    ]
+                    random.shuffle(_affirm_candidates)
+                    for _a in _affirm_candidates[:_n_affirm]:
+                        extra_events.append({
+                            "type": "agree",
+                            "actor": _a.public_id,
+                            "target": organiser.public_id,
+                            "text": random.choice([
+                                "That works for me.",
+                                "Yeah, I'm good with that.",
+                                "Sounds like the right call.",
+                                "Works for me — let's go.",
+                                "Makes sense. I'm in.",
+                                "Happy with that choice.",
+                            ]),
+                            "preference": "_finalise_",
+                            "reason": "warm_affirmation",
+                        })
 
         return extra_events
 
@@ -1503,6 +1720,30 @@ class CafeRestaurantLogic(BaseLogic):
 
         state = self._state(model)
         tick_now = getattr(model, "tick", 0)
+
+        # ── Refresh memory impressions every 4 ticks (per-agent) ─────────
+        # Uses per-agent tracking so each agent independently maintains their
+        # own impressions rather than one agent refreshing for the whole model.
+        if hasattr(agent, "memory") and agent.memory:
+            if tick_now >= 4 and tick_now - getattr(agent, "_memory_impression_tick", -99) >= 4:
+                try:
+                    agent.memory.update_impressions(tick_now)
+                    agent._memory_impression_tick = tick_now
+                    # Feed impression patterns back into trust (subtle drift)
+                    from app.sim.agent import clamp as _iclamp
+                    for _oid, _imp in (agent.memory.impressions or {}).items():
+                        _pats = _imp.get("patterns", {})
+                        _td = 0.0
+                        if "positive" in _pats:
+                            _td += 0.015
+                        if "conflict_prone" in _pats or "anger_prone" in _pats:
+                            _td -= 0.015
+                        if _td != 0.0:
+                            agent.trust[_oid] = _iclamp(
+                                agent.trust.get(_oid, 0.5) + _td, 0.0, 1.0
+                            )
+                except Exception:
+                    pass
         role_constraint = ROLE_TO_CONSTRAINT.get(agent.public_id)
         own_pref = next((p for p in ALL_PREFS if p in getattr(agent, "known_items", set())), None)
         personality = getattr(agent, "personality_type", "Easygoing")
@@ -1525,7 +1766,12 @@ class CafeRestaurantLogic(BaseLogic):
             None,
         )
 
-        if role_constraint and recent_targeted and not model._cafe_revealed_constraints.get(role_constraint, False):
+        if (
+            role_constraint
+            and recent_targeted
+            and not model._cafe_revealed_constraints.get(role_constraint, False)
+            and role_constraint == self._choose_missing_constraint(model)
+        ):
             asker_id = recent_targeted.get("from")
 
             refusal = self._maybe_refuse(agent, asker_id, role_constraint)
@@ -1585,17 +1831,23 @@ class CafeRestaurantLogic(BaseLogic):
                 if ask_count >= 5 and tick_now >= 12:
                     fallback_target = next((x for x in others if x.public_id != owner_id), None)
                     if fallback_target:
+                        # No "item" on this coordination say — it doesn't share resolving
+                        # content, so carrying item would cause the frontend to show
+                        # "X is now resolved" if the constraint completes in the same tick.
                         return {
                             "type": "say",
                             "actor": agent.public_id,
                             "target": fallback_target.public_id,
                             "text": f"We're stuck on {_lbl(missing)} — use whatever you know that helps us move.",
-                            "item": missing,
                             "reason": "deadlock_break_prompt",
                         }
 
         # 3) Owners may proactively share their owned constraint after some time
-        if role_constraint and not model._cafe_revealed_constraints.get(role_constraint, False):
+        if (
+            role_constraint
+            and not model._cafe_revealed_constraints.get(role_constraint, False)
+            and role_constraint == self._choose_missing_constraint(model)
+        ):
             proactive_prob = {
                 "Easygoing": 0.30,
                 "Decisive": 0.28,
@@ -1654,6 +1906,17 @@ class CafeRestaurantLogic(BaseLogic):
             if model._cafe_revealed_constraints.get("budget_constraint", False) and own_pref == "fancy":
                 suggest_prob *= 0.15
 
+            # Active-blocker context filter: suppress off-topic suggestions while a
+            # constraint is still open.  An agent saying "somewhere not cheap, not
+            # flashy" (budget framing) when the active blocker is dietary constraint
+            # is topically incoherent.  Keep a small non-zero floor so personality
+            # drift can still surface, but redirect most energy to the live topic.
+            _active_blocker = self._choose_missing_constraint(model)
+            if _active_blocker == "dietary_constraint" and own_pref in ("fancy", "cheap"):
+                suggest_prob *= 0.20   # strongly suppress budget talk during food discussion
+            elif _active_blocker == "budget_constraint" and own_pref in ("vegan", "italian"):
+                suggest_prob *= 0.40   # moderately suppress cuisine talk during budget discussion
+
             if random.random() < suggest_prob and (state[dim] is None or random.random() < 0.30):
                 tgt = random.choice([a for a in others if a != agent])
                 self._register_pref_expression(model, agent.public_id, own_pref)
@@ -1665,6 +1928,63 @@ class CafeRestaurantLogic(BaseLogic):
                     "preference": own_pref,
                     "reason": "preference_suggestion",
                 }
+
+        # 4b) Tension/pressure teams: unprompted skeptical challenge
+        # Fires based on stress or group tension alone — no preference conflict needed.
+        # Represents a tense team questioning the decision process itself.
+        _cafe_chal_preset = getattr(model, "team_preset", "balanced_team") or "balanced_team"
+        _cafe_chal_bias = PRESET_CHALLENGE_BIAS.get(_cafe_chal_preset, 1.0)
+        if _cafe_chal_bias > 1.0:
+            _group_tension = float(getattr(model, "group_tension", 0.0) or 0.0)
+            _agent_stress  = float(getattr(agent, "stress", 0.0) or 0.0)
+            _spontaneous_chal_prob = 0.07 * _cafe_chal_bias
+            if _group_tension > 0.30 or _agent_stress > 0.28:
+                # Pick any recent suggester from STM as the target
+                _recent_sug_msg = next(
+                    (m for m in reversed(list(agent.stm)[-8:])
+                     if m.get("kind") == "suggest" and m.get("from") != agent.public_id),
+                    None,
+                )
+                _chal_target_id = (
+                    _recent_sug_msg.get("from") if _recent_sug_msg
+                    else (random.choice([a for a in others if a != agent]).public_id if others else None)
+                )
+                if _chal_target_id and random.random() < _spontaneous_chal_prob:
+                    _skep_chal_pools = {
+                        "Skeptical":   [
+                            "I'm not sure we're approaching this the right way.",
+                            "Are we actually sure this is the best we can do?",
+                            "I keep coming back to whether we've actually thought this through.",
+                        ],
+                        "Overthinker": [
+                            "I keep second-guessing whether we're making the right call here.",
+                            "Something about this feels off — have we covered everything?",
+                            "I'm not convinced we've considered all the options here.",
+                        ],
+                        "Decisive":    [
+                            "This is taking too long. We need to challenge ourselves to decide faster.",
+                            "We're going in circles. Someone needs to push back.",
+                        ],
+                        "Leader":      [
+                            "I want to challenge the group — are we being rigorous enough?",
+                            "Let's not settle. Has anyone actually questioned the approach?",
+                        ],
+                    }
+                    _skep_text = random.choice(
+                        _skep_chal_pools.get(personality, [
+                            "I'm not sure this is the right direction.",
+                            "Can we take a step back and question this?",
+                        ])
+                    )
+                    self._add_conflict(model, 1)
+                    agent.stress = min(0.60, agent.stress + 0.02)
+                    return {
+                        "type": "challenge",
+                        "actor": agent.public_id,
+                        "target": _chal_target_id,
+                        "text": _skep_text,
+                        "reason": "tension_skeptical_challenge",
+                    }
 
         # 5) Respond to recent suggestions
         recent_suggest = next(
@@ -1698,6 +2018,11 @@ class CafeRestaurantLogic(BaseLogic):
                         "reason": "creative_late_convergence",
                     }
 
+                # Team-preset bias: tension teams challenge more, smooth teams less.
+                _preset = getattr(model, "team_preset", "balanced_team") or "balanced_team"
+                _preset_challenge_bias = PRESET_CHALLENGE_BIAS.get(_preset, 1.0)
+                _preset_agree_bias = PRESET_AGREE_BIAS.get(_preset, 1.0)
+
                 # Cafe should stay softer than office — also modulated by env modifiers
                 personality_challenge_mult = {
                     "Skeptical": 1.2,
@@ -1710,7 +2035,7 @@ class CafeRestaurantLogic(BaseLogic):
                 env_mods = get_env_modifiers(agent.model, personality)
                 personality_challenge_mult *= env_mods.get("challenge_bias", 1.0)
 
-                if random.random() < 0.12 * personality_challenge_mult:
+                if random.random() < 0.12 * personality_challenge_mult * _preset_challenge_bias:
                     self._add_conflict(model, 1)
                     agent.stress = min(0.58, agent.stress + 0.025)
                     return {
@@ -1734,9 +2059,9 @@ class CafeRestaurantLogic(BaseLogic):
                 personality_compromise_mult *= env_mods.get("confirm_bias", 1.0)
 
                 _post_summary = getattr(model, "_cafe_summary_done", False)
-                _compromise_prob = 0.30 * personality_compromise_mult
+                _compromise_prob = 0.30 * personality_compromise_mult * _preset_agree_bias
                 if not _post_summary and tick_now >= 10:
-                    _compromise_prob = max(_compromise_prob, 0.60)
+                    _compromise_prob = max(_compromise_prob, 0.60 * _preset_agree_bias)
                 elif _post_summary:
                     _compromise_prob *= 0.35
                 if random.random() < _compromise_prob:
@@ -1761,7 +2086,13 @@ class CafeRestaurantLogic(BaseLogic):
                     }
 
             elif their_pref and other_id and their_pref == own_pref:
-                _agree_prob = 0.15 if getattr(model, "_cafe_summary_done", False) else 0.50
+                _preset_agree_bias_same = PRESET_AGREE_BIAS.get(
+                    getattr(model, "team_preset", "balanced_team") or "balanced_team", 1.0
+                )
+                _agree_prob = (
+                    0.15 if getattr(model, "_cafe_summary_done", False)
+                    else min(0.92, 0.70 * _preset_agree_bias_same)
+                )
                 if random.random() < _agree_prob:
                     self._register_pref_expression(model, agent.public_id, own_pref)
                     model._cafe_metrics["agreements"] += 1

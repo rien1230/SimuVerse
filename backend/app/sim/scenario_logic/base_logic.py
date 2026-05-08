@@ -48,36 +48,39 @@ ENVIRONMENT_RULES: Dict[str, Dict[str, float]] = {
         # Action probability biases (used by choose_action in scenario logics)
         "ask_bias": 1.0,
         "challenge_bias": 0.8,
-        "confirm_bias": 1.0,
+        # Structured collaboration: confirmations close the loop
+        "confirm_bias": 1.2,
     },
     "cafe": {
         # Low stakes — stress barely rises
         "stress_multiplier": 0.6,
         # Friendliness and flexibility rewarded more
         "trust_gain_multiplier": 1.1,
-        # Disagreement is light and short-lived
-        "conflict_multiplier": 0.6,
+        # Disagreement is rare and quickly forgotten
+        "conflict_multiplier": 0.5,
         # People calm down quickly here
         "recovery_multiplier": 1.2,
         # Refusals barely sting in a social setting
         "refusal_penalty": 0.7,
         "ask_bias": 0.8,
-        "challenge_bias": 0.5,
+        # Low pressure — challenges are soft and infrequent
+        "challenge_bias": 0.3,
         "confirm_bias": 1.2,
     },
     "escape": {
         # Time pressure means stress builds fast
-        "stress_multiplier": 1.4,
+        "stress_multiplier": 1.6,
         # Useful clue-sharing pays off big; hesitation punished
         "trust_gain_multiplier": 1.2,
         # Friction under pressure hits harder
         "conflict_multiplier": 1.3,
-        # Tension doesn't release until real progress happens
-        "recovery_multiplier": 0.8,
+        # Tension barely drops until real progress happens
+        "recovery_multiplier": 0.65,
         # Refusals are costly — every second counts
         "refusal_penalty": 1.3,
         "ask_bias": 1.2,
-        "challenge_bias": 1.1,
+        # High pressure sparks more challenges and second-guessing
+        "challenge_bias": 1.4,
         "confirm_bias": 0.9,
     },
 }
