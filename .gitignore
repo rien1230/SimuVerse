@@ -17,3 +17,9 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+
+# Generated run/replay data
+data/replays/*.jsonl
+data/replays/*.json
+personality_test_results.json
+backend/personality_test_results.json
