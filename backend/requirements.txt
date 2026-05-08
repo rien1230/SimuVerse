@@ -1,0 +1,20 @@
+# Web framework + ASGI server
+fastapi==0.128.8
+uvicorn==0.39.0
+websockets==15.0.1        # required for FastAPI WebSocket support
+
+# Data validation (used directly via BaseModel / Field)
+pydantic==2.13.3
+
+# Agent-based simulation engine
+mesa==2.4.0
+
+# Async thread execution (anyio.to_thread.run_sync used in routes)
+anyio==4.12.1
+
+# Sentiment analysis — rule-based emotion fallback
+vaderSentiment==3.3.2
+
+# Numerical random seeding in SimModel
+numpy==2.0.2
+
