@@ -3,9 +3,11 @@
 // Sets window.SimuVerseAPI = { API_BASE, WS_BASE, apiFetch, apiPost, apiDelete }
 
 (function () {
-  var API_BASE = (window.SIMUVERSE_API) || "http://127.0.0.1:8007/api";
+  // Shared base URLs used by every frontend page.
+  var API_BASE = (window.SIMUVERSE_API) || "http://localhost:8007/api";
   var WS_BASE = API_BASE.replace(/^http/, "ws");
 
+  // Low-level fetch wrapper with timeout and consistent error parsing.
   async function apiFetch(path, options) {
     options = options || {};
     var url = API_BASE + path;
@@ -41,6 +43,7 @@
     return response.json();
   }
 
+  // Small helpers for the request types the UI uses most.
   async function apiPost(path, body) {
     return apiFetch(path, {
       method: "POST",
@@ -52,6 +55,7 @@
     return apiFetch(path, { method: "DELETE" });
   }
 
+  // Expose one shared client so page scripts do not duplicate fetch logic.
   window.SimuVerseAPI = {
     API_BASE: API_BASE,
     WS_BASE: WS_BASE,
