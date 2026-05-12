@@ -1,24 +1,4 @@
-"""
-app/sim/dialogue_banks.py
 
-Structured dialogue system: environment → personality → tone → action → phrases
-
-Tone bands (based on agent stress):
-    calm  : 0.00 – 0.29
-    mild  : 0.30 – 0.54
-    tense : 0.55+
-
-Usage:
-    from app.sim.dialogue_banks import pick_line, get_tone
-
-    text = pick_line(agent, "agree")
-    text = pick_line(agent, "share", info="the budget is £15 per head")
-    text = pick_line(agent, "ask",   item="lock")
-
-Data now lives in data/dialogue/*.json, loaded by dialogue_loader.py.
-
-This file is the access layer for the structured dialogue bank.
-"""
 from __future__ import annotations
 
 import random
@@ -39,8 +19,6 @@ def get_tone(stress: float) -> str:
     """
     Convert a numeric stress value into one of three tone labels.
 
-    The tone is used to select which set of phrases an agent uses —
-    stressed agents sound more clipped and urgent, calm agents are warmer.
     """
     if stress < 0.30:
         return "calm"
@@ -65,15 +43,7 @@ def pick_line(
     info: str = "",
     role: str = "",
 ) -> Optional[str]:
-    """
-    Return a phrase from the structured dialogue bank for the given agent and action.
 
-    Looks up phrases by environment, personality, tone, and action type.
-    Falls back through: exact personality match → Easygoing default → None.
-    Substitutes {item}, {info}, {role} placeholders before returning.
-
-    Returns None if no matching phrase exists (caller decides what to do then).
-    """
     env = _scenario_type(agent)
     personality = getattr(agent, "personality_type", "Easygoing")
     tone = get_tone(agent.stress)

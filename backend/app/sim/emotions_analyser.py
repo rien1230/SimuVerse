@@ -311,9 +311,7 @@ class EmotionAnalyser:
     }
 
     # Per-emotion minimum score required to include that emotion in the output.
-    # Emotions that are easy to confuse (e.g. "realization", "confusion") get
-    # lower thresholds so they aren't missed; rare ones like "grief" need a higher
-    # score because a weak prediction there is probably just noise.
+
     EMOTION_THRESHOLDS = {
         "admiration": 0.20,
         "amusement": 0.20,
@@ -349,15 +347,7 @@ class EmotionAnalyser:
     # circumplex model of affect, which defines emotions along two independent axes:
     #   - Valence: how pleasant (+1.0) or unpleasant (-1.0) the emotion feels
     #   - Arousal: how activating (1.0 = high energy) or deactivating (0.0 = calm)
-    # This gives the simulation a way to translate any detected emotion into a
-    # quantifiable effect on agent behaviour, rather than treating labels as opaque
-    # categories. For example, anger is highly negative (-0.7) and highly activating
-    # (0.8), which the sim maps to increased stress and reduced trust. By contrast,
-    # gratitude is highly positive (+0.8) but low-arousal (0.3) — it improves
-    # cooperation without spiking energy levels. The coordinate values are based on
-    # published dimensional ratings for emotion words:
-    #   - Russell (1980) — original circumplex model
-    #   - Warriner, Kuperman & Brysbaert (2013) — large-scale valence/arousal norms
+
     VALENCE_AROUSAL_MAP = {
         "admiration": (0.7, 0.4),
         "amusement": (0.8, 0.5),
@@ -538,16 +528,7 @@ class EmotionAnalyser:
     # ------------------------------------------------------------------
     # Rule-based deterministic mode
     # ------------------------------------------------------------------
-    # I kept a rule-based mode as the default for simulation runs because
-    # reproducibility matters — seeded simulations should produce the same
-    # output every time, and transformer models can behave non-deterministically
-    # across library versions. The rule-based mode uses VADER (Hutto & Gilbert, 2014)
-    # for overall sentiment polarity and then overlays explicit lexical cues for
-    # specific emotion labels. The lexical cues are intentionally high-precision
-    # and low-recall: I'd rather miss a weak signal than wrongly fire an emotion
-    # that changes the simulation state. VADER's compound score handles the
-    # cases where no explicit keyword fires, mapping strong positive/negative
-    # polarity to joy/anger and milder polarity to approval/disapproval.
+
 
     def _rule_based_analysis(self, text: str) -> Dict[str, float]:
         """Classify text using VADER sentiment plus explicit keyword rules.

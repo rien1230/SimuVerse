@@ -30,12 +30,7 @@ _COLLAPSE_SPACES = re.compile(r"\s{2,}")
 
 
 def _polish_dialogue(text: str) -> str:
-    """
-    Thin wrapper that delegates to the polishing logic in model.py.
 
-    Keeping it here means other parts of the pipeline can call it without
-    importing SimModel directly (avoiding circular import issues).
-    """
     from app.sim.model import _polish_dialogue as _model_polish
     return _model_polish(text)
 
@@ -45,12 +40,7 @@ def normalize_events(
     collected_events: List[Dict[str, Any]],
     existing_events: Optional[List[Dict[str, Any]]] = None,
 ) -> List[Dict[str, Any]]:
-    """
-    Run the full cleanup pipeline on a batch of tick events.
 
-    existing_events is the list of events already committed from previous ticks —
-    it's used by the phrase deduper so agents don't repeat themselves across ticks.
-    """
     from app.sim.model import _polish_dialogue
 
     # Keep this order stable: trim duplicates first, then remove contradictions,
@@ -73,17 +63,7 @@ def filter_events(
     model: "SimModel",
     events: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    """
-    Drop events that would contradict or clutter active interventions.
 
-    There are three main cases we handle:
-    1. Stale ask_info events — if an intervention already triggered a share for
-       the same (actor, target, item) pair, the old ask is now redundant.
-    2. Forced meeting interference — during a forced meeting between two agents,
-       we drop events that try to redirect either of them to a third party.
-    3. Focus window quiet period — when an intervention forces a specific topic,
-       we suppress unrelated chatter so it doesn't drown out the forced event.
-    """
     # Track which agents are sharing info this tick — used later to suppress hesitation lines
     share_actors = {
         event["actor"] for event in events if event.get("type") == "share_info"

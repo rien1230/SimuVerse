@@ -5,18 +5,6 @@ Builds agent trait dicts and assigns personality_type.
 
 Roles (office), preferences (cafe), and archetypes (escape) are fixed by the system.
 
-Usage:
-    from app.sim.agent_builder import build_agent_traits, build_all_agents, get_personality_phrase
-
-    # Single agent
-    traits, ptype = build_agent_traits("office_proposal", agent_id="A1", personality="Skeptical")
-
-    # All four agents
-    all_traits = build_all_agents("office_proposal", personalities=["Leader","Skeptical","Overthinker","Creative"])
-
-    # Get a personality phrase for dialogue
-    phrase = get_personality_phrase(agent, action_type="challenge")
-
 This file is the construction layer for agent personalities.
 This module turns team presets into concrete trait values and labels.
 """

@@ -1,6 +1,3 @@
-"""Personality test service — runs a full SimModel simulation for a given scenario/team
-combination and returns structured metrics. Extracted from routes/runs.py to keep route
-files as thin handlers."""
 
 # This service is a focused evaluation helper.
 # It is separate from the live run routes because it runs full simulations to

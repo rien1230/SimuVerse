@@ -1,9 +1,3 @@
-"""Intervention helpers that push a run toward movement, clarity, or tension.
-
-This file contains the low-level simulation mutations behind intervention
-buttons. The service layer validates requests first; this file actually changes
-model/agent state and queues visible events.
-"""
 
 from __future__ import annotations
 from typing import Any, Dict, Optional
@@ -16,15 +10,7 @@ import random
 # ──────────────────────────────────────────────────────────────────────────
 
 def reveal_info(model, agent_id: str, item: str, complete_task: bool = False) -> Dict[str, Any]:
-    """
-    Give an agent immediate knowledge of an item.
-    Optionally also marks the task as complete.
-    Also queues a visible conversation event so it appears in the log.
 
-    This is called when the user clicks "Reveal Info" in the UI. The goal is to
-    unblock a stalled run by giving an agent the piece of info they're missing,
-    then triggering a realistic-looking dialogue exchange so it doesn't feel abrupt.
-    """
     agent = _find_agent(model, agent_id)
     if not agent:
         return {"success": False, "reason": f"Agent {agent_id} not found"}

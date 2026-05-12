@@ -10,13 +10,7 @@ from typing import Dict, List
 
 @dataclass
 class Scenario:
-    """
-    Represents a single simulation scenario — basically the game state for one run.
 
-    Each scenario has a set of tasks that agents need to complete together.
-    The knowledge_map controls which agent starts with knowledge of which task,
-    so agents actually have to communicate to get everything done.
-    """
 
     environment: str                       # which environment type this is (e.g. "office", "escape")
     id: str
@@ -43,14 +37,7 @@ class Scenario:
         return all(self.tasks.values())
 
     def outcome(self, tick: int) -> str:
-        """
-        Return 'success', 'partial', or 'failure' if ended, else 'running'.
 
-        - 'success'  — all tasks done
-        - 'partial'  — time ran out but at least half done
-        - 'failure'  — time ran out and less than half done
-        - 'running'  — simulation is still in progress
-        """
         if self.is_success():
             return "success"
         if tick >= self.max_ticks:

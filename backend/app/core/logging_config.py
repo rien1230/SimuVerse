@@ -11,12 +11,7 @@ import sys
 def configure_logging(level: str = "INFO") -> None:
     """Set up a single stdout handler with a consistent format for the whole app.
 
-    Called once at startup in main.py. The format includes timestamp, level,
-    logger name, and message so it's easy to trace which module produced each line.
 
-    Args:
-        level: Logging level string (e.g. "INFO", "DEBUG"). Falls back to INFO
-               if an unrecognised string is passed.
     """
     formatter = logging.Formatter(
         fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",

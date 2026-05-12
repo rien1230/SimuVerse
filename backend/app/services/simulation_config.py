@@ -1,4 +1,3 @@
-"""Builds the normalized config that each simulation run starts from."""
 
 # Bridge between setup-page choices and backend-ready config.
 

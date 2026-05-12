@@ -100,12 +100,7 @@ def _trait_initial_trust(
 ) -> float:
     """Calculate the initial trust that one agent has toward another, based on OCEAN traits.
 
-    Agreeableness (A) raises trust — agreeable people extend more good faith.
-    Neuroticism (N) lowers trust — anxious/neurotic people are more guarded by default.
-    The other agent's traits also matter slightly: a highly agreeable target gets
-    a small bonus, and a neurotic one gets a small penalty.
 
-    Result is clamped to [0.05, 0.95] so no agent starts with zero or perfect trust.
     """
     # clamped to [0.05, 0.95] — no agent starts fully trusting or fully suspicious
     base = 0.40
@@ -119,12 +114,7 @@ def _trait_initial_trust(
 def _trait_initial_strategy(traits: Dict[str, float]) -> str:
     """Determine the most appropriate starting strategy from an agent's OCEAN traits.
 
-    The rules try to capture the most behaviorally relevant combinations:
-    - High Neuroticism → defensive (anxious agents withdraw and guard themselves)
-    - High Agreeableness + Extraversion → cooperative (sociable and warm)
-    - Low Agreeableness + high Neuroticism → avoidant (reluctant and anxious)
-    - High Conscientiousness + Extraversion → assertive (goal-driven and outgoing)
-    - Everything else → neutral (baseline, no strong personality pull)
+
     """
     a_val = traits.get("A", 0.5)
     n_val = traits.get("N", 0.5)
@@ -167,27 +157,7 @@ class SimModel(mesa.Model):
         team_type: Optional[str] = None,
         team_preset: Optional[str] = None,
     ) -> None:
-        """Set up all simulation state for a new run.
 
-        Parameters
-        ----------
-        seed : int
-            RNG seed for reproducibility.
-        min_events_per_tick : int
-            Minimum number of events generated each tick (currently advisory).
-        episode_max_ticks : int
-            Hard tick limit — the run ends when this is reached regardless of outcome.
-        environment : str, optional
-            Override the scenario's default environment string.
-        scenario_id : str
-            Which scenario to run (e.g. "office_proposal", "cafe_lunch").
-        use_nlp : bool
-            If True, NLP-based emotion analysis is active; otherwise rule-based only.
-        team_type : str, optional
-            Team composition label used to resolve personalities (e.g. "smooth").
-        team_preset : str, optional
-            Preset label that seeds initial group tension/cohesion/stress.
-        """
         super().__init__(seed=seed)
 
         self.tick = 0
@@ -741,13 +711,7 @@ class SimModel(mesa.Model):
             self.recent_success_ticks = 0
             self.total_stalled_ticks += 1
 
-        # Use the scenario behaviour's _priority_missing() when available — it
-        # returns items in the canonical chain order (e.g. requirements → design →
-        # tech_specs → budget for Office; clue priority order for Escape).
-        # Without this, model.bottleneck_item is determined by raw dict iteration
-        # which puts "budget" first in the Office tasks dict, causing the whole
-        # run to be recorded with bottleneck_item="budget" and the blocker_timeline
-        # to show only "Budget" even when all four blockers were resolved.
+
         if hasattr(getattr(self, "behaviour", None), "_priority_missing"):
             missing_items = list(self.behaviour._priority_missing(self))
         else:
@@ -1037,11 +1001,7 @@ class SimModel(mesa.Model):
 
     # ============================================================
     # COMPLETION AND SUMMARY BUILDING
-    # _check_end_conditions evaluates scenario outcome, max-ticks,
-    # trust/stress collapse, harmony, and bottleneck deadlock.
-    # _build_tick_diff assembles self.last_diff — the canonical
-    # per-tick snapshot streamed to the frontend and stored in
-    # self.history for replay and PDF export.
+
     # ============================================================
 
     def _check_end_conditions(self, metrics: Dict[str, Any]) -> str:
@@ -1392,49 +1352,13 @@ class SimModel(mesa.Model):
 
     # ============================================================
     # NLP / USER EMOTION INJECTION
-    # inject_user_emotion() is the bridge between the text
-    # classifier (emotions_analyser) and the live simulation.
-    # It classifies free-text input, translates the emotion into
-    # bounded stress/trust/valence deltas, applies them to every
-    # agent immediately, then stores a decay record so the effect
-    # fades exponentially over the next several ticks.
-    # emotion_summary() is called by run_history_service at save
-    # time to include the injection log in the history JSON.
+
     # ============================================================
 
-    # ── User emotion injection ────────────────────────────────────────────────
-    # I designed inject_user_emotion() as the bridge between the classify_user_emotion()
-    # function (which only analyses text) and the live simulation state (which tracks
-    # per-agent stress, valence, and trust). The method does three things:
-    #   1. Classifies the text using the emotion pipeline (ML or rule-based)
-    #   2. Translates the detected emotion into bounded stress/trust/valence deltas
-    #      using the four-category scheme (neg_high, neg_low, positive, neutral)
-    #   3. Applies those deltas immediately to all agents and then stores a decay
-    #      record so the effect fades over the following ticks
-    # I apply the effect to all agents rather than a single agent because the
-    # framing is that the *user* is acting as an external moderator influencing
-    # the group atmosphere — analogous to a manager entering a meeting with a
-    # particular mood. Emotional contagion research (Barsade, 2002) supports
-    # the idea that one person's emotional state rapidly spreads through a group.
+
 
     def inject_user_emotion(self, text: str, tick: Optional[int] = None) -> Dict[str, Any]:
-        """Classify user-provided emotional text and apply it to all agents.
 
-        The effect is bounded and decays over the following ticks so it does
-        not permanently dominate the simulation.
-
-        Parameters
-        ----------
-        text : str
-            Free-text emotion input from the user.
-        tick : int, optional
-            Tick label to record.  Defaults to the model's current tick.
-
-        Returns
-        -------
-        dict
-            The emotion_injection event that was logged and queued.
-        """
         from app.sim.emotions_analyser import classify_user_emotion
         from app.sim.agent import clamp
 
@@ -1446,20 +1370,7 @@ class SimModel(mesa.Model):
         arousal   = classification["arousal"]
         intensity = classification["intensity"]
 
-        # ── Compute bounded deltas ────────────────────────────────────────
-        # I derived the delta bounds empirically by running the simulation
-        # with extreme emotion inputs and checking that no single injection
-        # could dominate the run. The maximum stress increase (+0.12) is large
-        # enough to be visible in the charts but small enough that a single
-        # angry input doesn't send all agents into permanent high-stress. Trust
-        # is only reduced for high-arousal negatives at intensity >= 0.5 because
-        # trust is the slowest-moving social variable — a momentary expression
-        # of nervousness shouldn't tank relationships the way repeated conflict does.
-        # Rules follow the spec categories:
-        #   Negative high-arousal → stress +, trust –
-        #   Negative low-arousal  → stress + (smaller), no trust hit
-        #   Positive              → stress –, trust +
-        #   Neutral               → no change
+
 
         _neg_high = {"anger", "annoyance", "fear", "nervousness", "disgust", "disapproval"}
         _neg_low  = {"sadness", "disappointment", "remorse", "grief", "embarrassment"}

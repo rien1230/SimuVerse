@@ -12,22 +12,7 @@ import math
 
 class EmotionalMemory:
     """Combined short-term and long-term social memory for one agent."""
-    # Each agent has one EmotionalMemory instance. It acts as a combined short-term and
-    # long-term memory store, tracking who the agent has interacted with, how those
-    # interactions felt, and — crucially — what kind of person each partner seems to be.
-    # The memory system has two tiers:
-    #   - STM (short-term memory): a rolling deque of recent interactions, max 50 entries
-    #   - LTM (long-term memory): only the highest-importance memories survive here,
-    #     sorted by importance score, capped at 50 entries
-    # Importance is calculated separately for each memory (see _calculate_importance below).
-    # The emotional importance boosts below are grounded in psychological research:
-    #   - Negativity bias (Baumeister et al., 2001): negative events are processed more
-    #     thoroughly and remembered more strongly than equivalent positive ones
-    #   - Emotional arousal enhances memory consolidation (McGaugh, 2003): the amygdala
-    #     modulates hippocampal storage in proportion to emotional intensity
-    #   - Negative emotions are recalled with greater vividness and accuracy (Kensinger, 2007)
-    # This is why grief, fear, and anger have the highest boosts — they're the emotions
-    # most likely to produce durable behavioural change in a social agent.
+
     EMOTION_IMPORTANCE_BOOST = {
         # Very high impact emotions (life-changing, traumatic)
         'grief': 0.45,
@@ -117,16 +102,7 @@ class EmotionalMemory:
             if len(self.ltm) > 50:
                 self.ltm = self.ltm[:50]
 
-    # To calculate the importance of a memory. I'll be considering 4 factors that increases importance :
-    #         - High emotional intensity (confidence)
-    #         - Emotion type (using per-emotion importance boosts)
-    #         - First interaction with someone
-    #         - Very recent events (recency bias)
-    # How I came up with emotion importance boost is that I found that negative emotions has high intensity memory
-    # effect than everyday emotions. Based on psychological research on emotional memory:
-    #         - Negativity bias (Baumeister et al., 2001)
-    #         - Emotional arousal enhances memory (McGaugh, 2003)
-    #         - Negative emotions remembered more vividly (Kensinger, 2007)
+
     def _calculate_importance(self, memory: Dict[str, Any]) -> float:
         """Score a memory on a 0–1 scale based on four factors:
           1. Base rate (0.3) — every memory starts with some importance
@@ -160,11 +136,7 @@ class EmotionalMemory:
 
         return max(0.0, min(1.0, importance))
 
-    # Returns recent interactions with a specific speaker, newest first.
-    # I store memories under the key "from" (not "speaker") because that's the field
-    # name used when agent.py writes events into the memory buffer via apply_events().
-    # Keeping these consistent was a bug fix — the original code searched for "speaker"
-    # and therefore always returned an empty list, which is why impressions never formed.
+
     def get_recent_interactions(self, speaker: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Return the most recent memories involving a specific speaker, newest first.
 
@@ -176,13 +148,7 @@ class EmotionalMemory:
         interactions.sort(key=lambda x: x.get('tick', 0), reverse=True)
         return interactions[:limit]
 
-    # Is this person becoming more or less [emotion] over time?
-    # I calculate emotional trend by splitting the interaction window in half and comparing
-    # the emotion rate in the older half vs the newer half. A positive trend means the
-    # target is showing that emotion *more* recently; negative means they've calmed down.
-    # The minimum of 3 interactions is a practical floor — two data points isn't enough
-    # to call a trend. The result is clamped to [-1, 1] and scaled by 2 so that a shift
-    # from 0% → 50% in one half maps to a trend of +1.0 (maximum detectable change).
+
     def get_emotional_trend(self, speaker: str, emotion: str, window: int = 20) -> float:
         """Measure whether a speaker is showing a given emotion more or less lately.
 
@@ -213,13 +179,6 @@ class EmotionalMemory:
         trend = second_rate - first_rate
         return max(-1.0, min(1.0, trend * 2))
 
-    # What kind of person is this agent based on their emotional patterns?
-    # Every 10 ticks, this function reviews the last 30 conversations with each person and asks: 'Is this person angry?
-    # Positive? Conflict-causing? Unpredictable?' It then stores these impressions so the agent knows who to trust,
-    # who to avoid, and how to act around different people.
-
-    # Event-type signals used when NLP emotion data is absent (use_nlp=False).
-    # Each event kind contributes a positive or negative signal toward impression formation.
     EVENT_SIGNAL: Dict[str, float] = {
         "share_info":  1.0,   # cooperative, positive signal
         "agree":       1.0,   # supportive, positive signal
@@ -230,17 +189,7 @@ class EmotionalMemory:
     }
 
     def update_impressions(self, current_tick: int) -> Dict[str, Any]:
-        """Build per-speaker personality impressions from accumulated STM data.
 
-        This is called periodically to update the agent's mental model of each
-        person they've interacted with. We look at the last 30 interactions per
-        speaker and classify behavioural patterns (conflict-prone, positive,
-        anger-prone, volatile). These patterns then feed into _should_share()
-        in agent.py to influence cooperation decisions.
-
-        Works with or without NLP: event-type signals (share_info, refuse, etc.)
-        give a baseline, and emotion labels from the NLP pipeline add detail.
-        """
         new_impressions = {}
         # Collect every speaker found in STM (uses "from" not "speaker" — see fix note)
         speakers = set(m.get('from') for m in self.stm if m.get('from'))
@@ -313,24 +262,8 @@ class EmotionalMemory:
         """Return the stored impression dict for a speaker, or None if we haven't formed one yet."""
         return self.impressions.get(speaker)
 
-    # When an agent encounters new dialogue, this function searches their memory for similar
-    # past conversations — matching on the same emotion label or overlapping topic keywords.
-    # The idea is loosely based on cue-dependent retrieval (Tulving & Thomson, 1973): the
-    # emotion present in a new situation acts as a retrieval cue that surfaces memories
-    # formed in similar emotional contexts. In practice this means an agent who previously
-    # had a tense exchange about the "budget" item will surface that memory when a new
-    # budget conversation starts — which can subtly influence how cautiously they respond.
     def recall_similar(self, current_text: str, current_emotion: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """Retrieve past memories that share the current emotion or topic keywords.
 
-        This simulates cue-dependent retrieval (Tulving & Thomson, 1973): the current
-        emotional state acts as a retrieval cue that surfaces memories formed in similar
-        emotional contexts. An agent who previously had a tense exchange about "budget"
-        will surface that memory when a new budget conversation starts.
-
-        Scoring: emotion match = +0.5, each matching keyword (> 3 chars) = +0.2.
-        LTM is checked before STM so important memories are preferred.
-        """
         # Split text into words to use as topic keywords
         keywords = set(current_text.lower().split())
 

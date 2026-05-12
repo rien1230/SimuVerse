@@ -78,15 +78,6 @@ def _run_single_simulation(
     wrapper around SimModel that handles metric extraction, fallbacks, and
     optional persistence to disk.
 
-    Parameters
-    ----------
-    scenario_id       : canonical scenario to run
-    seed              : RNG seed for reproducibility
-    episode_max_ticks : step limit; simulation may also end via its own end conditions
-    skip_emotions     : if True, NLP emotion pipeline is disabled (for control runs)
-    team_type         : which personality preset to use (e.g. "smooth", "tension")
-    persist_run       : whether to save this run to disk as part of history
-    experiment_type   : label stored in the run file (e.g. "batch", "team_styles")
     """
     scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
@@ -196,12 +187,7 @@ def run_experiment(
     Run the same scenario n_runs times with seeds 0..n_runs-1.
     Uses whole-run metric averages (not just final tick) for accurate results.
 
-    Parameters
-    ----------
-    scenario_id       : which scenario to run
-    n_runs            : number of independent runs (recommend 20-50)
-    episode_max_ticks : hard tick limit per run
-    skip_emotions     : disable NLP pipeline for baseline comparison
+
     """
     scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
@@ -496,13 +482,7 @@ def robustness_experiment(
     episode_max_ticks: int = 120,
     persist_runs: bool = True,
 ) -> Dict[str, Any]:
-    """Test how robust the simulation is to different random seeds.
 
-    Runs the same scenario+team combination with n_runs consecutive seeds
-    (seed_start, seed_start+1, ...) and aggregates the results. A high
-    success rate and low spread across seeds means the simulation behaves
-    consistently rather than depending heavily on random chance.
-    """
     scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
         return {"error": f"Unknown scenario '{scenario_id}'"}
@@ -641,19 +621,7 @@ def compare_intervention_experiment(
     n_runs: int = 20,
     episode_max_ticks: int = 120,
 ) -> Dict[str, Any]:
-    """
-    Compare runs with and without a specific intervention applied at a fixed tick.
-    Directly answers: does this intervention improve coordination outcomes?
 
-    Example usage:
-        compare_intervention_experiment(
-            scenario_id="office_proposal",
-            intervention_type="nudge_strategy",
-            intervention_params={"agent_id": "A3", "strategy": "cooperative"},
-            intervention_tick=5,
-            n_runs=20,
-        )
-    """
     scenario_id = resolve_scenario_id(scenario_id)
     baseline     = run_experiment(scenario_id, n_runs, episode_max_ticks, skip_emotions=False)
     with_intervention = _run_with_intervention(

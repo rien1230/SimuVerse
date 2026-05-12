@@ -26,14 +26,6 @@ def compute_tick_metrics(
     metric_history. Returns a flat dict that's directly serialised into the
     run history JSON.
 
-    Parameters
-    ----------
-    model : SimModel
-        The running simulation (used to access cumulative counters and helpers).
-    agents_sorted : list
-        All agents in a deterministic order (consistent across ticks).
-    events : list
-        The events that fired this tick — used to count conflict/share events.
     """
     # Compute pairwise trust and average it across all agent pairs
     ties = model._compute_ties(agents_sorted)
@@ -158,20 +150,7 @@ def compute_tick_metrics(
 # Short human-readable labels for how the run ended overall.
 # ──────────────────────────────────────────────────────────────────────────────
 def classify_run_outcome(model: "SimModel") -> str:
-    """Return a human-readable outcome label for a finished (or in-progress) run.
 
-    The label is derived from the actual simulation state — conflict rate,
-    average stress, average trust, whether interventions were used, and whether
-    the run completed — rather than hardcoded thresholds.  Callers should treat
-    it as an explanatory summary, not a score.
-
-    Critical design rule: stress and conflict are independent axes.
-    A high-stress run (e.g. escape room, pressure_team) is NOT the same as a
-    high-conflict run. Only label a run "high conflict" when conflict events
-    actually dominated over cooperative ones. If cooperation clearly outweighed
-    conflict, downgrade to a tension/pressure label even if conflict_rate is
-    technically above threshold.
-    """
     progress = model.scenario.progress_ratio()
     # Default to "running" so a mid-run call doesn't crash on a missing attribute
     end_reason = getattr(model, "end_reason", "running")
