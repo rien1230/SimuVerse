@@ -3,14 +3,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script src="consent-guard.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SimuVerse &#8212; Experiment Runner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="nav.css">
-  <link rel="stylesheet" href="experiment.css?v=20260504o">
+  <link rel="stylesheet" href="experiment.css?v=20260508a">
 </head>
 <body>
 
@@ -39,9 +38,21 @@
 
       <div class="xp-hero xp-hero--setup">
         <div>
-          <h1 class="xp-title">Experiment Runner</h1>
-          <p class="xp-sub">Set up repeatable experiments to compare how team style, scenario, or interventions affect simulation behaviour.</p>
           <p class="xp-hero-note">Same scenario + repeatable run IDs = fair comparison</p>
+        </div>
+      </div>
+
+      <!-- How it works — above setup -->
+      <div class="xp-ctx-howto xp-ctx-howto--below">
+        <span class="xp-ctx-howto-label">How it works</span>
+        <div class="xp-ctx-howto-flow">
+          <span class="xp-ctx-howto-step"><em>1</em> Choose what to compare</span>
+          <span class="xp-ctx-howto-arrow">&#8250;</span>
+          <span class="xp-ctx-howto-step"><em>2</em> Fix other variables</span>
+          <span class="xp-ctx-howto-arrow">&#8250;</span>
+          <span class="xp-ctx-howto-step"><em>3</em> Same run IDs</span>
+          <span class="xp-ctx-howto-arrow">&#8250;</span>
+          <span class="xp-ctx-howto-step"><em>4</em> Review results</span>
         </div>
       </div>
 
@@ -104,14 +115,6 @@
                   </span>
                 </button>
 
-                <button class="xp-tab xp-tab--soon" type="button" data-type="intervention_impact" disabled role="tab" aria-disabled="true">
-                  <span class="xp-tab-icon-wrap"><span class="xp-tab-icon">&#x26A1;</span></span>
-                  <span class="xp-tab-body">
-                    <span class="xp-tab-label">Intervention Impact</span>
-                    <span class="xp-tab-desc">Baseline run &#183; intervention run &#183; compare effect</span>
-                  </span>
-                  <span class="xp-tab-soon">soon</span>
-                </button>
 
               </div>
 
@@ -250,17 +253,6 @@
                 </div>
               </div>
 
-              <!-- Intervention (coming soon) -->
-              <div class="xp-type-fields" id="xpPanelIntervention" style="display:none">
-                <div class="xp-intervention-card">
-                  <div class="xp-intervention-icon">&#x26A1;</div>
-                  <div class="xp-intervention-content">
-                    <span class="xp-intervention-eyebrow">Planned Feature</span>
-                    <p class="xp-intervention-desc">Apply a targeted mid-simulation intervention &#8212; such as nudging an agent&#8217;s strategy or boosting urgency &#8212; and compare outcomes against an unmodified control run. Directly answers: does this intervention improve coordination?</p>
-                    <span class="xp-intervention-badge">Not yet available in this build</span>
-                  </div>
-                </div>
-              </div>
 
               <div class="xp-step-nav">
                 <button class="xp-wizard-back-btn" id="xpStepBack" type="button">&#8592; Back</button>
@@ -303,40 +295,6 @@
 
         <!-- ── Right context panel ─────────────────────────────── -->
         <div class="xp-context-panel">
-
-          <!-- Step 1: Choose guidance panel -->
-          <div class="xp-ctx-card xp-ctx-step1-panel" id="xpCtxStep1Panel">
-            <div class="xp-ctx-step1-header">
-              <h3 class="xp-ctx-step1-title">Choose experiment type</h3>
-              <p class="xp-ctx-step1-desc">Select an experiment type on the left. SimuVerse keeps one variable fixed and varies another so each comparison is fair and reproducible.</p>
-            </div>
-            <div class="xp-ctx-step1-types">
-              <div class="xp-ctx-step1-type">
-                <span class="xp-ctx-step1-icon xp-ctx-step1-icon--blue">&#x21C4;</span>
-                <div class="xp-ctx-step1-type-body">
-                  <strong>Compare Teams</strong>
-                  <span>Same scenario across different team styles</span>
-                </div>
-                <span class="xp-ctx-step1-varies">Team style</span>
-              </div>
-              <div class="xp-ctx-step1-type">
-                <span class="xp-ctx-step1-icon xp-ctx-step1-icon--teal">&#x2302;</span>
-                <div class="xp-ctx-step1-type-body">
-                  <strong>Compare Scenarios</strong>
-                  <span>Same team across different environments</span>
-                </div>
-                <span class="xp-ctx-step1-varies">Scenario</span>
-              </div>
-              <div class="xp-ctx-step1-type">
-                <span class="xp-ctx-step1-icon xp-ctx-step1-icon--purple">&#x21BA;</span>
-                <div class="xp-ctx-step1-type-body">
-                  <strong>Reproducibility</strong>
-                  <span>Fixed setup repeated across run IDs</span>
-                </div>
-                <span class="xp-ctx-step1-varies">Run ID</span>
-              </div>
-            </div>
-          </div>
 
           <!-- Steps 2 & 3: Experimental Protocol — live preview, JS updates it -->
           <div id="xpCtxProtocolPanel" style="display:none">
@@ -389,20 +347,6 @@
             <div class="xp-ctx-proto-tip">Tip: use 3&#8211;5 run IDs so results are averaged across multiple repeatable runs.</div>
           </div>
           </div><!-- /#xpCtxProtocolPanel -->
-
-          <!-- How it works — compact inline strip -->
-          <div class="xp-ctx-howto">
-            <span class="xp-ctx-howto-label">How it works</span>
-            <div class="xp-ctx-howto-flow">
-              <span class="xp-ctx-howto-step"><em>1</em> Choose what to compare</span>
-              <span class="xp-ctx-howto-arrow">&#8250;</span>
-              <span class="xp-ctx-howto-step"><em>2</em> Fix other variables</span>
-              <span class="xp-ctx-howto-arrow">&#8250;</span>
-              <span class="xp-ctx-howto-step"><em>3</em> Same run IDs</span>
-              <span class="xp-ctx-howto-arrow">&#8250;</span>
-              <span class="xp-ctx-howto-step"><em>4</em> Review results</span>
-            </div>
-          </div>
 
           <!-- Metric definitions — collapsible accordion -->
           <div class="xp-ctx-card xp-ctx-card--accordion">
@@ -522,6 +466,6 @@
   </div>
 
   <script src="api.js"></script>
-  <script src="experiment.js?v=20260504j"></script>
+  <script src="experiment.js?v=20260508e"></script>
 </body>
 </html>

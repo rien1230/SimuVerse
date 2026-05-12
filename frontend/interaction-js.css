@@ -7,7 +7,7 @@
    class names.
 ═══════════════════════════════════════════ */
 
-/* ─── Status strip (JS version) ─── */
+/* JS-built top cards */
 
 .status-card {
   display: flex;
@@ -56,7 +56,7 @@
   color: var(--orange);
 }
 
-/* ─── Metric cards: Urgency / Tension / Cohesion — single-line pill layout ─── */
+/* JS metric cards */
 .status-strip .status-card:nth-child(5),
 .status-strip .status-card:nth-child(6),
 .status-strip .status-card:nth-child(7) {
@@ -81,7 +81,7 @@
 .status-strip .status-card:nth-child(7) .status-label { color: var(--teal); opacity: 0.85; }
 .status-strip .status-card:nth-child(7) .status-value { color: var(--teal); font-size: 0.88rem; font-weight: 900; }
 
-/* ─── Panel structure (JS version) ─── */
+/* JS panel shell */
 
 /* col-head replaces panel-head */
 .col-head {
@@ -122,9 +122,63 @@
   padding: 14px 16px 16px;
 }
 
-/* ─── Right panel scroll hint ─── */
+/* Scroll cues for long side panels */
 .panel-interventions {
   position: relative;
+}
+
+.panel-agents {
+  position: relative;
+}
+.panel-agents::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 30px;
+  height: 88px;
+  border-radius: 0 0 20px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(244,248,255,0.82) 52%, rgba(255,255,255,0.98) 100%);
+  pointer-events: none;
+  z-index: 7;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.panel-agents.show-scroll-cue::after {
+  opacity: 1;
+}
+.panel-agents .panel-scroll {
+  position: relative;
+  padding-bottom: 44px;
+  scrollbar-width: auto;
+  scrollbar-color: rgba(10,32,80,0.34) rgba(10,32,80,0.08);
+}
+.panel-agents .panel-scroll::-webkit-scrollbar {
+  width: 9px;
+}
+.panel-agents .panel-scroll::-webkit-scrollbar-track {
+  background: rgba(10,32,80,0.07);
+  border-radius: 999px;
+}
+.panel-agents .panel-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(46,124,255,0.68), rgba(10,32,80,0.46));
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,0.9);
+}
+
+.agent-scroll-prompt {
+  margin-top: 7px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(22,103,245,0.08);
+  border: 1px solid rgba(22,103,245,0.16);
+  color: var(--blue-deep) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em;
 }
 
 .iv-scroll-hint {
@@ -132,29 +186,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  height: 30px;
-  background: linear-gradient(0deg, #fff 40%, rgba(255,255,255,0));
-  color: var(--muted);
-  font-size: 0.60rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
+  gap: 6px;
+  height: 42px;
+  background: linear-gradient(0deg, rgba(255,255,255,0.98) 44%, rgba(255,255,255,0));
+  color: var(--blue-deep);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   pointer-events: none;
   /* overlap the bottom of the scroll area */
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 4px;
+  left: 14px;
+  right: 14px;
   z-index: 10;
-  transition: opacity 0.2s;
+  border-radius: 14px;
+  transition: opacity 0.2s ease;
 }
 
 .iv-scroll-hint.hidden {
   opacity: 0;
 }
 
-/* ─── Middle stack (center column) ─── */
+/* Center column helper stack */
 .middle-stack {
   min-height: 0;
   display: flex;
@@ -162,7 +217,7 @@
   gap: 10px;
 }
 
-/* ─── Panel controls (step/reset buttons) ─── */
+/* Shared controls used by JS views */
 .panel-controls {
   flex-shrink: 0;
 }
@@ -201,7 +256,7 @@
   text-overflow: ellipsis;
 }
 
-/* ─── Story cards (situation / latest change) ─── */
+/* Small summary cards above the main content */
 .story-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -287,7 +342,7 @@
   font-weight: 800;
 }
 
-/* ─── Intervention panel extras ─── */
+/* Collapsible / optional action area */
 .iv-more {
   display: grid;
   gap: 8px;
@@ -315,14 +370,14 @@
   border-color: var(--blue-mid);
 }
 
-/* ─── Log container ─── */
+/* Generic JS log wrapper */
 .log {
   position: relative;
   display: grid;
   gap: 11px;
 }
 
-/* Progress list */
+/* Short progress summaries */
 .progress-list {
   display: grid;
   gap: 6px;
@@ -335,7 +390,7 @@
   padding: 8px 0;
 }
 
-/* ─── Responsive overrides for JS classes ─── */
+/* JS layout tweaks on smaller screens */
 @media (max-width: 1220px) {
   .middle-stack { gap: 10px; }
   .story-grid { grid-template-columns: 1fr; }
@@ -352,14 +407,31 @@
 /* ═══════════════════════════════════════════
    VIEW TOGGLE — 3-tab bar
 ═══════════════════════════════════════════ */
+.view-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.view-toggle-label {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 0.70rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .view-toggle {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   padding: 3px;
   border-radius: 12px;
   background: #fff;
-  border: 1px solid rgba(18,41,83,0.10);
+  border: 1px solid rgba(18,41,83,0.13);
   box-shadow: 0 2px 8px rgba(14,32,72,0.07);
   flex-shrink: 0;
   width: 100%;
@@ -369,34 +441,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   flex: 1;
-  padding: 7px 18px;
+  padding: 8px 14px;
   border-radius: 9px;
-  border: none;
-  background: transparent;
+  border: 1px solid rgba(18,41,83,0.13);
+  background: rgba(18,41,83,0.04);
   color: var(--muted-strong);
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: background 0.14s, color 0.14s, box-shadow 0.14s;
+  transition: background 0.14s, color 0.14s, box-shadow 0.14s, border-color 0.14s;
   white-space: nowrap;
 }
 
 .view-tab:hover {
-  background: rgba(22,103,245,0.05);
-  color: var(--navy);
+  background: var(--blue-soft);
+  color: var(--blue-deep);
+  border-color: rgba(22,103,245,0.28);
 }
 
 .view-tab.is-active {
   background: var(--navy-deep);
   color: #fff;
   font-weight: 800;
-  box-shadow: 0 1px 3px rgba(10,32,80,0.08);
+  box-shadow: 0 2px 6px rgba(10,32,80,0.18);
   letter-spacing: -0.015em;
+  border-color: transparent;
 }
 
-.vt-icon { display: none; }
+.vt-icon {
+  font-size: 0.82rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
 
 /* ═══════════════════════════════════════════
    VIEW CONTAINER + SECTIONS
@@ -445,7 +525,7 @@
   gap: 10px;
 }
 
-/* ── Stat cards row ── */
+/* Metrics summary cards */
 .mv-cards {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -519,7 +599,7 @@
   margin-top: 6px;
 }
 
-/* ── Chart panel ── */
+/* Main metrics chart */
 .mv-chart-panel {
   border-radius: 16px;
   background: #fff;
@@ -712,7 +792,7 @@
 
 .iv-impact-headline h3 {
   color: var(--navy-deep);
-  font-size: 1rem;
+  font-size: 1.08rem;
   font-weight: 900;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -721,16 +801,16 @@
 .iv-impact-headline p {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   line-height: 1.45;
 }
 
 .iv-impact-meta {
   margin-top: 8px;
   color: var(--muted-strong);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 800;
   line-height: 1.4;
 }
 
@@ -755,16 +835,34 @@
 }
 
 .iv-impact-empty strong {
-  font-size: 0.98rem;
+  font-size: 1.06rem;
   color: var(--navy);
   font-weight: 900;
 }
 
 .iv-impact-empty p {
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   color: var(--muted);
+  font-weight: 700;
   line-height: 1.55;
   max-width: 380px;
+}
+
+.iv-link-btn {
+  margin-top: 10px;
+  padding: 6px 16px;
+  border: 1.5px solid var(--blue);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--blue);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.iv-link-btn:hover {
+  background: var(--blue);
+  color: #fff;
 }
 
 .iv-impact-list {
@@ -845,6 +943,48 @@
   padding: 13px 16px 15px;
 }
 
+/* Knowledge evidence panel — reveal_info cards only */
+.iv-knowledge-evidence {
+  margin: 0 16px 2px;
+  padding: 10px 14px 12px;
+  background: #f0f7ff;
+  border: 1px solid #cce0ff;
+  border-radius: 7px;
+  font-size: 0.8rem;
+}
+.iv-ke-head {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #2563b0;
+  margin-bottom: 8px;
+}
+.iv-ke-row {
+  display: flex;
+  gap: 8px;
+  padding: 3px 0;
+  border-top: 1px solid #ddeeff;
+}
+.iv-ke-row:first-of-type { border-top: none; }
+.iv-ke-label {
+  flex: 0 0 160px;
+  color: var(--muted-strong);
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+.iv-ke-value {
+  flex: 1;
+  color: var(--navy-deep);
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+.iv-ke-muted {
+  color: var(--muted) !important;
+  font-style: italic;
+  font-weight: 400 !important;
+}
+
 .iv-impact-table {
   width: 100%;
   border-collapse: collapse;
@@ -886,15 +1026,25 @@
 .iv-delta-down { color: var(--green) !important; font-weight: 900 !important; }
 .iv-delta-flat { color: var(--muted) !important; }
 
+/* No-baseline row: metric measured after step only — no before data available */
+.iv-no-baseline td { color: var(--muted) !important; font-weight: 400 !important; }
+.iv-no-baseline-note {
+  font-size: 0.72rem !important;
+  font-style: italic;
+  text-align: left !important;
+}
+
 /* Metric-direction-aware delta classes */
 .iv-delta-good { color: #0a7a3e !important; font-weight: 900 !important; }
 .iv-delta-bad  { color: var(--red) !important; font-weight: 900 !important; }
 
 /* Impact badge variants */
-.iv-impact-badge.is-positive { background: #e6f9ee; color: #0a7a3e; }
-.iv-impact-badge.is-mixed    { background: #fff5e0; color: #9a5c00; }
-.iv-impact-badge.is-negative { background: #ffeaea; color: #c0392b; }
-.iv-impact-badge.is-neutral  { background: var(--panel-soft); color: var(--muted-strong); }
+.iv-impact-badge.is-positive   { background: #e6f9ee; color: #0a7a3e; }
+.iv-impact-badge.is-mixed      { background: #fff5e0; color: #9a5c00; }
+.iv-impact-badge.is-negative   { background: #ffeaea; color: #c0392b; }
+.iv-impact-badge.is-neutral    { background: var(--panel-soft); color: var(--muted-strong); }
+/* inject_tension: amber-orange — signals deliberate disruption, not failure */
+.iv-impact-badge.is-disruption { background: #fff0e6; color: #b84d00; }
 
 /* Tick tag (small grey pill) */
 .iv-tick-tag {

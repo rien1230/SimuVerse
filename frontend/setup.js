@@ -1,6 +1,7 @@
 // Setup page logic for presets, validation, and run creation.
 const API_BASE = window.SimuVerseAPI.API_BASE;
 
+// Static card content for the three setup choices.
 const SCENARIOS = {
   office: {
     label: "Office Project",
@@ -108,6 +109,7 @@ const state = {
   launching: false
 };
 
+// Cached DOM refs used by the stepper, cards, and summary panel.
 const stepperEl = document.getElementById("stepper");
 const scenarioGrid = document.getElementById("scenarioGrid");
 const teamGrid = document.getElementById("teamGrid");
@@ -129,6 +131,7 @@ const TARGET_BY_MODE = {
   live: "interactive.html"
 };
 
+// Error helpers keep the launch flow readable.
 async function parseApiError(response) {
   const text = await response.text();
   if (!text) return `HTTP ${response.status}`;
@@ -259,6 +262,7 @@ function clearError() {
   launchFeedback.innerHTML = "";
 }
 
+// Render the three-step wizard and the live summary card.
 function renderStepper() {
   stepperEl.innerHTML = STEPS.map((step, index) => {
     const done = state.currentStep > step.n && isStepComplete(step.n);
@@ -266,7 +270,7 @@ function renderStepper() {
     const cls = ["stepper-item"];
     if (done) cls.push("is-done");
     if (current) cls.push("is-current");
-    const separator = index < STEPS.length - 1 ? '<span class="stepper-sep">→</span>' : "";
+    const separator = index < STEPS.length - 1 ? '<span class="stepper-sep" aria-hidden="true"></span>' : "";
     return `
       <div class="${cls.join(" ")}">
         <span class="stepper-dot">${done ? "✓" : step.n}</span>
@@ -359,6 +363,7 @@ function renderAll() {
   renderSummary();
 }
 
+// Create the run on the backend, then send the user to the right page.
 async function launchSimulation() {
   if (!allStepsComplete() || state.launching) return;
 
@@ -377,7 +382,9 @@ async function launchSimulation() {
   try {
     response = await fetch(`${API_BASE}/runs`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         environment: scenario.request.environment,
         goal: scenario.request.goal,

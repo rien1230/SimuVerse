@@ -10,6 +10,9 @@
 (function (global) {
   "use strict";
 
+  /* Structured PDF export only — this builds a clean report from saved data,
+     not from a screenshot of the live dashboard. */
+
   /* ── Design tokens (RGB) ─────────────────────────────────────── */
   const C = {
     navy:    [15,  34,  56],

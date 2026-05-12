@@ -3,6 +3,9 @@ const API = window.SimuVerseAPI.API_BASE;
 const PAGE_SIZE = 4;
 const REFRESH_INTERVAL_MS = 8000;
 
+function authHeader() { return {}; }
+
+// Page state for filters, selection, sorting, and auto-refresh.
 let allRuns = [];
 let currentPage = 1;
 let selectedRunIds = new Set();
@@ -11,9 +14,11 @@ let backendOnline = null;
 let sortKey = 'date';
 let sortDir = 'desc';
 let selectionStatusTimer = null;
+let isReloadingAfterDelete = false;
 
 function $(id){ return document.getElementById(id); }
 
+// Label and format helpers keep cards, badges, and modal text consistent.
 function escapeHtml(value){
   return String(value == null ? '' : value).replace(/[&<>"']/g, (char) => (
     {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char]
@@ -153,12 +158,14 @@ function itemLabel(value){
 
 function interventionTypeLabel(raw) {
   const map = {
-    force_meeting:  'Force Meeting',
-    reveal_info:    'Reveal Info',
-    nudge_strategy: 'Nudge Strategy',
-    boost_urgency:  'Boost Pressure',
-    ease_pressure:  'Ease Pressure',
-    inject_tension: 'Inject Tension',
+    force_meeting:    'Force Meeting',
+    reveal_info:      'Reveal Info',
+    nudge_strategy:   'Nudge Strategy',
+    boost_urgency:    'Boost Pressure',
+    ease_pressure:    'Ease Pressure',
+    inject_tension:   'Inject Tension',
+    inject_emotion:   'Emotion Input',
+    emotion_injection:'Emotion Input',
   };
   const key = String(raw || '').toLowerCase();
   return map[key] || eventLabel(raw);
@@ -170,18 +177,24 @@ function extractConversation(history){
     // Agent conversation events
     for (const event of tick.events || []) {
       if (!event?.text) continue;
+      const isEmotionInjection = String(event.type || '').toLowerCase() === 'emotion_injection';
       out.push({
         tick: tick.tick,
-        actor: event.actor || 'Agent',
-        target: event.target || '',
-        type: eventLabel(event.type),
-        text: cleanMessage(event.text),
-        isUser: String(event.actor || '').toUpperCase() === 'USER',
-        isIntervention: false,
+        actor:  isEmotionInjection ? 'You' : (event.actor || 'Agent'),
+        target: isEmotionInjection ? 'Group' : (event.target || ''),
+        type:   isEmotionInjection ? 'Emotion Input' : eventLabel(event.type),
+        text:   cleanMessage(event.text),
+        isUser: isEmotionInjection || String(event.actor || '').toUpperCase() === 'USER',
+        isIntervention: isEmotionInjection,
       });
     }
-    // User intervention events — include in the log so the full run is visible
+    // User intervention events — include in the log so the full run is visible.
+    // Skip inject_emotion: the emotion_injection event in tick.events already
+    // represents it with the actual typed text (marked isIntervention: true
+    // above). Including the tick.interventions entry too would double-count it
+    // in the intervention total and show a duplicate Run Log row.
     for (const iv of tick.interventions || []) {
+      if (String(iv.type || '').toLowerCase() === 'inject_emotion') continue;
       const label = interventionTypeLabel(iv.type);
       const detail = cleanMessage(iv.message || iv.label || iv.result?.message || '');
       out.push({
@@ -229,6 +242,7 @@ function extractInterventionMessages(run, conversation){
     .filter(Boolean);
 }
 
+// Modal and status helpers for run details and page-level feedback.
 function openModal(){
   $('historyModal').hidden = false;
 }
@@ -294,6 +308,7 @@ function setOfflineBanner(message, kind = 'error'){
 function showLoadingSkeleton(){
   const tbody = $('runsTableBody');
   if (!tbody) return;
+  _lastRenderedKey = ':loading';
   tbody.innerHTML = Array.from({ length: 4 }, () => `
     <tr class="skeleton-row">
       <td class="select-cell"></td>
@@ -327,13 +342,19 @@ async function deleteRun(runId){
   try{
     const response = await fetch(`${API}/history/runs/${encodeURIComponent(runId)}`, {
       method: 'DELETE',
+      headers: authHeader(),
     });
     if (!response.ok) throw new Error(await parseApiError(response));
 
     allRuns = allRuns.filter((run) => run.run_id !== runId);
+    selectedRunIds.delete(runId);
+    currentPage = 1;
     renderStats();
     renderFilter();
     renderTable();
+
+    isReloadingAfterDelete = true;
+    await loadRuns({ showSkeleton: false });
     flashSelectionStatus(`✓ Run ${runId} was deleted from history.`, 'success');
 
     if (!$('historyModal').hidden && $('historyModalTitle').textContent.includes(runId)) {
@@ -341,6 +362,8 @@ async function deleteRun(runId){
     }
   }catch(error){
     setSelectionStatus(`Could not delete run ${runId}. ${error.message || String(error)}`, 'error');
+  } finally {
+    isReloadingAfterDelete = false;
   }
 }
 
@@ -356,6 +379,7 @@ async function deleteSelectedRuns(){
     try{
       const response = await fetch(`${API}/history/runs/${encodeURIComponent(runId)}`, {
         method: 'DELETE',
+        headers: authHeader(),
       });
       if (!response.ok) throw new Error(await parseApiError(response));
       allRuns = allRuns.filter((run) => run.run_id !== runId);
@@ -371,6 +395,15 @@ async function deleteSelectedRuns(){
   renderStats();
   renderFilter();
   renderTable();
+
+  if (runIds.length !== failed.length) {
+    isReloadingAfterDelete = true;
+    try {
+      await loadRuns({ showSkeleton: false });
+    } finally {
+      isReloadingAfterDelete = false;
+    }
+  }
 
   if (failed.length) {
     setSelectionStatus(`Some runs could not be deleted: ${failed.join(' · ')}`, 'error');
@@ -391,6 +424,7 @@ async function clearHistory(){
   try{
     const response = await fetch(`${API}/history/runs`, {
       method: 'DELETE',
+      headers: authHeader(),
     });
     if (!response.ok) throw new Error(await parseApiError(response));
     const data = await response.json();
@@ -401,12 +435,18 @@ async function clearHistory(){
     renderStats();
     renderFilter();
     renderTable();
+
+    isReloadingAfterDelete = true;
+    await loadRuns({ showSkeleton: false });
     flashSelectionStatus(`✓ ${data.message || 'Saved history was cleared.'}`, 'success');
   }catch(error){
     setSelectionStatus(`Could not clear saved history. ${error.message || String(error)}`, 'error');
+  } finally {
+    isReloadingAfterDelete = false;
   }
 }
 
+// Build one clean export payload from the saved run JSON.
 /**
  * Build a canonical payload for SimuVerseReport.generate() from a saved history run object.
  * Matches the shape produced by buildPdfPayload() / buildInteractionPdfPayload().
@@ -573,6 +613,7 @@ function buildHistoryPdfPayload(run) {
   };
 }
 
+// Modal renderers for one run and for side-by-side comparison.
 async function openInteractionSummary(runId){
   $('historyModalTitle').textContent = 'Run Summary';
   $('historyModalSubtitle').textContent = 'Loading…';
@@ -580,7 +621,7 @@ async function openInteractionSummary(runId){
   openModal();
 
   try{
-    const response = await fetch(`${API}/history/runs/${runId}`);
+    const response = await fetch(`${API}/history/runs/${runId}`, { headers: authHeader() });
     if (!response.ok) throw new Error(await parseApiError(response));
     const run = await response.json();
     const conversation = extractConversation(run.history || []);
@@ -591,12 +632,20 @@ async function openInteractionSummary(runId){
     const scenId = String(run.scenario_id || '').toLowerCase();
     const isEscapeRun = scenId.includes('escape');
     const isOfficeRun = scenId.includes('office');
+    // For failed/partial runs, rawBlocker may be empty (the run ended without a
+    // live bottleneck_item).  Fall back to the first unresolved task from run.tasks
+    // so the "Final blocker state" line is never blank for incomplete runs.
+    const _firstUnresolved = run.tasks
+      ? (Object.entries(run.tasks).find(([, done]) => !done)?.[0] ?? null)
+      : null;
     const blocker = rawBlocker !== '—' ? rawBlocker
       : outcomeLabel(run) === 'Success'
         ? (isEscapeRun ? 'Escape complete — all clues resolved'
            : isOfficeRun ? 'All tasks completed'
            : 'All items resolved')
-        : '—';
+        : _firstUnresolved
+          ? `${itemLabel(_firstUnresolved)} — not confirmed before step limit`
+          : 'All blockers resolved';
 
     // Use null-safe check so 0 interventions stays 0 (not overridden by message scan).
     // Also prefer event_counts.interventions_used (scanned from full history) over the
@@ -977,6 +1026,7 @@ function renderFilter(){
 let _lastRenderedKey = '';
 
 function renderTable(){
+  const tbody = $('runsTableBody');
   const runs = currentRuns();
   const pageCount = Math.max(1, Math.ceil(runs.length / PAGE_SIZE));
   if (currentPage > pageCount) currentPage = pageCount;
@@ -1015,7 +1065,10 @@ function renderTable(){
   if (!pageRuns.length) {
     if (_lastRenderedKey !== ':empty') {
       _lastRenderedKey = ':empty';
-      $('runsTableBody').innerHTML = '<tr><td colspan="9" class="empty-table">No saved runs match this filter.</td></tr>';
+      const emptyMsg = allRuns.length === 0
+      ? 'No saved runs yet. Start a simulation to create your first run.'
+        : 'No saved runs match this filter.';
+      tbody.innerHTML = `<tr><td colspan="9" class="empty-table">${emptyMsg}</td></tr>`;
     }
     return;
   }
@@ -1028,7 +1081,6 @@ function renderTable(){
 
   // Suppress row transitions during the swap so newly inserted rows don't
   // flash through the hover/box-shadow transition on first paint.
-  const tbody = $('runsTableBody');
   tbody.classList.add('is-updating');
 
   tbody.innerHTML = pageRuns.map((run) => `
@@ -1110,61 +1162,48 @@ function renderTable(){
 
 }
 
-async function checkHealth(){
-  try{
-    const response = await fetch(`${API}/health`, { signal: AbortSignal.timeout(4000) });
-    if (!response.ok) throw new Error('offline');
-    backendOnline = true;
-  }catch{
-    backendOnline = false;
-  }
-}
-
-async function loadRuns(){
+async function loadRuns({ showSkeleton = allRuns.length === 0 && !isReloadingAfterDelete } = {}){
   // Only show the shimmer skeleton on the very first load when the table is
   // empty. Background auto-refreshes silently update the data so the user
   // never sees a flash of skeleton rows replacing real content.
-  if (allRuns.length === 0) showLoadingSkeleton();
-  try{
-    const response = await fetch(`${API}/history/runs`, { signal: AbortSignal.timeout(10000) });
-    if (!response.ok) throw new Error(await parseApiError(response));
-    const data = await response.json();
-    allRuns = Array.isArray(data.runs) ? data.runs : [];
-    selectedRunIds = new Set(Array.from(selectedRunIds).filter((runId) => allRuns.some((run) => run.run_id === runId)));
-    setOfflineBanner('');
-    renderStats();
-    renderFilter();
-    renderTable();
-    const ss = $('selectionStatus');
-    if (ss && !ss.classList.contains('success')) {
-      setSelectionStatus('Select 2 or more runs to compare, or choose a run to replay, inspect, or delete.', 'info');
-    }
-  }catch(error){
-    const isTimeout = error.name === 'TimeoutError' || error.name === 'AbortError';
-    const msg = isTimeout ? 'Request timed out — backend may be slow or offline.' : (error.message || String(error));
-    const tbody = $('runsTableBody');
-    if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="9" class="empty-table">Could not load saved runs. ${escapeHtml(msg)}</td></tr>`;
-    }
-    setSelectionStatus(`Could not load saved history. ${msg}`, 'error');
+  if (showSkeleton) showLoadingSkeleton();
+  const response = await fetch(`${API}/history/runs`, { headers: authHeader(), signal: AbortSignal.timeout(10000) });
+  if (!response.ok) throw new Error(await parseApiError(response));
+  const data = await response.json();
+  allRuns = Array.isArray(data.runs) ? data.runs : [];
+  selectedRunIds = new Set(Array.from(selectedRunIds).filter((runId) => allRuns.some((run) => run.run_id === runId)));
+  renderStats();
+  renderFilter();
+  renderTable();
+  const ss = $('selectionStatus');
+  if (ss && !ss.classList.contains('success')) {
+    setSelectionStatus('Select 2 or more runs to compare, or choose a run to replay, inspect, or delete.', 'info');
   }
 }
 
 async function refreshHistoryFromBackend(){
   const wasOnline = backendOnline;
-  await checkHealth();
-  if (backendOnline) {
+  try {
     await loadRuns();
+    backendOnline = true;
     if (wasOnline === false) {
       setOfflineBanner('Backend is back online — history refreshed.', 'success');
       setTimeout(() => setOfflineBanner(''), 4000);
     } else {
       setOfflineBanner('');
     }
-  } else {
+  } catch(error) {
+    backendOnline = false;
     if (wasOnline !== false) {
+      // First detected failure — show the banner and update the table if empty.
       setOfflineBanner('Backend is offline. Showing last known data. Will retry automatically.', 'error');
       setSelectionStatus('Backend went offline. History will refresh when it comes back.', 'error');
+      if (allRuns.length === 0) {
+        const isTimeout = error.name === 'TimeoutError' || error.name === 'AbortError';
+        const msg = isTimeout ? 'Request timed out — backend may be slow or offline.' : (error.message || String(error));
+        const tbody = $('runsTableBody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="empty-table">Could not load saved runs. ${escapeHtml(msg)}</td></tr>`;
+      }
     }
   }
 }

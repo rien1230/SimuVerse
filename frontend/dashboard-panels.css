@@ -925,9 +925,33 @@ body {
 }
 
 .metric-spark {
-  height: 5px !important;
-  margin-top: auto !important;
-  padding-top: 8px !important;
+  height: 8px !important;
+  margin-top: 12px !important;
+  padding-top: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(0,0,0,0.07) !important;
+  overflow: hidden !important;
+}
+
+.metric-spark span {
+  display: block !important;
+  height: 100% !important;
+  border-radius: 999px !important;
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  min-width: 0 !important;
+}
+
+.metric-spark.progress span {
+  background: linear-gradient(90deg, #2a78c5 0%, #1f8f83 100%) !important;
+}
+.metric-spark.trust span {
+  background: linear-gradient(90deg, #2bc09a 0%, #1f8f83 100%) !important;
+}
+.metric-spark.avgstress span {
+  background: linear-gradient(90deg, #f4a24a 0%, #c84a4a 100%) !important;
+}
+.metric-spark.conflict span {
+  background: linear-gradient(90deg, #f2a173 0%, #b83030 100%) !important;
 }
 
 /* ── Panel inner typography: denser ── */

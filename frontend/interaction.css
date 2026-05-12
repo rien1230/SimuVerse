@@ -7,6 +7,9 @@
  *   js    → overrides for JS-built DOM classes, view tabs, analysis sections
  */
 
+/* Shared layout + tokens */
 @import url("interaction-base.css");
+/* Static panel styling */
 @import url("interaction-panels.css");
+/* JS-rendered view pieces */
 @import url("interaction-js.css");

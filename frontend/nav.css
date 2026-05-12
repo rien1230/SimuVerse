@@ -157,6 +157,65 @@ nav.sv-nav,
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.12);
 }
 
+/* ── Auth UI injected by auth.js (user chip + divider + logout) ── */
+
+/* User name chip shown in the navbar */
+span.sv-user-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 10px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.75);
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  flex-shrink: 1;
+}
+
+.sv-auth-divider {
+  display: inline-block;
+  width: 1px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+a.sv-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.60);
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+  background: none;
+}
+
+a.sv-logout-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
 /* ── Responsive ── */
 @media (max-width: 680px) {
   .sv-sub { display: none; }

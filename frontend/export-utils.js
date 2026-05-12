@@ -1,5 +1,6 @@
 // Small browser export helpers for filenames, downloads, and saved snapshots.
 (function(global) {
+  // File-naming and formatting helpers used by JSON/CSV export buttons.
   function pad(value) {
     return String(value).padStart(2, "0");
   }
@@ -76,6 +77,7 @@
     );
   }
 
+  // Shared fetch helper for export flows that need one saved run from the API.
   async function fetchJson(url, options) {
     const response = await fetch(url, options);
     if (!response.ok) {
@@ -108,6 +110,7 @@
     return summary;
   }
 
+  // Comparison export helper for experiment-style CSV downloads.
   function downloadComparisonCsv({ filename, title, setupSummary, insight, fairness, rows, columnOrder }) {
     const preface = [
       ["Comparison", title || "SimuVerse Comparison Results"],

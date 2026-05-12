@@ -15,6 +15,7 @@
     : "http://127.0.0.1:8007/api";
 
   // ── Config ─────────────────────────────────────────────────────────────────
+  // Static labels and panel mappings for the three experiment modes.
 
   const TYPE_DESCS = {
     team_comparison:
@@ -23,8 +24,6 @@
       "Run the same team style across multiple scenarios to see how the environment changes coordination, stress, and completion speed.",
     seed_reproducibility:
       "Fix one scenario and one team style, then rerun the same setup with repeatable run IDs to check consistency across repeated tests.",
-    intervention_impact:
-      "Compare a baseline run against a run where an intervention was applied mid-simulation.",
   };
 
   const SCENARIO_NAMES = {
@@ -37,7 +36,6 @@
     team_comparison:     "xpPanelTeam",
     scenario_comparison: "xpPanelScenario",
     seed_reproducibility:"xpPanelSeed",
-    intervention_impact: "xpPanelIntervention",
   };
 
   // ── State ──────────────────────────────────────────────────────────────────
@@ -102,6 +100,14 @@
     return Number(v).toFixed(dp);
   }
 
+  // Shows no decimal when the value is whole (e.g. 14 not 14.0),
+  // otherwise shows `dp` decimal places (e.g. 14.2).
+  function fmtSmartNum(v, dp = 1) {
+    if (v == null || !isFinite(v)) return "—";
+    const n = Number(v);
+    return Number.isInteger(n) ? String(n) : n.toFixed(dp);
+  }
+
   function fmtDelta(v) {
     if (v == null || !isFinite(v)) return "—";
     const s = Number(v).toFixed(3);
@@ -122,6 +128,24 @@
     if (key.includes("creative")) return "xp-tone-creative";
     if (key.includes("pressure")) return "xp-tone-pressure";
     return "";
+  }
+
+  // Returns every label that shares the best value for `metric`.
+  // `g` is a function label → group object.
+  function winnersOf(labels, g, metric, lowerBetter = false) {
+    const vals = labels.map(l => Number(g(l)?.[metric] ?? (lowerBetter ? Infinity : -Infinity)));
+    const finite = vals.filter(isFinite);
+    if (!finite.length) return labels.slice(0, 1);
+    const best = lowerBetter ? Math.min(...finite) : Math.max(...finite);
+    return labels.filter((_, i) => isFinite(vals[i]) && Math.abs(vals[i] - best) < 0.001);
+  }
+
+  // Formats a winner list into a readable label, e.g. "Smooth & Pressure" for ties.
+  function tieLabel(winners, nameFn) {
+    if (!winners.length) return "—";
+    if (winners.length === 1) return nameFn(winners[0]);
+    if (winners.length === 2) return `${nameFn(winners[0])} & ${nameFn(winners[1])}`;
+    return "Tie (" + winners.map(nameFn).join(", ") + ")";
   }
 
   function selectedTeamStyles() {
@@ -281,10 +305,6 @@
       // Update description
       $("xpTypeDesc").textContent = TYPE_DESCS[_currentType] || "";
 
-      // Disable Next on coming-soon types so user can't proceed to configure step
-      const isComingSoon = _currentType === "intervention_impact";
-      if (stepNext) stepNext.disabled = isComingSoon;
-
       updateRunCount();
       updatePreview();
       hideError();
@@ -294,11 +314,6 @@
   // ── Run count display ──────────────────────────────────────────────────────
 
   function updateRunCount() {
-    if (_currentType === "intervention_impact") {
-      runCountEl.textContent = "Not available in this build";
-      runBtn.textContent = "Intervention experiments coming soon";
-      return;
-    }
     const seeds = parsedSeeds().length;
     let totalRuns = 0;
     let msg = "";
@@ -387,7 +402,26 @@
   updateRunCount();
   updatePreview();
   updateStyleCount();
-  showSetupView();
+
+  // ── Restore last result from sessionStorage (survives page refresh) ────────
+  try {
+    const saved = sessionStorage.getItem("xp_last_result");
+    if (saved) {
+      const data = JSON.parse(saved);
+      // Validate shape before rendering — stale/corrupted data from an older
+      // version of the UI would crash renderResults() without this guard.
+      if (data && Array.isArray(data.runs) && data.aggregated && data.experiment_type) {
+        renderResults(data);
+      } else {
+        sessionStorage.removeItem("xp_last_result"); // discard invalid data
+        showSetupView();
+      }
+    } else {
+      showSetupView();
+    }
+  } catch (_) {
+    showSetupView();
+  }
 
   // ── Run experiment ─────────────────────────────────────────────────────────
 
@@ -462,6 +496,8 @@
       const data = await res.json();
       renderResults(data);
       hideError();
+      // Persist so a page refresh restores the results view
+      try { sessionStorage.setItem("xp_last_result", JSON.stringify(data)); } catch (_) {}
     } catch (err) {
       showError(err.message ?? "Unknown error — check the backend is running.");
     } finally {
@@ -499,6 +535,8 @@
     if (resultsViewEl) resultsViewEl.style.display = "none";
     showStep(1);
     window.scrollTo({ top: 0, behavior: "auto" });
+    // Clear saved result so a subsequent refresh starts on setup, not results
+    try { sessionStorage.removeItem("xp_last_result"); } catch (_) {}
   }
 
   function showResultsView() {
@@ -576,9 +614,15 @@
       const n       = labels.length;
       if (n === 0) { el.innerHTML = ""; return; }
 
-      const crs    = labels.map(l => agg[l].completion_rate ?? 0);
+      const crs    = labels.map(l => agg[l]?.completion_rate ?? 0);
       const avgCr  = Math.round(crs.reduce((s, v) => s + v, 0) / n * 100);
       const crRange= Math.round((Math.max(...crs) - Math.min(...crs)) * 100);
+      // Only call it "Consistent" if runs actually completed — all-zero means all failed
+      const allFailed = crs.every(v => v === 0) && completed === 0;
+      const consistencyValue = allFailed ? "No data"
+        : crRange === 0 ? "Consistent" : "Variable";
+      const consistencySub = allFailed ? "No run IDs completed successfully"
+        : crRange === 0 ? "All run IDs gave the same outcome" : `Rate varied by ${crRange}%`;
 
       const cards = [
         {
@@ -593,8 +637,8 @@
         },
         {
           label: "Consistency",
-          value: crRange === 0 ? "Consistent" : "Variable",
-          sub:   crRange === 0 ? "All run IDs gave the same outcome" : `Rate varied by ${crRange}%`,
+          value: consistencyValue,
+          sub:   consistencySub,
         },
         {
           label: "Run IDs tested",
@@ -624,33 +668,60 @@
     const coop   = findWinner("cooperation");
     const chall  = findWinner("challenge_count");
 
+    const aggLabels = Object.keys(agg);
+    const aggG      = l => agg[l] || {};
+
     const cards = [
       {
         label: "Runs completed",
         value: `${completed}/${total}`,
         sub:   completed === total ? "All runs finished" : `${total - completed} did not complete`,
       },
-      speed && {
-        label: `Fastest ${winWord}`,
-        value: esc(titleCaseLabel(speed.winner)),
-        sub:   `Avg ${fmtNum(speed.value, 1)} steps · Completed the required sequence quickest`,
-      },
+      speed && (() => {
+        const ws    = winnersOf(aggLabels, aggG, "avg_completion_steps", true);
+        const isTie = ws.length > 1;
+        return {
+          label: `Fastest ${winWord}`,
+          value: isTie ? "Tie" : esc(titleCaseLabel(speed.winner)),
+          sub:   isTie
+            ? `${ws.map(titleCaseLabel).join(", ")} · ${fmtSmartNum(speed.value)} steps each`
+            : `Avg ${fmtSmartNum(speed.value)} steps · Completed the required sequence quickest`,
+        };
+      })(),
       stress && {
         label: "Highest stress",
         value: esc(titleCaseLabel(stress.winner)),
         sub:   `Avg peak ${fmtNum(stress.value)} · Most pressured behaviour`,
       },
-      coop && {
-        label: "Most cooperative",
-        value: esc(titleCaseLabel(coop.winner)),
-        sub:   `Avg ${fmtNum(coop.value, 1)} events · Most stable teamwork`,
-      },
-      chall && {
-        label: "Most challenges",
-        value: esc(titleCaseLabel(chall.winner)),
-        sub:   `Avg ${fmtNum(chall.value, 1)} events · Highest conflict signal`,
-      },
+      coop && (() => {
+        const ws    = winnersOf(aggLabels, aggG, "avg_cooperation_count");
+        const isTie = ws.length > 1;
+        return {
+          label: "Most cooperative",
+          value: isTie ? "Tie" : esc(titleCaseLabel(coop.winner)),
+          sub:   isTie
+            ? `${ws.map(titleCaseLabel).join(", ")} · ${fmtSmartNum(coop.value)} coop. events each`
+            : `Avg ${fmtSmartNum(coop.value)} coop. events · Most stable teamwork`,
+        };
+      })(),
+      chall && (() => {
+        const challWinners = winnersOf(aggLabels, aggG, "avg_challenge_count");
+        const challIsTie   = challWinners.length > 1;
+        const challLabel   = challIsTie ? "Tie" : esc(titleCaseLabel(chall.winner));
+        const challSub     = challIsTie
+          ? `${challWinners.map(titleCaseLabel).join(", ")} · ${fmtSmartNum(chall.value)} challenge events each · Highest pushback signal`
+          : `Avg ${fmtSmartNum(chall.value)} challenge events · Highest pushback signal`;
+        return { label: "Most Pushback", value: challLabel, sub: challSub };
+      })(),
     ].filter(Boolean);
+
+    // If metric findings are fewer than expected, some cards were silently dropped.
+    // Surface a note so the user knows the comparison data is incomplete.
+    const expectedMetrics = 4; // speed, stress, coop, chall
+    const missingCount = expectedMetrics - [speed, stress, coop, chall].filter(Boolean).length;
+    const incompleteNote = missingCount > 0
+      ? `<div class="xp-incomplete-note">${missingCount} metric${missingCount === 1 ? "" : "s"} could not be compared — not enough completed runs in every group.</div>`
+      : "";
 
     el.innerHTML = cards.map(c =>
       `<div class="xp-card">
@@ -658,22 +729,30 @@
          <div class="xp-card-value">${c.value}</div>
          <div class="xp-card-sub">${esc(c.sub)}</div>
        </div>`
-    ).join("");
+    ).join("") + incompleteNote;
   }
 
   // ── Comparison table ────────────────────────────────────────────────────────
 
   const TABLE_COLS = [
-    { key: "completion_rate",            label: "Completion",           tip: "Share of runs that completed successfully.",                                          fmt: v => fmtPct(v),      lowerBetter: false },
-    { key: "avg_completion_steps",       label: "Steps",                tip: "Average steps to finish a run (completed runs only).",                                fmt: v => fmtNum(v, 1),   lowerBetter: true  },
-    { key: "avg_peak_stress",            label: "Stress",               tip: "Highest average stress reached across the run.",                                      fmt: v => fmtNum(v),      lowerBetter: true  },
-    { key: "avg_trust_delta",            label: "Trust Δ",              tip: "Average change in trust between team members over the run.",                          fmt: v => fmtDelta(v),    lowerBetter: false },
-    { key: "avg_challenge_count",        label: "Challenges",           tip: "Average refusal / push-back events per run.",                                         fmt: v => fmtNum(v, 1),   lowerBetter: true  },
-    { key: "conflict_ratio",             label: "Conflict %",           tip: "Challenge events as a share of all social interactions. Lower = more cooperative.",
-      compute: g => { const c = Number(g?.avg_challenge_count ?? 0); const o = Number(g?.avg_cooperation_count ?? 0); return c / Math.max(1, c + o); },
-      fmt: v => v == null ? "—" : Math.round(v * 100) + "%",            lowerBetter: true  },
-    { key: "avg_cooperation_count",      label: "Cooperation",          tip: "Average info-sharing / agreement events per run.",                                    fmt: v => fmtNum(v, 1),   lowerBetter: false },
-    { key: "avg_blockers_resolved_rate", label: "Resolved",             tip: "Share of tracked items resolved. 100% if run completed with no tracked items.", fmt: v => fmtPct(v),      lowerBetter: false },
+    { key: "completion_rate",            label: "Completion",           tip: "Share of runs that completed successfully.",                                                                                              fmt: v => fmtPct(v),          lowerBetter: false },
+    { key: "avg_completion_steps",       label: "Steps",                tip: "Average steps to finish a run (completed runs only). Whole numbers when all runs took the same count; one decimal when averaged.",       fmt: v => fmtSmartNum(v, 1),   lowerBetter: true  },
+    { key: "avg_peak_stress",            label: "Stress",               tip: "Highest average stress reached across the run.",                                                                                          fmt: v => fmtNum(v),           lowerBetter: true  },
+    { key: "avg_trust_delta",            label: "Trust Δ",              tip: "Average change in trust between team members over the run.",                                                                              fmt: v => fmtDelta(v),         lowerBetter: false },
+    { key: "avg_challenge_count",        label: "Challenges",           tip: "Average refusal / push-back events per run. Whole numbers when consistent across runs; one decimal when averaged.",                      fmt: v => fmtSmartNum(v, 1),   lowerBetter: true  },
+    { key: "conflict_ratio",             label: "Challenge %",          tip: "Challenge events (refusals, push-backs) as a share of all agent interactions in the run. Unlike challenge-vs-cooperation ratio, this accounts for neutral interactions (asks, suggestions) so high-negotiation scenarios are not unfairly penalised.",
+      compute: g => {
+        const c = Number(g?.avg_challenge_count ?? 0);
+        const total = Number(g?.avg_total_event_count ?? 0);
+        if (total > 0) return c / total;
+        // Fallback to old formula if total_event_count not available (old runs)
+        const o = Number(g?.avg_cooperation_count ?? 0);
+        if (c + o > 0) return c / (c + o);
+        return 0; // No events recorded — no challenge ratio to show
+      },
+      fmt: v => v == null ? "—" : Math.round(v * 100) + "%",                                                                                                                                                            lowerBetter: true  },
+    { key: "avg_cooperation_count",      label: "Coop. Events Avg",     tip: "Average info-sharing and agreement events per run (event count, not a 0–1 score). Higher = more cooperative interactions.",               fmt: v => fmtSmartNum(v, 1),   lowerBetter: false },
+    { key: "avg_blockers_resolved_rate", label: "Resolved",             tip: "Share of tracked items resolved. 100% if run completed with no tracked items.",                                                           fmt: v => fmtPct(v),           lowerBetter: false },
   ];
 
   // col can be a column object (with optional .compute) or a plain key string (legacy)
@@ -740,78 +819,6 @@
     }).join("");
   }
 
-  function renderBehaviourPattern(agg, experimentType) {
-    const el = $("xpBehaviourPattern");
-    if (!el) return;
-
-    const labels = Object.keys(agg || {});
-    if (labels.length < 2 || experimentType === "seed_reproducibility") {
-      el.innerHTML = "";
-      el.style.display = "none";
-      return;
-    }
-
-    el.style.display = "";
-
-    const isTeam = experimentType === "team_comparison";
-    const g = label => agg[label] || {};
-    const name = label => titleCaseLabel(label) + (isTeam ? " Team" : "");
-    const fmt1 = v => (v == null || !isFinite(v)) ? "—" : Number(v).toFixed(1);
-    const fmt2 = v => (v == null || !isFinite(v)) ? "—" : Number(v).toFixed(2);
-    const fmtPct = v => `${Math.round(v * 100)}%`;
-    const crOf = l => {
-      const c = Number(g(l).avg_challenge_count ?? 0);
-      const o = Number(g(l).avg_cooperation_count ?? 0);
-      return c / Math.max(1, c + o);
-    };
-    const winnerOf = (metric, lowerBetter = false) =>
-      labels.reduce((a, b) => {
-        const va = Number(g(a)[metric] ?? (lowerBetter ? Infinity : -Infinity));
-        const vb = Number(g(b)[metric] ?? (lowerBetter ? Infinity : -Infinity));
-        return lowerBetter ? (va < vb ? a : b) : (va > vb ? a : b);
-      });
-
-    const fastest = winnerOf("avg_completion_steps", true);
-    const calmest = winnerOf("avg_peak_stress", true);
-    const mostConflict = labels.reduce((a, b) => crOf(a) > crOf(b) ? a : b);
-    const mostCoop = winnerOf("avg_cooperation_count");
-
-    const chips = [
-      {
-        kicker: "Fastest",
-        winner: name(fastest),
-        value: `${fmt1(g(fastest).avg_completion_steps)} steps`,
-        cls: "xp-pattern-chip xp-pattern-chip--accent",
-      },
-      {
-        kicker: "Calmest",
-        winner: name(calmest),
-        value: `${fmt2(g(calmest).avg_peak_stress)} stress`,
-        cls: "xp-pattern-chip xp-pattern-chip--positive",
-      },
-      {
-        kicker: "Most conflict",
-        winner: name(mostConflict),
-        value: `${fmtPct(crOf(mostConflict))} conflict ratio`,
-        cls: "xp-pattern-chip xp-pattern-chip--warning",
-      },
-      {
-        kicker: "Most cooperative",
-        winner: name(mostCoop),
-        value: `${fmt1(g(mostCoop).avg_cooperation_count)} events`,
-        cls: "xp-pattern-chip xp-pattern-chip--positive",
-      },
-    ];
-
-    el.innerHTML = chips.map(item => `
-      <div class="${item.cls}">
-        <span class="xp-pattern-kicker">${esc(item.kicker)}</span>
-        <span class="xp-pattern-winner">${esc(item.winner)}</span>
-        <span class="xp-pattern-value">${esc(item.value)}</span>
-      </div>
-    `).join("");
-  }
-
   // ── Behaviour Pattern strip (above table) ──────────────────────────────────
 
   function renderBehaviourPattern(agg, experimentType) {
@@ -830,24 +837,31 @@
     const fmt2   = v => (v == null || !isFinite(v)) ? "—" : Number(v).toFixed(2);
     const fmtP   = v => Math.round(v * 100) + "%";
 
-    const winnerOf = (metric, lowerBetter = false) =>
-      labels.reduce((a, b) => {
-        const va = Number(g(a)[metric] ?? (lowerBetter ? Infinity : -Infinity));
-        const vb = Number(g(b)[metric] ?? (lowerBetter ? Infinity : -Infinity));
-        return lowerBetter ? (va < vb ? a : b) : (va > vb ? a : b);
-      });
+    // challenge / total_events (falls back to challenge / (challenge+coop) for old data)
+    const crOf = l => {
+      const c = Number(g(l).avg_challenge_count ?? 0);
+      const total = Number(g(l).avg_total_event_count ?? 0);
+      if (total > 0) return c / total;
+      const o = Number(g(l).avg_cooperation_count ?? 0);
+      return c / Math.max(1, c + o);
+    };
 
-    const crOf  = l => { const c = Number(g(l).avg_challenge_count ?? 0); const o = Number(g(l).avg_cooperation_count ?? 0); return c / Math.max(1, c + o); };
-    const fastest  = winnerOf("avg_completion_steps", true);
-    const calmest  = winnerOf("avg_peak_stress", true);
-    const highCoop = winnerOf("avg_cooperation_count");
-    const highCR   = labels.reduce((a, b) => crOf(a) > crOf(b) ? a : b);
+    // Tie-aware winners
+    const fastestWs  = winnersOf(labels, g, "avg_completion_steps", true);
+    const calmestWs  = winnersOf(labels, g, "avg_peak_stress",      true);
+    const highCoopWs = winnersOf(labels, g, "avg_cooperation_count");
+    // "Most Pushback" chip uses raw challenge count (most honest: which had most pushback events)
+    const highCRWs   = winnersOf(labels, g, "avg_challenge_count");
+    const fastest    = fastestWs[0];
+    const calmest    = calmestWs[0];
+    const highCoop   = highCoopWs[0];
+    const highCR     = highCRWs[0];
 
     const chips = [
-      { kicker: "Fastest",          winner: name(fastest),   value: `${fmt1(g(fastest).avg_completion_steps)} avg steps`,       mod: "xp-pattern-chip--accent"   },
-      { kicker: "Calmest",          winner: name(calmest),   value: `${fmt2(g(calmest).avg_peak_stress)} peak stress`,          mod: "xp-pattern-chip--positive" },
-      { kicker: "Most Cooperative", winner: name(highCoop),  value: `${fmt1(g(highCoop).avg_cooperation_count)} events avg`,    mod: "xp-pattern-chip--positive" },
-      { kicker: "Most Conflict",    winner: name(highCR),    value: `${fmtP(crOf(highCR))} conflict ratio`,                     mod: "xp-pattern-chip--warning"  },
+      { kicker: "Fastest",          winner: tieLabel(fastestWs,  name), value: `${fmtSmartNum(g(fastest).avg_completion_steps)} avg steps`,       mod: "xp-pattern-chip--accent"   },
+      { kicker: "Calmest",          winner: tieLabel(calmestWs,  name), value: `${fmt2(g(calmest).avg_peak_stress)} peak stress`,                  mod: "xp-pattern-chip--positive" },
+      { kicker: "Most Cooperative", winner: tieLabel(highCoopWs, name), value: `${fmtSmartNum(g(highCoop).avg_cooperation_count)} coop. events`,   mod: "xp-pattern-chip--positive" },
+      { kicker: "Most Pushback",    winner: tieLabel(highCRWs,   name), value: `${fmtSmartNum(g(highCR).avg_challenge_count)} challenge events`,   mod: "xp-pattern-chip--warning"  },
     ];
 
     el.innerHTML = chips.map(c => `
@@ -878,33 +892,50 @@
     const fmtD     = v => { if (v == null || !isFinite(v)) return "—"; const s = Number(v).toFixed(2); return v >= 0 ? "+" + s : s; };
     const fmtPct2  = v => Math.round(v * 100) + "%";
 
-    const crOf = l => { const c = Number(g(l).avg_challenge_count ?? 0); const o = Number(g(l).avg_cooperation_count ?? 0); return c / Math.max(1, c + o); };
+    // challenge / total_events (falls back to challenge / (challenge+coop) for old data)
+    const crOf = l => {
+      const c = Number(g(l).avg_challenge_count ?? 0);
+      const total = Number(g(l).avg_total_event_count ?? 0);
+      if (total > 0) return c / total;
+      const o = Number(g(l).avg_cooperation_count ?? 0);
+      return c / Math.max(1, c + o);
+    };
 
-    const winnerOf = (metric, lowerBetter = false) =>
-      labels.reduce((a, b) => {
-        const va = Number(g(a)[metric] ?? (lowerBetter ? Infinity : -Infinity));
-        const vb = Number(g(b)[metric] ?? (lowerBetter ? Infinity : -Infinity));
-        return lowerBetter ? (va < vb ? a : b) : (va > vb ? a : b);
-      });
+    // Tie-aware winners
+    const highTrustWs  = winnersOf(labels, g, "avg_trust_delta");
+    const highCoopWs   = winnersOf(labels, g, "avg_cooperation_count");
+    const highConfWs   = winnersOf(labels, g, "avg_challenge_count");
+    const highStressWs = winnersOf(labels, g, "avg_peak_stress");
+    const fastestWs    = winnersOf(labels, g, "avg_completion_steps", true);
+    const highTrust    = highTrustWs[0];
+    const highCoop     = highCoopWs[0];
+    const highConf     = highConfWs[0];
+    const highStress   = highStressWs[0];
+    const fastest      = fastestWs[0];
+    // "Conflict Ratio" winner uses the improved challenge/total formula (tie-aware)
+    const highCRVals   = labels.map(l => crOf(l));
+    const bestCR       = Math.max(...highCRVals);
+    const highCRWs     = labels.filter((_, i) => Math.abs(highCRVals[i] - bestCR) < 0.001);
+    const highCR       = highCRWs[0];
 
-    const highTrust  = winnerOf("avg_trust_delta");
-    const highCoop   = winnerOf("avg_cooperation_count");
-    const highConf   = winnerOf("avg_challenge_count");
-    const highStress = winnerOf("avg_peak_stress");
-    const fastest    = winnerOf("avg_completion_steps", true);
-    const highCR     = labels.reduce((a, b) => crOf(a) > crOf(b) ? a : b);
+    const highTrustLabel  = tieLabel(highTrustWs,  name);
+    const highCoopLabel   = tieLabel(highCoopWs,   name);
+    const highConfLabel   = tieLabel(highConfWs,   name);
+    const highStressLabel = tieLabel(highStressWs, name);
+    const fastestLabel    = tieLabel(fastestWs,    name);
+    const highCRLabel     = tieLabel(highCRWs,     name);
 
     const narrative = isTeam
-      ? `Across ${labels.length} team styles, <strong>${esc(name(highTrust))}</strong> showed the strongest trust growth (${esc(fmtD(g(highTrust).avg_trust_delta))}), while <strong>${esc(name(highConf))}</strong> generated the most challenge events (${esc(fmt1(g(highConf).avg_challenge_count))} avg). <strong>${esc(name(highCoop))}</strong> led on cooperation (${esc(fmt1(g(highCoop).avg_cooperation_count))} events avg) and <strong>${esc(name(highStress))}</strong> had the highest peak stress (${esc(fmt1(g(highStress).avg_peak_stress))}). <strong>${esc(name(fastest))}</strong> completed runs fastest at ${esc(fmt1(g(fastest).avg_completion_steps))} steps on average. Conflict ratio was highest in <strong>${esc(name(highCR))}</strong> (${esc(fmtPct2(crOf(highCR)))}). This comparison shows that team style changed measurable behaviour: <strong>${esc(name(fastest))}</strong> completed fastest, <strong>${esc(name(highCoop))}</strong> produced the strongest cooperation pattern, and <strong>${esc(name(highStress))}</strong> produced the highest stress and conflict ratio.`
-      : `Across ${labels.length} scenarios, <strong>${esc(name(highTrust))}</strong> produced the highest trust growth (${esc(fmtD(g(highTrust).avg_trust_delta))}), while <strong>${esc(name(highConf))}</strong> generated the most challenge events (${esc(fmt1(g(highConf).avg_challenge_count))} avg). <strong>${esc(name(highCoop))}</strong> was the most cooperative environment (${esc(fmt1(g(highCoop).avg_cooperation_count))} events avg) and <strong>${esc(name(highStress))}</strong> showed the highest stress (${esc(fmt1(g(highStress).avg_peak_stress))}). <strong>${esc(name(fastest))}</strong> resolved fastest at ${esc(fmt1(g(fastest).avg_completion_steps))} steps. This comparison shows that scenario context changed measurable behaviour across speed, stress, cooperation, and conflict.`;
+      ? `Across ${labels.length} team styles, <strong>${esc(highTrustLabel)}</strong> showed the strongest trust growth (${esc(fmtD(g(highTrust).avg_trust_delta))}), while <strong>${esc(highConfLabel)}</strong> generated the most challenge events (${esc(fmtSmartNum(g(highConf).avg_challenge_count))} avg). <strong>${esc(highCoopLabel)}</strong> led on cooperation (${esc(fmtSmartNum(g(highCoop).avg_cooperation_count))} coop. events avg) and <strong>${esc(highStressLabel)}</strong> had the highest peak stress (${esc(fmt1(g(highStress).avg_peak_stress))}). <strong>${esc(fastestLabel)}</strong> completed runs fastest at ${esc(fmtSmartNum(g(fastest).avg_completion_steps))} steps on average. Challenge rate was highest in <strong>${esc(highCRLabel)}</strong> (${esc(fmtPct2(crOf(highCR)))} of all interactions). This comparison shows that team style changed measurable behaviour: <strong>${esc(fastestLabel)}</strong> completed fastest, <strong>${esc(highCoopLabel)}</strong> produced the strongest cooperation pattern, and <strong>${esc(highStressLabel)}</strong> produced the highest stress.`
+      : `Across ${labels.length} scenarios, <strong>${esc(highTrustLabel)}</strong> produced the highest trust growth (${esc(fmtD(g(highTrust).avg_trust_delta))}), while <strong>${esc(highConfLabel)}</strong> generated the most challenge events (${esc(fmtSmartNum(g(highConf).avg_challenge_count))} avg). <strong>${esc(highCoopLabel)}</strong> was the most cooperative environment (${esc(fmtSmartNum(g(highCoop).avg_cooperation_count))} coop. events avg) and <strong>${esc(highStressLabel)}</strong> showed the highest stress (${esc(fmt1(g(highStress).avg_peak_stress))}). <strong>${esc(fastestLabel)}</strong> resolved fastest at ${esc(fmtSmartNum(g(fastest).avg_completion_steps))} steps. This comparison shows that scenario context changed measurable behaviour across speed, stress, cooperation, and conflict.`;
 
     const items = [
-      { metric: "Trust Growth",   winner: name(highTrust),  val: fmtD(g(highTrust).avg_trust_delta),                        color: "var(--xp-green)"  },
-      { metric: "Cooperation",    winner: name(highCoop),   val: `${fmt1(g(highCoop).avg_cooperation_count)} events`,        color: "#1a8a7a"          },
-      { metric: "Most Conflict",  winner: name(highConf),   val: `${fmt1(g(highConf).avg_challenge_count)} events`,          color: "var(--xp-amber)"  },
-      { metric: "Conflict Ratio", winner: name(highCR),     val: fmtPct2(crOf(highCR)),                                     color: "var(--xp-red)"    },
-      { metric: "Peak Stress",    winner: name(highStress), val: fmt1(g(highStress).avg_peak_stress),                        color: "var(--xp-red)"    },
-      { metric: "Fastest",        winner: name(fastest),    val: `${fmt1(g(fastest).avg_completion_steps)} steps`,           color: "var(--xp-accent)" },
+      { metric: "Trust Growth",    winner: highTrustLabel,  val: fmtD(g(highTrust).avg_trust_delta),                             color: "var(--xp-green)"  },
+      { metric: "Coop. Events Avg", winner: highCoopLabel,   val: `${fmtSmartNum(g(highCoop).avg_cooperation_count)} events`,      color: "#1a8a7a"          },
+      { metric: "Most Pushback",   winner: highConfLabel,   val: `${fmtSmartNum(g(highConf).avg_challenge_count)} events`,         color: "var(--xp-amber)"  },
+      { metric: "Challenge %",     winner: highCRLabel,     val: fmtPct2(crOf(highCR)),                                           color: "var(--xp-red)"    },
+      { metric: "Peak Stress",     winner: highStressLabel, val: fmt1(g(highStress).avg_peak_stress),                              color: "var(--xp-red)"    },
+      { metric: "Fastest",         winner: fastestLabel,    val: `${fmtSmartNum(g(fastest).avg_completion_steps)} steps`,          color: "var(--xp-accent)" },
     ];
 
     el.innerHTML = `
@@ -994,23 +1025,40 @@
     const bySpeed     = labels.map(l => [l, Number(agg[l]?.avg_completion_steps  ?? Infinity)]).sort((a, b) => a[1] - b[1]);
     const byChallenge = labels.map(l => [l, Number(agg[l]?.avg_challenge_count   ?? 0       )]).sort((a, b) => b[1] - a[1]);
 
+    // Tie-aware top labels for interpretation text
+    const _topCoopVal  = byCoop[0]?.[1];
+    const _topCoopNames  = byCoop.filter(([, v]) => Math.abs(v - _topCoopVal) < 0.001).map(([l]) => titleCaseLabel(l));
+    const _topCoopLabel  = _topCoopNames.length > 1 ? _topCoopNames.join(" & ") : (_topCoopNames[0] || "—");
+
+    const _topStressVal  = byStress[0]?.[1];
+    const _topStressNames= byStress.filter(([, v]) => Math.abs(v - _topStressVal) < 0.001).map(([l]) => titleCaseLabel(l));
+    const _topStressLabel= _topStressNames.length > 1 ? _topStressNames.join(" & ") : (_topStressNames[0] || "—");
+
+    const _topSpeedVal   = bySpeed[0]?.[1];
+    const _topSpeedNames = bySpeed.filter(([, v]) => Math.abs(v - _topSpeedVal) < 0.001).map(([l]) => titleCaseLabel(l));
+    const _topSpeedLabel = _topSpeedNames.length > 1 ? _topSpeedNames.join(" & ") : (_topSpeedNames[0] || "—");
+
+    const _topChallVal   = byChallenge[0]?.[1];
+    const _topChallNames = byChallenge.filter(([, v]) => Math.abs(v - _topChallVal) < 0.001).map(([l]) => titleCaseLabel(l));
+    const _topChallLabel = _topChallNames.length > 1 ? _topChallNames.join(" & ") : (_topChallNames[0] || "—");
+
     const overall = isTeam
       ? `Across repeated runs, team style had a clear effect on behaviour. `
-        + `${titleCaseLabel(byCoop[0]?.[0])} teams were the most cooperative, `
-        + `${titleCaseLabel(byStress[0]?.[0])} teams showed the highest stress, `
-        + `and ${titleCaseLabel(bySpeed[0]?.[0])} teams completed runs most quickly.`
+        + `${_topCoopLabel} team${_topCoopNames.length > 1 ? "s" : ""} were the most cooperative, `
+        + `${_topStressLabel} team${_topStressNames.length > 1 ? "s" : ""} showed the highest stress, `
+        + `and ${_topSpeedLabel} team${_topSpeedNames.length > 1 ? "s" : ""} completed runs most quickly.`
       : `Across repeated runs, the scenario environment shaped behaviour in distinct ways. `
-        + `${titleCaseLabel(byCoop[0]?.[0])} produced the most cooperative interactions, `
-        + `${titleCaseLabel(byStress[0]?.[0])} generated the highest stress, `
-        + `and ${titleCaseLabel(bySpeed[0]?.[0])} was completed most quickly.`;
+        + `${_topCoopLabel} produced the most cooperative interactions, `
+        + `${_topStressLabel} generated the highest stress, `
+        + `and ${_topSpeedLabel} was completed most quickly.`;
 
     const why = isTeam
       ? `These results suggest that ${groupWord} meaningfully changes simulation outcomes, `
         + `affecting coordination speed, social tension, and collaboration quality. `
-        + `${titleCaseLabel(byChallenge[0]?.[0])} teams generated the most challenge events, `
-        + `while ${titleCaseLabel(byCoop[0]?.[0])} teams showed the smoothest coordination.`
+        + `${_topChallLabel} team${_topChallNames.length > 1 ? "s" : ""} generated the most challenge events, `
+        + `while ${_topCoopLabel} team${_topCoopNames.length > 1 ? "s" : ""} showed the smoothest coordination.`
       : `These results suggest that ${groupWord} shapes agent behaviour in measurable ways. `
-        + `${titleCaseLabel(byChallenge[0]?.[0])} generated the most challenge events, `
+        + `${_topChallLabel} generated the most challenge events, `
         + `indicating higher coordination friction in that context.`;
 
     const summaryLabel = isTeam ? "Team-by-team summary" : "Scenario-by-scenario summary";

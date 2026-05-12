@@ -292,7 +292,7 @@
     /* ── Feature cards ────────────────────────────────────────── */
     .feature-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
       margin-top: 40px;
     }
@@ -845,15 +845,16 @@
         <div class="hero-copy">
           <div class="hero-eyebrow">
             <span class="hero-eyebrow-dot"></span>
-            Multi-Agent Behavioural Simulation
+            Research tool · HCI &amp; Agent Behaviour
           </div>
 
           <h1>How team <em>behaviour</em><br>changes under pressure</h1>
 
           <p class="hero-lead">
-            SimuVerse runs controlled simulations with personality-driven agents
-            working through shared tasks. Watch trust, stress, cooperation, and challenge
-            behaviour evolve over time, then compare outcomes through repeatable experiment runs.
+            SimuVerse is a research tool for studying group dynamics.
+            Run personality-driven agent simulations, intervene in the run to influence team behaviour,
+            see exactly why each decision was made, and compare outcomes across repeatable experiment runs —
+            without needing to recruit real participants for every scenario run.
           </p>
 
           <div class="hero-actions">
@@ -869,22 +870,22 @@
         <div class="hero-stats">
           <div class="stat-pill">
             <div>
-              <div class="stat-pill-label">Agents</div>
-              <div class="stat-pill-value">Agents follow team-style presets — Smooth, Tension, Creative, and Pressure — which affect trust, cooperation, stress, and challenge behaviour.</div>
+              <div class="stat-pill-label">Explainable</div>
+              <div class="stat-pill-value">Every agent action shows its Why and Effect — no black boxes.</div>
             </div>
           </div>
 
           <div class="stat-pill">
             <div>
-              <div class="stat-pill-label">Scenarios</div>
-              <div class="stat-pill-value">Office coordination, café negotiation, and escape-room problem solving create different social pressures and blocker patterns.</div>
+              <div class="stat-pill-label">Interactive</div>
+              <div class="stat-pill-value">Apply interventions mid-run and measure their impact on the team.</div>
             </div>
           </div>
 
           <div class="stat-pill">
             <div>
-              <div class="stat-pill-label">Live metrics</div>
-              <div class="stat-pill-value">Stress, trust, cooperation, challenge events, progress, and blocker resolution are tracked throughout each run.</div>
+              <div class="stat-pill-label">Repeatable</div>
+              <div class="stat-pill-value">Run the same scenario with different team types and compare results.</div>
             </div>
           </div>
         </div>
@@ -896,42 +897,48 @@
   <!-- ── What SimuVerse does ─────────────────────────────────── -->
   <section class="section">
     <div class="container">
-      <div class="section-kicker">What it does</div>
-      <h2 class="section-title">Three moving parts behind every run</h2>
+      <div class="section-kicker">What makes it a research tool</div>
+      <h2 class="section-title">Built for observation, not just simulation</h2>
       <p class="section-sub">
-        Each simulation combines personality-driven agents, a structured scenario,
-        and a live metrics layer so every run is both observable and comparable.
+        SimuVerse shows its work. Every decision is explained, every intervention is measured,
+        and every run can be reproduced exactly.
       </p>
 
       <div class="feature-grid">
 
         <article class="feature-card accent-blue">
-          <div class="feature-icon blue">🧠</div>
-          <h3>Personality-driven agents</h3>
+          <div class="feature-icon blue">🔍</div>
+          <h3>Explainable agent decisions</h3>
           <p>
-            Team-style presets shape how agents respond to pressure, requests, and disagreement.
-            Smooth, Tension, Creative, and Pressure each produce different trust, cooperation,
-            stress, and challenge patterns across a run.
+            Every action in the simulation log includes a Why and an Effect — what drove the
+            decision and what it changed in the team. No black boxes.
           </p>
         </article>
 
         <article class="feature-card accent-teal">
-          <div class="feature-icon teal">🗺️</div>
-          <h3>Scenario progression</h3>
+          <div class="feature-icon teal">⚡</div>
+          <h3>Live interventions</h3>
           <p>
-            Tasks unlock in dependency order. Agents share information, refuse requests,
-            negotiate and block each other — just like real teams do when the goal is unclear
-            or the stakes are high.
+            Influence the team mid-run: reveal information, force a meeting, adjust pressure.
+            Each intervention is tracked with before-and-after metrics so you can see what actually changed.
           </p>
         </article>
 
         <article class="feature-card accent-amber">
           <div class="feature-icon amber">📊</div>
-          <h3>Quantified team dynamics</h3>
+          <h3>Repeatable experiments</h3>
           <p>
-            Stress, trust, cooperation, challenge events, progress, and blocker resolution
-            update throughout each run. The metrics make individual runs easy to inspect,
-            and repeatable experiments easy to compare.
+            Run the same scenario with different team types and compare outcomes side by side.
+            Stress, trust, cohesion, and conflict events are captured automatically across every run.
+          </p>
+        </article>
+
+        <article class="feature-card accent-violet">
+          <div class="feature-icon violet">🗂️</div>
+          <h3>History and replay</h3>
+          <p>
+            Every completed run is saved. Revisit the full event timeline, inspect past decisions,
+            and compare outcomes across runs — without having to rerun the simulation.
           </p>
         </article>
 
@@ -1004,8 +1011,8 @@
 
         <div class="step">
           <div class="step-num">3</div>
-          <h4>Run the simulation</h4>
-          <p>Step through manually or let it run automatically at a steady pace.</p>
+          <h4>Run and intervene</h4>
+          <p>Step through manually, apply interventions mid-run, or let it run automatically.</p>
         </div>
 
         <div class="step">

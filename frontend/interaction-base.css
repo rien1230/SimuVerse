@@ -1,5 +1,6 @@
 /* interaction-base.css — CSS variables, base/reset, top bar, live-session root, three-column layout */
 
+/* Shared colour / spacing tokens */
 :root {
   --bg: #eef3fa;
   --panel: #ffffff;
@@ -36,6 +37,7 @@
   --font-display: "Fraunces", Georgia, serif;
 }
 
+/* Base reset */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -48,6 +50,7 @@ html, body {
   overflow: hidden;
 }
 
+/* Page background + default type */
 body {
   font-family: var(--font-ui);
   color: var(--text);
@@ -103,9 +106,7 @@ a { color: inherit; }
   box-shadow: 0 0 10px rgba(255,109,109,0.9);
 }
 
-/* ─────────────────────────────────────────
-   LIVE SESSION ROOT
-───────────────────────────────────────── */
+/* Main page shell */
 #liveSession {
   height: calc(100vh - 54px);
   min-height: 0;
@@ -120,9 +121,7 @@ a { color: inherit; }
   padding: 10px 14px 12px;
 }
 
-/* ─────────────────────────────────────────
-   STATUS STRIP — single unified bar
-───────────────────────────────────────── */
+/* Top status cards */
 .status-strip {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(240px, 0.92fr) minmax(0, 0.96fr);
@@ -175,7 +174,7 @@ a { color: inherit; }
   transition: background 0.12s;
 }
 
-/* Thin vertical dividers between cards */
+/* Thin separators between top cards */
 .sc-card + .sc-card {
   border-left: 1px solid rgba(18,41,83,0.07);
 }
@@ -225,7 +224,7 @@ a { color: inherit; }
 .metric-delta.is-warning { color: #c65b16; }
 .metric-delta.is-calm { color: #1c9b5f; }
 
-/* ── Step card — blue tinted ── */
+/* Step / progress card */
 .sc-card-step {
   background: linear-gradient(90deg, #eef4ff 0%, #f7faff 100%);
 }
@@ -255,7 +254,7 @@ a { color: inherit; }
   border: 1px solid rgba(240,125,20,0.14);
 }
 
-/* ── Blocker ── */
+/* Current focus pill */
 .sc-blocker {
   display: flex;
   align-items: center;
@@ -281,7 +280,7 @@ a { color: inherit; }
   box-shadow: 0 0 4px rgba(240,125,20,0.5);
 }
 
-/* ── sc-level — qualitative level label inside metric cards ── */
+/* Small label like Low / High / Very High */
 .sc-level {
   font-size: 0.63rem;
   font-weight: 800;
@@ -293,7 +292,7 @@ a { color: inherit; }
   opacity: 0.82;
 }
 
-/* ── Metric cards — coloured left-border accent ── */
+/* Pressure / tension / cohesion cards */
 .sc-card-urgency,
 .sc-card-tension,
 .sc-card-cohesion {
@@ -327,9 +326,7 @@ a { color: inherit; }
 .sc-card-cohesion .sc-value { color: var(--teal); font-size: 0.88rem; font-weight: 900; letter-spacing: -0.025em; }
 .sc-card-cohesion .metric-delta { color: var(--teal); }
 
-/* ─────────────────────────────────────────
-   MAIN THREE-COLUMN AREA
-───────────────────────────────────────── */
+/* Main three-column layout */
 .main-area {
   min-height: 0;
   display: grid;
@@ -348,7 +345,7 @@ a { color: inherit; }
   flex-direction: column;
 }
 
-/* ─── Panel headers ─── */
+/* Shared panel header */
 .panel-head {
   flex-shrink: 0;
   display: flex;
@@ -375,7 +372,7 @@ a { color: inherit; }
 }
 .panel-head-icon { display: none; }
 
-/* ─── Scrollable panel body ─── */
+/* Shared scroll areas */
 .panel-scroll {
   flex: 1;
   min-height: 0;

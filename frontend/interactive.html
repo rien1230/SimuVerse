@@ -3,7 +3,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script src="consent-guard.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SimuVerse — Live Interactive</title>
 
@@ -12,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="interaction.css?v=13">
+  <link rel="stylesheet" href="interaction.css?v=14">
   <link rel="stylesheet" href="nav.css">
 </head>
 
@@ -106,14 +105,14 @@
           </article>
 
           <article class="sc-card sc-card-tension">
-            <div class="sc-label" id="sTensionLabel">Tension</div>
+            <div class="sc-label" id="sTensionLabel" title="Tension and Cohesion are complementary readings of the same group interaction signal — high tension reflects conflict events, high cohesion reflects cooperation events.">Tension ⓘ</div>
             <div class="sc-level" id="sTensionLevel">—</div>
             <div class="sc-value status-value" id="sTension">0.00</div>
             <div class="sc-sub metric-delta" id="sTensionDelta"></div>
           </article>
 
           <article class="sc-card sc-card-cohesion">
-            <div class="sc-label" id="sCohesionLabel">Cohesion</div>
+            <div class="sc-label" id="sCohesionLabel" title="Cohesion and Tension are complementary readings of the same group interaction signal — high cohesion reflects cooperation events, high tension reflects conflict events.">Cohesion ⓘ</div>
             <div class="sc-level" id="sCohesionLevel">—</div>
             <div class="sc-value status-value" id="sCohesion">0.00</div>
             <div class="sc-sub metric-delta" id="sCohesionDelta"></div>
@@ -123,11 +122,14 @@
       </section>
 
       <!-- View toggle -->
-      <nav class="view-toggle" id="viewToggle" aria-label="Page views">
-        <button class="view-tab is-active" data-view="live">Live Simulation</button>
-        <button class="view-tab" data-view="metrics">Metrics &amp; Analysis</button>
-        <button class="view-tab" data-view="impact">Intervention Impact</button>
-      </nav>
+      <div class="view-toggle-wrap">
+        <span class="view-toggle-label">Switch view:</span>
+        <nav class="view-toggle" id="viewToggle" aria-label="Page views">
+          <button class="view-tab is-active" data-view="live"><span class="vt-icon">▶</span>Live Simulation</button>
+          <button class="view-tab" data-view="metrics"><span class="vt-icon">📊</span>Metrics &amp; Analysis</button>
+          <button class="view-tab" data-view="impact"><span class="vt-icon">⚡</span>Intervention Impact</button>
+        </nav>
+      </div>
 
       <!-- View container -->
       <div class="view-container">
@@ -141,7 +143,8 @@
               <div class="panel-head">
                 <div>
                   <h2>Agents</h2>
-                  <p id="agentPanelSub">Private knowledge and starting stress</p>
+                  <p id="agentPanelSub">Private knowledge, style, mood and stress</p>
+                  <p class="agent-scroll-prompt">Scroll to view all agents ↓</p>
                 </div>
               </div>
 
@@ -150,6 +153,7 @@
                   <div class="empty-state">Waiting for first step…</div>
                 </div>
               </div>
+              <div class="iv-scroll-hint hidden" id="agentScrollHint">Scroll for more ↓</div>
             </aside>
 
             <!-- Main log panel -->
@@ -183,19 +187,21 @@
                 <div class="log conversation-stream" id="eventLog">
                   <div data-placeholder class="empty-state">
                     <div class="empty-trace-card">
-                      <div class="empty-trace-step">Step 0</div>
                       <div class="empty-trace-title">Ready to simulate</div>
                       <div class="empty-trace-copy">
-                        The team is ready. Press <strong>Start First Step</strong> to generate the first agent interaction.
+                        Press <strong>Start First Step</strong> to begin.
                       </div>
-                      <div class="empty-trace-hint">This log will explain:</div>
+                      <div class="empty-trace-hint">The log will show:</div>
                       <div class="empty-trace-points">
                         <span>Who acted</span>
                         <span>What changed</span>
                         <span>Why it happened</span>
-                        <span>Effect on team</span>
+                        <span>Effect on the team</span>
                       </div>
                     </div>
+
+                    <!-- Onboarding hint — right panel cue -->
+                    <div class="ioc-hint" aria-label="Use the action panel on the right to interact">💡 Use actions here →</div>
                   </div>
                 </div>
               </div>
@@ -213,24 +219,7 @@
                     <span>Interventions are disabled because the simulation has ended. Start a new run to apply more interventions.</span>
                     <a class="iv-complete-action" href="setup.html">Start New Run</a>
                   </div>
-                  <div id="ivMore">
-
-                  <article class="iv-card iv-green">
-                    <div class="iv-head">
-                      <div>
-                        <h3>Force Meeting</h3>
-                        <p class="iv-desc">Rallies two agents to discuss the current focus directly.</p>
-                      </div>
-                    </div>
-
-                    <div class="iv-item-controls iv-double">
-                      <select id="forceAgentA"></select>
-                      <select id="forceAgentB"></select>
-                      <button class="btn-iv iv-green" data-iv="force_meeting" disabled>Apply</button>
-                    </div>
-                    <p class="iv-inline-error hidden" id="ivErrorForce"></p>
-                    <p class="iv-inline-note hidden" id="ivNoteForce"></p>
-                  </article>
+                  <div class="iv-pre-run-note" id="ivPreRunNote">Press <strong>Start First Step</strong> first, then use actions to influence the team.</div>
 
                   <article class="iv-card iv-blue" id="revealInfoCard">
                     <div class="iv-head">
@@ -248,7 +237,26 @@
                     <p class="iv-inline-note hidden" id="revealEmptyMsg">No revealable clue is available right now.</p>
                   </article>
 
+                  <article class="iv-card iv-green">
+                    <!-- Direct coordination action -->
+                    <div class="iv-head">
+                      <div>
+                        <h3>Force Meeting</h3>
+                        <p class="iv-desc">Rallies two agents to discuss the current focus directly.</p>
+                      </div>
+                    </div>
+
+                    <div class="iv-item-controls iv-double">
+                      <select id="forceAgentA"></select>
+                      <select id="forceAgentB"></select>
+                      <button class="btn-iv iv-green" data-iv="force_meeting" disabled>Apply</button>
+                    </div>
+                    <p class="iv-inline-error hidden" id="ivErrorForce"></p>
+                    <p class="iv-inline-note hidden" id="ivNoteForce"></p>
+                  </article>
+
                   <article class="iv-card iv-purple">
+                    <!-- Soft behaviour nudge -->
                     <div class="iv-head">
                       <div>
                         <h3>Nudge Cooperation</h3>
@@ -264,6 +272,7 @@
                   </article>
 
                   <article class="iv-card iv-red">
+                    <!-- Raise social friction for a short period -->
                     <div class="iv-head">
                       <div>
                         <h3>Inject Tension</h3>
@@ -277,6 +286,7 @@
                   </article>
 
                   <article class="iv-card iv-orange">
+                    <!-- Raise time pressure -->
                     <div class="iv-head">
                       <div>
                         <h3>Boost Urgency</h3>
@@ -291,6 +301,7 @@
                   </article>
 
                   <article class="iv-card iv-blue">
+                    <!-- Lower time pressure -->
                     <div class="iv-head">
                       <div>
                         <h3>Ease Pressure</h3>
@@ -305,6 +316,7 @@
                   </article>
 
                   <article class="iv-card iv-teal">
+                    <!-- Free-text mood injection -->
                     <div class="iv-head">
                       <div>
                         <h3>Inject Mood</h3>
@@ -324,7 +336,6 @@
                     </div>
                   </article>
 
-                  </div>
                 </div>
               </div>
               <div class="iv-scroll-hint" id="ivScrollHint" aria-hidden="true">↓ scroll for more</div>
@@ -347,9 +358,9 @@
                 <div class="mv-stat-sub">Current avg cooperation quality</div>
               </article>
               <article class="mv-stat-card">
-                <div class="mv-stat-label">Cohesion</div>
+                <div class="mv-stat-label" title="Cohesion and Tension are complementary readings of the same group interaction signal — high cohesion reflects cooperation events, high tension reflects conflict events.">Cohesion ⓘ</div>
                 <div class="mv-stat-value is-cohesion" id="mvCohesion">—</div>
-                <div class="mv-stat-sub">Current group alignment</div>
+                <div class="mv-stat-sub">Current group alignment (mirrors Tension inversely)</div>
               </article>
               <article class="mv-stat-card">
                 <div class="mv-stat-label">Agent Conflict Events</div>
@@ -429,6 +440,7 @@
       </div><!-- /.view-container -->
 
       <!-- Hidden state panels kept for existing JS compatibility -->
+      <!-- Extra hidden placeholders used by older render helpers -->
       <section class="semantic-data hidden" aria-hidden="true">
         <div id="lastInterventionCard">
           <div id="ivTickStamp">—</div>
@@ -471,13 +483,14 @@
 
   <div class="hidden" id="banner"></div>
 
-  <!-- PDF export libraries -->
+  <!-- Export helpers -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <script src="pdf-report.js"></script>
   <script src="report-generator.js"></script>
 
+  <!-- Main page scripts -->
   <script src="api.js"></script>
-  <script src="interaction.js" defer></script>
+  <script src="interaction.js?v=20260508h" defer></script>
 </body>
 </html>

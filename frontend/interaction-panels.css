@@ -8,6 +8,7 @@
   gap: 6px;
 }
 
+/* Individual agent cards */
 .agent-card {
   padding: 10px 12px 11px;
   border-radius: 14px;
@@ -80,7 +81,7 @@
   min-height: 0;
 }
 
-/* Strategy badge — compact, softer */
+/* Team style badge */
 .agent-strategy-label {
   display: inline-flex;
   align-items: center;
@@ -93,7 +94,7 @@
   flex-shrink: 0;
 }
 
-/* Emotion chip */
+/* Short mood / emotion label */
 .agent-emotion-chip {
   display: inline-flex;
   align-items: center;
@@ -108,7 +109,7 @@
   line-height: 1.2;
 }
 
-/* Metrics row */
+/* Small stress / trust rows inside each card */
 .agent-metrics {
   display: block;
 }
@@ -152,20 +153,22 @@
 .mini-bar.stress.stress-low      > span { background: #1ec466; }
 .mini-bar.stress.stress-moderate > span { background: #f5a623; }
 .mini-bar.stress.stress-high     > span { background: #e83030; }
+.mini-bar.trust.trust-high       > span { background: #1ec466; }
+.mini-bar.trust.trust-moderate   > span { background: #2e7cff; }
+.mini-bar.trust.trust-low        > span { background: #f5a623; }
+.mini-bar.trust.trust-neutral    > span { background: #c0c8d8; }
 .mini-bar.valence-negative > span { background: linear-gradient(90deg, #ff8a1f, #e83030); }
 .mini-bar.valence-positive > span { background: linear-gradient(90deg, #22d365, #11a6b8); }
 .mini-bar.valence-neutral > span  { background: linear-gradient(90deg, #7d55ff, #2e7cff); }
 
 .agent-thought { display: none; }
 
-/* ─────────────────────────────────────────
-   LOG PANEL
-───────────────────────────────────────── */
+/* Center log panel */
 .panel-log {
   background: #f4f9ff;
 }
 
-/* Log header — two-zone */
+/* Title row + action buttons */
 .log-head {
   flex-shrink: 0;
   display: flex;
@@ -199,7 +202,7 @@
   font-weight: 600;
 }
 
-/* Buttons row — inline with title */
+/* Reset / step controls */
 .log-head-controls {
   display: flex;
   align-items: center;
@@ -207,7 +210,7 @@
   flex-shrink: 0;
 }
 
-/* Situation strip */
+/* Current situation summary */
 .log-situation {
   padding: 11px 18px 12px;
   background: linear-gradient(90deg, #f6faff 0%, #fafcff 100%);
@@ -270,7 +273,7 @@
   line-height: 1;
 }
 
-/* Legacy aliases — keep JS compatibility */
+/* Legacy aliases — keep older JS hooks working */
 .log-head-copy { padding: 0; }
 .log-title-row { display: contents; }
 .log-inline-status { display: contents; }
@@ -284,9 +287,7 @@
   gap: 8px;
 }
 
-/* ─────────────────────────────────────────
-   BUTTONS
-───────────────────────────────────────── */
+/* Main buttons */
 .btn-step,
 .btn-compact {
   min-width: 136px;
@@ -389,9 +390,7 @@
   color: #fff;
 }
 
-/* ─────────────────────────────────────────
-   CONVERSATION STREAM / EVENTS
-───────────────────────────────────────── */
+/* Timeline / event stream */
 .conversation-stream {
   position: relative;
   display: grid;
@@ -416,15 +415,16 @@
   max-width: 680px;
 }
 
+/* First-load placeholder card */
 .empty-trace-card {
-  padding: 22px 24px 24px;
+  padding: 24px 26px 26px;
   border-radius: 18px;
   background: #fff;
   border: 1px solid rgba(22,103,245,0.10);
   box-shadow: 0 4px 24px rgba(14,32,72,0.06);
   display: grid;
   justify-items: start;
-  gap: 10px;
+  gap: 12px;
   margin: 4px 0;
   max-width: 620px;
   min-height: 0;
@@ -453,7 +453,7 @@
 .empty-trace-title {
   color: var(--navy-deep);
   font-family: var(--font-display);
-  font-size: 1.08rem;
+  font-size: 1.18rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -464,14 +464,14 @@
 }
 .empty-trace-copy {
   color: var(--muted-strong);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   line-height: 1.55;
   max-width: 52ch;
 }
 .empty-trace-hint {
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -484,18 +484,18 @@
 .empty-trace-points span {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
-  padding: 0 12px;
+  min-height: 34px;
+  padding: 0 14px;
   border-radius: 999px;
   background: #f3f7ff;
   border: 1px solid rgba(22,103,245,0.12);
   color: var(--blue-deep);
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   font-weight: 800;
   line-height: 1;
 }
 
-/* ─── Event cards ─── */
+/* Step groups + event cards */
 .step-group {
   position: relative;
   display: grid;
@@ -938,6 +938,44 @@
   line-height: 1.4;
 }
 
+
+/* ── Onboarding hint — right-panel cue ── */
+[data-placeholder].empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: start; /* prevent grid row from stretching the empty state tall */
+}
+.ioc-hint {
+  align-self: flex-end;
+  margin-top: 10px;
+  margin-right: 4px;
+  padding: 13px 26px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  border: 2px solid rgba(22,103,245,0.40);
+  color: var(--blue-deep);
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-shadow: 0 3px 14px rgba(22,103,245,0.15);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────
+   START FIRST STEP — pre-run pulse
+───────────────────────────────────────── */
+@keyframes stepPulseRing {
+  0%   { box-shadow: 0 4px 20px rgba(22,103,245,0.40), 0 1px 6px rgba(22,103,245,0.22), inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 0 rgba(22,103,245,0.30); }
+  60%  { box-shadow: 0 4px 20px rgba(22,103,245,0.40), 0 1px 6px rgba(22,103,245,0.22), inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 8px rgba(22,103,245,0.00); }
+  100% { box-shadow: 0 4px 20px rgba(22,103,245,0.40), 0 1px 6px rgba(22,103,245,0.22), inset 0 1px 0 rgba(255,255,255,0.18), 0 0 0 0 rgba(22,103,245,0.00); }
+}
+.btn-step.is-start-action:not(:disabled) {
+  animation: stepPulseRing 2s ease-out infinite;
+}
+
 /* ─────────────────────────────────────────
    INTERVENTION PANEL
 ───────────────────────────────────────── */
@@ -954,6 +992,23 @@
   text-transform: uppercase;
   padding: 1px 2px 0;
 }
+
+/* ── Pre-run onboarding note ── */
+.iv-pre-run-note {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(22,103,245,0.05);
+  border: 1px solid rgba(22,103,245,0.12);
+  color: var(--muted-strong);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.iv-pre-run-note strong {
+  color: var(--navy-deep);
+  font-weight: 900;
+}
+.iv-pre-run-note.hidden { display: none; }
 
 /* ── Suggested action callout ── */
 .iv-recommend {
@@ -1274,6 +1329,35 @@
 #ivMore {
   display: grid;
   gap: 8px;
+}
+#ivMore.collapsed {
+  display: none;
+}
+
+/* Optional actions toggle button */
+.iv-more-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px dashed rgba(18,41,83,0.18);
+  color: var(--muted-strong);
+  font-size: 0.73rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.13s, color 0.13s, border-color 0.13s;
+}
+.iv-more-toggle:hover {
+  background: var(--blue-soft);
+  color: var(--blue-deep);
+  border-color: var(--blue-mid);
+}
+.iv-console.is-ended .iv-more-toggle {
+  display: none;
 }
 
 /* Intervention confirmation chips */

@@ -1,21 +1,8 @@
-/**
- * SimuVerse Report Generator
- * Produces a downloadable PDF from a structured run-data payload.
- *
- * Usage:
- *   window.SimuVerseReport.generate(payload)
- *
- * The payload shape is identical to what buildPdfPayload() / buildInteractionPdfPayload()
- * already return. This module replaces the old jsPDF drawing approach with a clean
- * HTML→PDF pipeline powered by html2pdf.js (html2canvas + jsPDF bundle, CDN loaded
- * lazily on first use).
- *
- * No DOM capture of the live UI. No window.print(). Off-screen div → downloaded file.
- * File name: SimuVerse_Run_<run_id>.pdf
- */
 
 (function () {
   "use strict";
+
+  // Legacy HTML-to-PDF export path kept as a fallback.
 
   /* ── html2pdf.js CDN (bundled, includes html2canvas + jsPDF) ── */
   const HTML2PDF_CDN =
@@ -48,6 +35,7 @@
   }
 
   /* ── Helpers ─────────────────────────────────────────────────── */
+  /* Small formatting helpers used while building the off-screen report HTML. */
 
   function esc(v) {
     return String(v == null ? "" : v)
@@ -138,6 +126,7 @@
   };
 
   /* ── CSS for the off-screen report container ─────────────────── */
+  /* All report styling lives here so the export stays separate from the live UI. */
   function reportCss() {
     return `
       <style>

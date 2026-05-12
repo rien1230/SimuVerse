@@ -1,4 +1,5 @@
 // Replay dashboard logic: builds the timeline, panels, and playback state.
+// Scenario metadata here keeps replay labels, agent cards, and task copy in one place.
 const SCENARIOS = {
       office: {
         key: "office",
@@ -1427,7 +1428,7 @@ const SCENARIOS = {
     }
 
     async function fetchSavedRunSummary(activeRunId) {
-      const response = await fetch(`${API_BASE}/history/runs/${activeRunId}`);
+      const response = await fetch(`${API_BASE}/history/runs/${activeRunId}`, { headers: {} });
       if (!response.ok) {
         throw new Error(await parseApiError(response));
       }
@@ -1435,7 +1436,7 @@ const SCENARIOS = {
     }
 
     async function fetchSavedRunReplay(activeRunId) {
-      const response = await fetch(`${API_BASE}/history/runs/${activeRunId}/replay`);
+      const response = await fetch(`${API_BASE}/history/runs/${activeRunId}/replay`, { headers: {} });
       if (!response.ok) {
         throw new Error(await parseApiError(response));
       }
@@ -4196,10 +4197,10 @@ const SCENARIOS = {
           await ensureSocket(runId);
         }
 
-        // Auto-start only for live Watch Mode runs that haven't begun yet.
+        // Auto-start for both Watch Mode (step) and auto mode runs that haven't begun yet.
         // Replay modes (watch_replay / interactive_replay) always arrive with
         // RUN.ended = true and must NOT auto-start a new backend run.
-        if (RUN?.mode === "auto" && !RUN.ended && totalRunTicks() === 0) {
+        if ((RUN?.mode === "auto" || RUN?.mode === "step") && !RUN.ended && totalRunTicks() === 0) {
           window.setTimeout(() => {
             playPlayback();
           }, 350);

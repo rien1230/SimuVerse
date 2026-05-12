@@ -7,6 +7,7 @@
     // In this mode the page is read-only: no WebSocket, no interventions, no steps.
     const IS_REPLAY_MODE = PARAMS.get("mode") === "interactive_replay";
 
+    // Main page state for the current run, replay mode, and intervention tracking.
     const state = {
       // ── Run identity ──────────────────────────────────────────────────
       runId: PARAMS.get("run_id") || "",
@@ -68,6 +69,7 @@
     };
 
     // ── DOM refs ───────────────────────────────────────────────────────
+    // Cache key elements once so the render/update code stays simpler.
     const $ = (id) => document.getElementById(id);
     const banner = $("banner");
     const fallbackMissing = $("fallbackMissing");
@@ -126,6 +128,7 @@
       dot.className = "mode-dot" + (statusClass ? " is-" + statusClass : "");
     }
 
+    // Metric display helpers keep the top strip and analysis tab consistent.
     // Qualitative metric labels are scenario-aware because each scenario has different baseline expectations.
     // Each entry is [Low_max, Medium_max, High_max]; values ≥ High_max → "Very High".
     const METRIC_THRESHOLDS = {
@@ -336,6 +339,18 @@
         }
       }
 
+      // ── Pre-run guard: before Step 1, show neutral "Ready" state ────────────
+      // Knowledge map is already populated at tick 0, but surfacing internal
+      // private knowledge (holder, partial share counts) before any agent has
+      // acted would expose hidden simulation state to the user prematurely.
+      if (state.tick === 0 && !state.ended) {
+        if (label) label.textContent = "Focus";
+        badge.className = "sc-blocker is-clear";
+        textEl.textContent = "Ready to start";
+        if (sub) { sub.textContent = "Awaiting first step"; sub.style.color = "var(--muted)"; }
+        return;
+      }
+
       if (state.ended) {
         const env = String(state.environment || state.scenarioHint || "").toLowerCase();
         // Determine whether the run actually succeeded — check canonical task order,
@@ -384,6 +399,13 @@
     function updateSuggestText() {
       const el = $("suggestText");
       if (!el) return;
+      // ── Pre-run guard ─────────────────────────────────────────────────────────
+      if (state.tick === 0 && !state.ended) {
+        el.textContent = "";
+        el.style.display = "none";
+        return;
+      }
+      el.style.display = "";
       if (state.ended) {
         const env = String(state.environment || state.scenarioHint || "").toLowerCase();
         const _cfg2   = scenarioConfig();
@@ -487,6 +509,7 @@
         open: "Open", doubt: "Doubt",
         reassure: "Reassure", insult: "Clash",
         ignore: "Ignore", pressure: "Pressure",
+        emotion_injection: "Emotion Input",
       };
       if (labels[key]) return labels[key];
       if (!key || key.includes("_") || key.includes("fallback") || key.includes("micro")) {
@@ -1205,7 +1228,7 @@
     }
 
     function displayPriority(ev) {
-      if (String(ev.actor || "").toUpperCase() === "USER" || ev.type === "intervention") return 0;
+      if (String(ev.actor || "").toUpperCase() === "USER" || ev.type === "intervention" || ev.type === "emotion_injection") return 0;
       if (String(ev.reason || "").startsWith("user_")) return 1;
       // Elevate events whose item/preference matches a resolved item in this tick so the
       // step group title reflects the actual resolution (e.g. "Requirements Confirmed")
@@ -1352,6 +1375,9 @@
       if (!btnStep || !btnStepLabel) return;
       btnStepLabel.textContent = advanceActionLabel();
       btnStep.setAttribute("aria-label", btnStepLabel.textContent);
+      // Pulse ring only on the very first action before any step has run
+      const isPreRun = !state.ended && Number(state.tick || 0) === 0;
+      btnStep.classList.toggle("is-start-action", isPreRun);
     }
 
     function clearPendingAdvance() {
@@ -1398,11 +1424,13 @@
       if (ivCompleteNote) ivCompleteNote.classList.toggle("hidden", !state.ended);
       if (ivSectionLabel) ivSectionLabel.classList.toggle("hidden", Boolean(state.ended));
       if (ivRecommend && state.ended) ivRecommend.classList.add("hidden");
+      const ivPreRunNote = $("ivPreRunNote");
+      if (ivPreRunNote) ivPreRunNote.classList.toggle("hidden", state.ended || Number(state.tick || 0) > 0);
       const agentPanelSub = $("agentPanelSub");
       if (agentPanelSub) {
         if (state.ended) agentPanelSub.textContent = "Final agent states";
-        else if (Number(state.tick || 0) > 0) agentPanelSub.textContent = "Private knowledge and current stress";
-        else agentPanelSub.textContent = "Private knowledge and starting stress";
+        else if (Number(state.tick || 0) > 0) agentPanelSub.textContent = "Private knowledge, style, mood and stress";
+        else agentPanelSub.textContent = "Private knowledge, style, mood and stress";
       }
     }
 
@@ -1478,6 +1506,14 @@
         const stressLabel = stressInfo.label;
         const stressClass = `stress-${stressInfo.level}`; // stress-low | stress-moderate | stress-high
 
+        // Avg trust toward other agents (trust is a dict {agentId: float})
+        const trustVals = Object.values(a.trust || {}).map(Number).filter(isFinite);
+        const trustAvg  = trustVals.length ? trustVals.reduce((s, v) => s + v, 0) / trustVals.length : null;
+        const trustStr  = trustAvg != null ? trustAvg.toFixed(2) : "—";
+        const trustWidth = trustAvg != null ? `${Math.round(clamp01(trustAvg) * 100)}%` : "0%";
+        const trustLevel = trustAvg == null ? "neutral"
+          : trustAvg >= 0.7 ? "high" : trustAvg >= 0.4 ? "moderate" : "low";
+
         // Live detected emotion from NLP backend field
         const rawEmotion = String(a.last_detected_emotion || a.emotion || "").toLowerCase();
         const emotionEmoji = {
@@ -1490,9 +1526,19 @@
           none: "", "": "",
         }[rawEmotion] ?? "💭";
         const emotionLabel = rawEmotion && rawEmotion !== "none"
-          ? rawEmotion.charAt(0).toUpperCase() + rawEmotion.slice(1)
+          ? "Mood: " + rawEmotion.charAt(0).toUpperCase() + rawEmotion.slice(1)
           : null;
-        const strategyLabel = strategy.charAt(0).toUpperCase() + strategy.slice(1);
+        // Display-only label variation for avoidant strategy so a full tension
+        // team doesn't show four identical "Style: Avoidant" chips.
+        // Underlying strategy value is unchanged — this is purely cosmetic.
+        const _AVOIDANT_DISPLAY = ["Avoidant", "Cautious", "Defensive", "Reserved"];
+        const _agentOrdinal = Math.max(0, parseInt(String(id).replace(/\D/g, ""), 10) - 1);
+        const strategyBase = strategy.toLowerCase() === "neutral"
+          ? "Balanced"
+          : strategy.toLowerCase() === "avoidant"
+            ? _AVOIDANT_DISPLAY[_agentOrdinal % _AVOIDANT_DISPLAY.length]
+            : strategy.charAt(0).toUpperCase() + strategy.slice(1);
+        const strategyLabel = "Style: " + strategyBase;
 
         card.className = "agent-card";
         card.style.borderLeftColor = color.bg;
@@ -1517,6 +1563,13 @@
                 <span class="metric-value">${escapeHtml(String(stress))} · ${escapeHtml(stressLabel)}</span>
               </div>
               <div class="mini-bar stress ${escapeHtml(stressClass)}"><span style="width:${escapeHtml(stressWidth)};"></span></div>
+            </div>
+            <div class="metric">
+              <div class="metric-topline">
+                <span class="metric-label">Avg Trust</span>
+                <span class="metric-value">${escapeHtml(trustStr)}${trustAvg != null ? ` · ${escapeHtml(trustLevel.charAt(0).toUpperCase() + trustLevel.slice(1))}` : ""}</span>
+              </div>
+              <div class="mini-bar trust trust-${escapeHtml(trustLevel)}"><span style="width:${escapeHtml(trustWidth)};"></span></div>
             </div>
           </div>
         `;
@@ -1717,20 +1770,8 @@
       let snapshots = allSnapshots;
       if (!includeAllCompleted && !ended && allSnapshots.length > 8) {
         snapshots = allSnapshots.slice(-8);
-        const hiddenCount = allSnapshots.length - 8;
-        const hiddenSnaps = allSnapshots.slice(0, hiddenCount);
-        // Surface which focus items were active only in hidden steps
-        const shownBlockerSet = new Set(snapshots.map(h => h.group_state?.active_blocker).filter(Boolean));
-        const hiddenOnlyBlockers = [...new Set(
-          hiddenSnaps.map(h => h.group_state?.active_blocker).filter(b => b && !shownBlockerSet.has(b))
-        )];
-        const hiddenNote = hiddenOnlyBlockers.length
-          ? `${hiddenCount} earlier step${hiddenCount === 1 ? "" : "s"} hidden — earlier progress includes: ${hiddenOnlyBlockers.map(b => itemLabel(b)).join(", ")}. Expand to view full timeline.`
-          : `Showing latest 8 of ${allSnapshots.length} steps. View full timeline to see earlier progress.`;
-        upsertTimelineRangeNote(hiddenNote);
-      } else {
-        upsertTimelineRangeNote(null);
       }
+      upsertTimelineRangeNote(null);
 
       const events = [];
       snapshots.forEach((h) => {
@@ -2107,7 +2148,7 @@
         appended.push(ev);
 
         const node = document.createElement("article");
-        const isUser          = String(ev.actor || "").toUpperCase() === "USER" || ev.type === "intervention";
+        const isUser          = String(ev.actor || "").toUpperCase() === "USER" || ev.type === "intervention" || ev.type === "emotion_injection";
         const isTriggered     = String(ev.reason || "").startsWith("user_");
         // Frontend-only synthetic evidence notes must never render as agent dialogue.
         // Only backend-emitted events (escape_reminder_share, etc.) are real agent events.
@@ -2148,17 +2189,25 @@
           const showTargetedItem = targetedItem && targetedItem !== blocker;
           const target  = ev.target && String(ev.target).toUpperCase() !== "GROUP"
             ? actorLabel(ev.target) : "Group";
+          const isEmotionIv = ev.type === "emotion_injection";
+          const ivEtype = isEmotionIv ? "emotion" : "intervention";
+          const ivLabel = isEmotionIv ? "Emotion Input" : "Intervention";
+          const rawEmotion = isEmotionIv && ev.detected_emotion ? ev.detected_emotion : null;
+          const detectedEmotion = rawEmotion
+            ? rawEmotion.charAt(0).toUpperCase() + rawEmotion.slice(1)
+            : null;
           node.innerHTML = `
             <div class="ev-header">
               <div class="ev-actors">
                 <span class="ev-you">You</span>
                 <span class="ev-arrow">→</span>
                 <span class="ev-target">${escapeHtml(target)}</span>
-                <span class="ev-type" data-etype="intervention">Intervention</span>
+                <span class="ev-type" data-etype="${ivEtype}">${escapeHtml(ivLabel)}</span>
               </div>
               <span class="ev-tick">${escapeHtml(tickStr)}</span>
             </div>
             <div class="ev-body-iv">${escapeHtml(visibleText)}</div>
+            ${detectedEmotion ? `<div class="ev-triggered">↳ Detected emotion: ${escapeHtml(detectedEmotion)}</div>` : ""}
             ${blocker ? `<div class="ev-triggered">↳ Current focus: ${escapeHtml(itemLabel(blocker))}</div>` : ""}
             ${showTargetedItem ? `<div class="ev-triggered">↳ Targeted item: ${escapeHtml(itemLabel(targetedItem))}</div>` : ""}
           `;
@@ -2854,14 +2903,70 @@
       if (objective) {
         if (state.ended) {
           const env = String(state.environment || state.scenarioHint || "").toLowerCase();
-          objective.textContent = env === "office"
-            ? "Final outcome reached — the proposal workflow is complete."
-            : env === "cafe"
-              ? "Final outcome reached — the cafe plan is complete."
-              : "Final outcome reached — the escape sequence is complete.";
+          // Check actual task completion — state.ended is true for both success AND failure.
+          const _oCfg   = scenarioConfig();
+          const _oOrder = Array.isArray(_oCfg.order) ? _oCfg.order : [];
+          const _oTasks = state.tasks || {};
+          const _oAllDone = _oOrder.length
+            ? _oOrder.every(item => Boolean(_oTasks[item]))
+            : Object.values(_oTasks).every(v => Boolean(v));
+          if (_oAllDone) {
+            objective.textContent = env === "office"
+              ? "Final outcome reached — the proposal workflow is complete."
+              : env === "cafe"
+                ? "Final outcome reached — the cafe plan is complete."
+                : "Final outcome reached — the escape sequence is complete.";
+          } else {
+            const _oFirst = _oOrder.find(item => !Boolean(_oTasks[item])) || null;
+            objective.textContent = _oFirst
+              ? `Run ended — ${itemLabel(_oFirst)} was not confirmed before the step limit.`
+              : "Run ended — not all required steps were completed before the step limit.";
+          }
         } else {
           objective.textContent = scenarioObjectiveText();
         }
+      }
+
+      // ── Pre-run guard: suppress all internal-state wording before Step 1 ───
+      // At tick 0 the knowledge map is populated but no agent has acted yet.
+      // Showing "partially shared" or holder info here exposes private sim state.
+      if (state.tick === 0 && !state.ended) {
+        if (currentProblem) {
+          const _env0 = String(state.environment || state.scenarioHint || "").toLowerCase();
+          const _readyLine = _env0 === "office"
+            ? "The office team is ready. Press Start First Step to begin the project."
+            : _env0 === "cafe"
+              ? "The group is ready. Press Start First Step to begin choosing a restaurant."
+              : "The escape team is ready. Press Start First Step to begin solving the clues.";
+          currentProblem.textContent = _readyLine;
+        }
+        // Override the objective sub-text (set above to scenarioObjectiveText) with nothing — the headline already has the action
+        if (objective) objective.textContent = "";
+        if (nextExpected) {
+          nextExpected.textContent = "No interactions have occurred yet.";
+        }
+        // Latest Change: latestUpdateFromEvents([]) already returns the correct
+        // "No simulation events yet." placeholder — no override needed here.
+        const latest0 = latestUpdateFromEvents(events);
+        if (latestSummary) latestSummary.textContent = latest0.summary;
+        if (latestNote)    latestNote.textContent    = latest0.note;
+        if (nextActionEl)     nextActionEl.classList.add("hidden");
+        if (ivRecommend)      ivRecommend.classList.add("hidden");
+        if (latestSummaryRec) latestSummaryRec.classList.add("hidden");
+        // Progress list: render tasks as "not started" — no knowledge leakage
+        if (progressList) {
+          const _tasks0 = Object.keys(state.tasks || {});
+          const _ord0 = _tasks0.filter(n => n !== "unlock");
+          if (_tasks0.includes("unlock")) _ord0.push("unlock");
+          progressList.innerHTML = _ord0.length
+            ? _ord0.map(item => `
+                <div class="progress-item">
+                  <span class="progress-item-name">${escapeHtml(itemLabel(item))}</span>
+                  <span class="progress-status is-missing">Not started</span>
+                </div>`).join("")
+            : '<div class="progress-empty">Waiting for scenario state…</div>';
+        }
+        return;
       }
 
       // Current Situation card
@@ -2875,11 +2980,24 @@
       if (currentProblem) {
         if (state.ended) {
           const env = String(state.environment || state.scenarioHint || "").toLowerCase();
-          currentProblem.textContent = env === "office"
-            ? "Run complete — all required proposal steps have been resolved."
-            : env === "cafe"
-              ? "Run complete — the group has reached a final decision."
-              : "Run complete — all required escape steps have been resolved.";
+          const _cpCfg   = scenarioConfig();
+          const _cpOrder = Array.isArray(_cpCfg.order) ? _cpCfg.order : [];
+          const _cpTasks = state.tasks || {};
+          const _cpAllDone = _cpOrder.length
+            ? _cpOrder.every(item => Boolean(_cpTasks[item]))
+            : Object.values(_cpTasks).every(v => Boolean(v));
+          if (_cpAllDone) {
+            currentProblem.textContent = env === "office"
+              ? "Run complete — all required proposal steps have been resolved."
+              : env === "cafe"
+                ? "Run complete — the group has reached a final decision."
+                : "Run complete — all required escape steps have been resolved.";
+          } else {
+            const _cpFirst = _cpOrder.find(item => !Boolean(_cpTasks[item])) || null;
+            currentProblem.textContent = _cpFirst
+              ? `Run ended — ${itemLabel(_cpFirst)} was not confirmed before the step limit.`
+              : "Run ended — not all required steps were completed before the step limit.";
+          }
         } else if (!blocker) {
           currentProblem.textContent = "No current focus — the team is resolving the final outcome.";
         } else if (knowCount === 0) {
@@ -2971,7 +3089,8 @@
     }
 
     function expectedEffectFor(iv) {
-      const { type, params, before } = iv;
+      const { type, params, before, apiResult } = iv;
+      const ar = apiResult || {};
       const blocker = before && before.blocker;
       if (type === "reveal_info") {
         if (blocker && blocker === params.item) {
@@ -2979,46 +3098,102 @@
         }
         return `${params.agent_id} carries ${itemLabel(params.item)} into the next step of the sequence.`;
       }
-      if (type === "force_meeting")  return `${params.agent_a_id} ↔ ${params.agent_b_id} on ${itemLabel(blocker || "focus")}.`;
-      if (type === "nudge_strategy") return blocker
-        ? `${params.agent_id} speaks constructively on ${itemLabel(blocker)}.`
-        : `${params.agent_id} speaks constructively (share/agree/ask).`;
-      if (type === "boost_urgency")  return `Pressure rises, next line pushes ${itemLabel(blocker || "focus")}.`;
-      if (type === "ease_pressure")  return `Pressure eases, giving ${itemLabel(blocker || "focus")} more breathing room.`;
+      if (type === "force_meeting") {
+        const trustNote = (ar.trust_before != null && ar.trust_after != null)
+          ? ` Pair trust raised ${ar.trust_before.toFixed(2)} → ${ar.trust_after.toFixed(2)}.`
+          : "";
+        return `${params.agent_a_id} ↔ ${params.agent_b_id} on ${itemLabel(blocker || "focus")}.${trustNote}`;
+      }
+      if (type === "nudge_strategy") {
+        const lockNote = ar.lock_duration != null ? ` Strategy locked for ~${ar.lock_duration} steps.` : "";
+        return blocker
+          ? `${params.agent_id} speaks constructively on ${itemLabel(blocker)}.${lockNote}`
+          : `${params.agent_id} speaks constructively (share/agree/ask).${lockNote}`;
+      }
+      if (type === "boost_urgency") {
+        const boostTicks = ar.share_boost_ticks || 3;
+        return `Pressure rises. Share boost active for ~${boostTicks} steps; pressure elevation persists beyond that window.`;
+      }
+      if (type === "ease_pressure") {
+        const beforeU = (before && before.urgency != null) ? before.urgency : null;
+        const afterU  = ar.pressure_after != null ? ar.pressure_after : null;
+        if (beforeU != null && afterU != null && Math.abs(afterU - beforeU) < 0.001) {
+          return `Pressure was already at the scenario baseline — agent stress reduced only, no urgency change.`;
+        }
+        return `Pressure eases, giving ${itemLabel(blocker || "focus")} more breathing room.`;
+      }
       if (type === "inject_tension") return `Tension rises, next line sharpens on ${itemLabel(blocker || "focus")}.`;
+      if (type === "inject_emotion") {
+        const dTicks = ar.decay_ticks || 5;
+        const emotion = ar.detected_emotion ? `${ar.detected_emotion} signal` : "emotional signal";
+        return `All agents perceive the ${emotion}. Stress and trust shift decay over ~${dTicks} steps.`;
+      }
       return "";
     }
 
-    function stateChangeLineFor(type, params, before, after) {
+    function stateChangeLineFor(type, params, before, after, apiResult) {
+      const ar = apiResult || {};
       if (type === "reveal_info") {
-        return `${params.agent_id} now knows <b>${itemLabel(params.item)}</b>.`;
+        let line = `${params.agent_id} now knows <b>${itemLabel(params.item)}</b>.`;
+        if (ar.stress_before != null && ar.stress_after != null) {
+          const delta = ar.stress_after - ar.stress_before;
+          if (Math.abs(delta) > 0.001) {
+            line += ` Stress ${delta < 0 ? "−" : "+"}${Math.abs(delta * 100).toFixed(0)}%.`;
+          }
+        }
+        return line;
       }
       if (type === "force_meeting") {
         const blocker = before && before.blocker;
-        return blocker
+        let line = blocker
           ? `<b>${params.agent_a_id}</b> & <b>${params.agent_b_id}</b> on <b>${itemLabel(blocker)}</b>.`
           : `<b>${params.agent_a_id}</b> & <b>${params.agent_b_id}</b> paired.`;
+        if (ar.trust_before != null && ar.trust_after != null) {
+          line += ` Trust: ${ar.trust_before.toFixed(2)} → <b>${ar.trust_after.toFixed(2)}</b>.`;
+        }
+        return line;
       }
       if (type === "nudge_strategy") {
-        const beforeStrat = (before && before.strategy) || "—";
-        if (beforeStrat === params.strategy) {
-          return `${params.agent_id} locked <b>${params.strategy}</b> (refreshed).`;
+        const beforeStrat = ar.strategy_before || (before && before.strategy) || "—";
+        const afterStrat  = ar.strategy_after  || params.strategy;
+        const lockDur     = ar.lock_duration;
+        const lockNote    = lockDur != null ? ` · locked ~${lockDur} steps` : "";
+        if (beforeStrat === afterStrat) {
+          return `${params.agent_id} locked <b>${afterStrat}</b> (refreshed)${lockNote}.`;
         }
-        return `${params.agent_id}: <b>${beforeStrat}</b> → <b>${params.strategy}</b>.`;
+        return `${params.agent_id}: <b>${beforeStrat}</b> → <b>${afterStrat}</b>${lockNote}.`;
       }
       if (type === "boost_urgency") {
         const beforeU = (before && before.urgency != null) ? before.urgency : scenarioBaseUrgency(state.environment || state.scenarioHint);
         const afterU  = (after && after.urgency != null) ? after.urgency : beforeU;
-        return pressureDisplayChangeText(beforeU, afterU, "up").replace(/([0-9]+\.[0-9]{2})/g, "<b>$1</b>");
+        let line = pressureDisplayChangeText(beforeU, afterU, "up").replace(/([0-9]+\.[0-9]{2})/g, "<b>$1</b>");
+        const boostTicks = ar.share_boost_ticks;
+        if (boostTicks != null) {
+          line += ` Share boost active for ~${boostTicks} steps; pressure elevation persists.`;
+        }
+        return line;
       }
       if (type === "ease_pressure") {
         const beforeU = (before && before.urgency != null) ? before.urgency : scenarioBaseUrgency(state.environment || state.scenarioHint);
         const afterU  = (after && after.urgency != null) ? after.urgency : beforeU;
+        if (Math.abs(afterU - beforeU) < 0.001) {
+          return "Pressure was already at the scenario baseline — agent stress reduced only.";
+        }
         return pressureDisplayChangeText(beforeU, afterU, "down").replace(/([0-9]+\.[0-9]{2})/g, "<b>$1</b>");
       }
       if (type === "inject_tension") {
+        if (ar.tension_before != null && ar.tension_after != null) {
+          return `Tension: <b>${ar.tension_before.toFixed(2)}</b> → <b>${ar.tension_after.toFixed(2)}</b>.`;
+        }
         const beforeT = (before && before.tension) || 0;
         return `Tension queued +${toFixedSafe(params.amount)} (was <b>${toFixedSafe(beforeT)}</b>).`;
+      }
+      if (type === "inject_emotion") {
+        let line = params.text ? `"${params.text.slice(0, 60)}${params.text.length > 60 ? "…" : ""}"` : "Emotion injected.";
+        if (ar.detected_emotion) line += ` Detected: <b>${ar.detected_emotion}</b>.`;
+        const dTicks = ar.decay_ticks || 5;
+        line += ` Effect decays over ~${dTicks} steps.`;
+        return line;
       }
       return "—";
     }
@@ -3060,10 +3235,12 @@
       if (!card) return;
       card.classList.remove("hidden");
 
-      $("ivTickStamp").textContent = `Applied at Step ${iv.atTick}`;
+      const _ivDisplayStep = state.tickToDisplayStep.get(iv.displayAtTick ?? iv.atTick)
+        ?? iv.displayAtTick ?? iv.atTick;
+      $("ivTickStamp").textContent = `Applied at Step ${_ivDisplayStep}`;
       $("ivButton").textContent = iv.label;
       $("ivStateChange").innerHTML = stateChangeLineFor(
-        iv.type, iv.params, iv.before, { urgency: iv.postUrgency }
+        iv.type, iv.params, iv.before, { urgency: iv.postUrgency }, iv.apiResult
       );
       renderBlockerPill(iv.before.blocker);
       $("ivExpected").textContent = expectedEffectFor(iv);
@@ -3248,12 +3425,38 @@
                  consequence: "No pressure change observed — the displayed pressure was already at the scenario baseline." };
       }
 
+      if (iv.type === "inject_emotion") {
+        const ar = iv.apiResult || {};
+        const anyEmotionLine = postEvents.some(e => String(e.reason || "").startsWith("user_inject_emotion"));
+        const emotionLabel = ar.detected_emotion || "emotional";
+        const deltaStress = ar.stress_delta != null ? ` Avg stress Δ ${ar.stress_delta > 0 ? "+" : ""}${ar.stress_delta.toFixed(2)}.` : "";
+        if (anyEmotionLine) {
+          return {
+            confirmed: true,
+            note: `Emotion injection registered — agents responded to the ${emotionLabel} signal.${deltaStress}`,
+            consequence: `Inject emotion (${emotionLabel}): agents perceive and react over ~${ar.decay_ticks || 5} steps.`,
+          };
+        }
+        return {
+          confirmed: false,
+          note: `Emotion injection queued (${emotionLabel}) — visible agent response expected next step.${deltaStress}`,
+          consequence: `Inject emotion: effect propagates over ~${ar.decay_ticks || 5} steps.`,
+        };
+      }
+
       return { confirmed: false, note: "Unknown intervention type.", consequence: "—" };
     }
 
     function applyConfirmationUpdate(iv, postEvents) {
       if (!$("ivConfirmBadge")) return;
       const result = evaluateInterventionConfirmation(iv, postEvents);
+      // Store on iv so renderImpactView() can use the follow-through text
+      // without re-evaluating confirmation logic.
+      iv.confirmResult = {
+        confirmed:   result.confirmed,
+        note:        result.note,
+        consequence: result.consequence,
+      };
       const before = iv.before || {};
       const tensionAfter = Number(state.groupState.tension || 0);
       const cohesionAfter = Number(state.groupState.cohesion || 0);
@@ -3444,7 +3647,6 @@
       } else {
         setModePill("Live Interactive");
         hideEndModal();
-        showBanner(`Live Interactive is ready. <strong>${advanceActionLabel()}</strong> or apply an intervention to advance the run.`, "info");
       }
     }
 
@@ -3546,8 +3748,10 @@
           const lastM = state.metricsHistory.length
             ? state.metricsHistory[state.metricsHistory.length - 1] : null;
           state.lastIntervention.afterMetrics = {
-            stress:   lastM ? lastM.stress   : 0,
-            trust:    lastM ? lastM.trust     : 0,
+            // Null when no metrics history exists — the display layer treats null
+            // as "no after data" and shows "—" rather than a misleading 0.00.
+            stress:   lastM ? lastM.stress : null,
+            trust:    lastM ? lastM.trust  : null,
             tension:  Number(state.groupState.tension  || 0),
             cohesion: Number(state.groupState.cohesion || 0),
           };
@@ -3644,7 +3848,11 @@
       if (!text) return `HTTP ${response.status}`;
       try {
         const data = JSON.parse(text);
-        return data.detail || data.message || `HTTP ${response.status}`;
+        let detail = data.detail || data.message || `HTTP ${response.status}`;
+        if (Array.isArray(detail)) {
+          detail = detail.map(e => (typeof e === "object" ? (e.msg || JSON.stringify(e)) : String(e))).join("; ");
+        }
+        return detail;
       } catch {
         return text;
       }
@@ -3660,7 +3868,10 @@
       let data;
       try { data = text ? JSON.parse(text) : {}; } catch { data = { detail: text }; }
       if (!r.ok) {
-        const detail = (data && (data.detail || data.message)) || (text || `HTTP ${r.status}`);
+        let detail = (data && (data.detail || data.message)) || (text || `HTTP ${r.status}`);
+        if (Array.isArray(detail)) {
+          detail = detail.map(e => (typeof e === "object" ? (e.msg || JSON.stringify(e)) : String(e))).join("; ");
+        }
         throw new Error(detail);
       }
       return data;
@@ -3718,6 +3929,13 @@
           state.wsReady = false;
           setMeta("Ws", wsLabel("closed"));
           rejectPendingAdvance("Live connection closed before the next step arrived.");
+          // If auto-run was active, reset the flag so the UI doesn't freeze on
+          // "Auto running" while the connection is down. The reconnect will
+          // restore the correct state from the backend's next status message.
+          if (state.autoRunning && !state.ended) {
+            state.autoRunning = false;
+            showBanner("Auto-run paused — live connection dropped. Reconnecting…", "warn");
+          }
           updateControlState();
           // Auto-reconnect unless the run ended cleanly.
           if (!state.ended) _scheduleWsReconnect();
@@ -3932,8 +4150,11 @@
         tension: Number(state.groupState.tension || 0),
         cohesion: Number(state.groupState.cohesion || 0),
         urgency: Number(state.urgencySeeded ? state.urgencyValue : scenarioBaseUrgency(state.environment || state.scenarioHint)),
-        stress: _lastM ? _lastM.stress : 0,
-        trust:  _lastM ? _lastM.trust  : 0,
+        // Use null (not 0) when no metrics history exists yet.
+        // A null baseline means "no before data" — the display layer will
+        // skip that row rather than show a fake 0.00 → real-value jump.
+        stress: _lastM ? _lastM.stress : null,
+        trust:  _lastM ? _lastM.trust  : null,
         blocker: currentBlocker(),
         strategy: targetAgent ? targetAgent.strategy : null,
         knownItems: targetAgent && Array.isArray(targetAgent.known_items)
@@ -4031,8 +4252,29 @@
           label: buttonLabelFor(type, params),
           before: beforeSnapshot,
           atTick: state.tick,
+          // displayAtTick is the tick the intervention event appears in the Live Log
+          // (state.tick + 1, because buildLocalInterventionEvent uses tick + 1).
+          // atTick stays as state.tick so the confirmation check fires correctly.
+          displayAtTick: state.tick + 1,
           postUrgency,
           confirmed: false,
+          // Transparency fields returned by the backend for the Impact card
+          apiResult: {
+            stress_before:    result.stress_before    ?? null,
+            stress_after:     result.stress_after     ?? null,
+            stress_delta:     result.stress_delta     ?? null,
+            strategy_before:  result.strategy_before  ?? null,
+            strategy_after:   result.strategy_after   ?? null,
+            lock_duration:    result.lock_duration     ?? null,
+            tension_before:   result.tension_before   ?? null,
+            tension_after:    result.tension_after    ?? null,
+            trust_before:     result.trust_before     ?? null,
+            trust_after:      result.trust_after      ?? null,
+            trust_delta:      result.trust_delta      ?? null,
+            detected_emotion: result.detected_emotion ?? null,
+            decay_ticks:      result.decay_ticks      ?? null,
+            share_boost_ticks: result.share_boost_ticks ?? null,
+          },
         };
 
         // Track force-meeting attempts per focus for repetition detection.
@@ -4073,17 +4315,6 @@
           updateControlState();
         }
       }
-    }
-
-    // ── Intervention more/less toggle ─────────────────────────────────
-    const ivMoreToggle = $("ivMoreToggle");
-    const ivMore = $("ivMore");
-    if (ivMoreToggle && ivMore) {
-      ivMoreToggle.addEventListener("click", () => {
-        const collapsed = ivMore.classList.toggle("collapsed");
-        ivMoreToggle.setAttribute("aria-expanded", String(!collapsed));
-        ivMoreToggle.textContent = collapsed ? "All interventions ▾" : "Hide interventions ▴";
-      });
     }
 
     // ── Wire buttons ───────────────────────────────────────────────────
@@ -4173,6 +4404,11 @@
         const el = $(id);
         if (el) el.classList.toggle("hidden", key !== name);
       });
+      // Show/hide view hints
+      const hintLive   = $("viewHintLive");
+      const hintImpact = $("viewHintImpact");
+      if (hintLive)   hintLive.classList.toggle("hidden",   name !== "live");
+      if (hintImpact) hintImpact.classList.toggle("hidden", name !== "impact");
       if (name === "metrics") refreshMetricsView();
       if (name === "impact") renderImpactView();
       scrollViewToTop(name, ids);
@@ -4526,7 +4762,24 @@
       if (!empty || !list) return;
 
       if (!state.interventionLog.length) {
-        if (meta) meta.textContent = "No interventions applied yet.";
+        const ended = Boolean(state.ended);
+        if (meta) meta.textContent = ended
+          ? "No interventions were used in this run."
+          : "No interventions applied yet.";
+        empty.innerHTML = ended
+          ? `<div class="iv-impact-empty-icon">⇄</div>
+             <strong>No interventions were used in this run.</strong>
+             <p>View the full step-by-step log in the <strong>Live Simulation</strong> tab.</p>`
+          : `<div class="iv-impact-empty-icon">⇄</div>
+             <strong>No intervention applied yet.</strong>
+             <p>Apply an intervention in <strong>Live Simulation</strong> and advance one step to see the before/after impact here.</p>`;
+        if (ended) {
+          const btn = document.createElement("button");
+          btn.className = "iv-link-btn";
+          btn.textContent = "View Live Simulation Log";
+          btn.addEventListener("click", () => setView("live"));
+          empty.appendChild(btn);
+        }
         empty.classList.remove("hidden");
         list.classList.add("hidden");
         list.innerHTML = "";
@@ -4537,7 +4790,12 @@
       if (meta) {
         const total = state.interventionLog.length;
         const noun = total === 1 ? "intervention" : "interventions";
-        meta.textContent = `${total} ${noun} applied so far · Latest at Step ${latestIntervention.atTick}`;
+        const _latestDisplayStep = state.tickToDisplayStep.get(
+          latestIntervention.displayAtTick ?? latestIntervention.atTick
+        ) ?? latestIntervention.displayAtTick ?? latestIntervention.atTick;
+        meta.textContent = state.ended
+          ? `${total} ${noun} used · Latest at Step ${_latestDisplayStep}`
+          : `${total} ${noun} applied so far · Latest at Step ${_latestDisplayStep}`;
       }
 
       empty.classList.add("hidden");
@@ -4557,50 +4815,175 @@
         const fix2 = v => Number(v).toFixed(2);
         const _env = state.environment || state.scenarioHint;
 
-        // For pressure interventions, prepend a Pressure row using display values.
+        // Pre-compute display pressure values so we can decide whether to show
+        // the Pressure row before building the METRICS list.
         // iv.before.urgency = raw urgency_modifier before the intervention.
         // iv.postUrgency    = raw urgency_modifier immediately after.
+        const _bRaw = Number(b.urgency ?? scenarioBaseUrgency(_env));
+        const _aRaw = Number(iv.postUrgency ?? b.urgency ?? state.urgencyValue ?? scenarioBaseUrgency(_env));
+        const _bPressure = displayPressureValue(_bRaw, _env);
+        const _aPressure = displayPressureValue(_aRaw, _env);
+
+        // Show Pressure row when:
+        //   • the intervention type explicitly targets pressure (boost/ease), or
+        //   • the displayed pressure value moved by ≥ 0.01 for any other reason
+        //     (natural scenario drift captured in the before/after snapshots).
         const isPressureIv = iv.type === "boost_urgency" || iv.type === "ease_pressure";
-        const METRICS = isPressureIv
+        const showPressure = isPressureIv || Math.abs(_aPressure - _bPressure) >= 0.01;
+        const METRICS = showPressure
           ? [{ key: "pressureDisplay", label: "Pressure" }, ...BASE_METRICS]
           : BASE_METRICS;
 
         const analysis = METRICS.map(({ key, label }) => {
           let bv, av;
           if (key === "pressureDisplay") {
-            const bRaw = Number(b.urgency ?? scenarioBaseUrgency(_env));
-            const aRaw = Number(iv.postUrgency ?? b.urgency ?? state.urgencyValue ?? scenarioBaseUrgency(_env));
-            bv = displayPressureValue(bRaw, _env);
-            av = displayPressureValue(aRaw, _env);
+            bv = _bPressure;
+            av = _aPressure;
           } else {
-            bv = Number(b[key] ?? 0);
-            av = Number(a[key] ?? 0);
+            // Use null when the value is absent — never default to 0, because
+            // 0 is indistinguishable from "genuinely zero" and creates fake
+            // large deltas (e.g. Trust 0.00 → 0.59 when no before data exists).
+            bv = b[key] != null ? Number(b[key]) : null;
+            av = a[key] != null ? Number(a[key]) : null;
           }
-          const d   = av - bv;
-          const cls = _ivDeltaClass(key, d);
+          // If we have no before baseline, skip the delta computation entirely.
+          // The row will render as "No baseline" rather than a misleading number.
+          if (bv === null) {
+            return { key, label, bv: null, av, d: null, cls: "iv-delta-flat",
+                     good: false, bad: false, arrow: "—", noBaseline: true };
+          }
+          const d   = av != null ? av - bv : null;
+          // Rounding guard: if before and after display identically at 2dp,
+          // treat the change as flat — avoids "0.12 → 0.12 ▼ 0.01" contradiction.
+          const visuallyFlat = av != null && Number(bv).toFixed(2) === Number(av).toFixed(2);
+          const effectiveD   = visuallyFlat ? 0 : d;
+          const cls = effectiveD != null ? _ivDeltaClass(key, effectiveD) : "iv-delta-flat";
           return {
-            key, label, bv, av, d, cls,
+            key, label, bv, av, d,
+            effectiveD, visuallyFlat, cls,
             good: cls === "iv-delta-good",
             bad:  cls === "iv-delta-bad",
-            arrow: d > 0.005 ? "▲" : d < -0.005 ? "▼" : "–",
+            arrow: effectiveD != null ? (effectiveD > 0.005 ? "▲" : effectiveD < -0.005 ? "▼" : "–") : "—",
           };
         });
 
-        const improved = analysis.filter(m => m.good);
-        const worsened = analysis.filter(m => m.bad);
-        const badge    = _ivBadge(improved, worsened, METRICS.length);
-        const summary  = _ivSummary(iv, analysis);
+        // Only count rows that have a real before baseline for badge/summary.
+        const measurable = analysis.filter(m => !m.noBaseline);
+        const improved = measurable.filter(m => m.good);
+        const worsened = measurable.filter(m => m.bad);
+        let badge   = _ivBadge(improved, worsened, measurable.length || METRICS.length);
+        let summary = _ivSummary(iv, measurable);
 
-        const rows = analysis.map(({ label, bv, av, d, cls, arrow, good, bad }) => {
+        // inject_tension: the goal is disruption, not improvement — relabelling
+        // "Positive Impact" (because e.g. stress or stall metrics improved after
+        // the agent response) would confuse a marker reading the card.
+        // Always use a disruption-specific label for this intervention type.
+        if (iv.type === "inject_tension") {
+          const tensionEntry = analysis.find(m => m.key === "tension");
+          // "bad" on the tension entry means tension went up (lower-is-better direction)
+          const tensionRose  = tensionEntry && tensionEntry.bad;
+          if (tensionRose) {
+            badge = { cls: "is-disruption", text: "Disruption recorded" };
+          } else {
+            // Tension didn't move (already high, or agent responses absorbed the spike)
+            badge = { cls: "is-neutral", text: "Tension spike attempted — no shift recorded" };
+          }
+        }
+
+        // reveal_info works through knowledge transfer, not immediate social metric
+        // shifts. Always use a knowledge-specific label when knowledge was surfaced,
+        // even if social metrics moved — labelling it "Negative Impact" because
+        // tension ticked up after the next agent step would be misleading.
+        if (iv.type === "reveal_info") {
+          const cr = iv.confirmResult || {};
+          // Build human-readable item/agent strings; fall back safely when params
+          // are absent (runs saved before the params-persistence fix).
+          const _riItem  = iv.params?.item || iv.params?.item_name || iv.params?.revealed_item || "";
+          const _riAgent = iv.params?.agent_id || iv.params?.target_agent || "";
+          const _riItemL  = _riItem  ? itemLabel(_riItem)    : "";
+          const _riAgentL = _riAgent ? actorLabel(_riAgent)  : "An agent";
+          const _riDetail = (_riItemL && _riAgentL !== "An agent")
+            ? `${_riAgentL} surfaced ${_riItemL}.`
+            : _riItemL
+              ? `${_riItemL} was surfaced to the team.`
+              : "Revealed information was surfaced to the team.";
+
+          if (iv.confirmed || cr.confirmed) {
+            badge = { cls: "is-positive", text: "Knowledge impact recorded" };
+            // Only override the summary text when there is nothing social to describe;
+            // if social metrics moved, _ivSummary already produced honest copy.
+            if (!improved.length && !worsened.length) {
+              summary = cr.consequence
+                || `${_riDetail} Social metrics did not shift this step.`;
+            }
+          } else if (!improved.length && !worsened.length) {
+            badge   = { cls: "is-neutral", text: "Information surfaced; social metrics unchanged" };
+            summary = `${_riDetail} The knowledge carries forward into the next step.`;
+          }
+        }
+
+        const rows = analysis.map(({ label, bv, av, d, effectiveD, visuallyFlat, cls, arrow, good, bad, noBaseline }) => {
+          if (noBaseline) {
+            return `<tr class="iv-no-baseline">
+              <td>${label}</td>
+              <td colspan="4" class="iv-no-baseline-note">No baseline — intervention applied before first step completed</td>
+            </tr>`;
+          }
           const verdict = good ? "Improved" : bad ? "Worsened" : "Unchanged";
+          // When the change is visually flat (rounds to same 2dp), show "– 0.00"
+          // rather than a non-zero arrow that contradicts the before/after columns.
+          const changeHtml = effectiveD != null
+            ? `${arrow} ${fix2(Math.abs(visuallyFlat ? 0 : d))}`
+            : "—";
           return `<tr>
             <td>${label}</td>
             <td>${fix2(bv)}</td>
-            <td>${fix2(av)}</td>
-            <td><span class="${cls}">${arrow} ${fix2(Math.abs(d))}</span></td>
+            <td>${av != null ? fix2(av) : "—"}</td>
+            <td><span class="${cls}">${changeHtml}</span></td>
             <td class="iv-verdict ${cls}">${verdict}</td>
           </tr>`;
         }).join("");
+
+        // Build the knowledge evidence panel for reveal_info cards.
+        const knowledgeEvidence = (() => {
+          if (iv.type !== "reveal_info") return "";
+          const p     = iv.params || {};
+          const rawItem  = p.item || p.item_name || p.revealed_item || p.target_item || "";
+          const rawAgent = p.agent_id || p.target_agent || "";
+          const item  = rawItem  ? itemLabel(rawItem)  : "";
+          const agent = rawAgent || "";
+          const cr    = iv.confirmResult || {};
+          const ar    = iv.apiResult    || {};
+          const wasBlocker = iv.before && iv.before.blocker === rawItem;
+
+          // Old saved runs (pre-params-persistence) genuinely have no item/agent.
+          // Show a safe, honest fallback rather than rendering "surfaced ." blanks.
+          const hasDetail = Boolean(item || agent);
+
+          const rows2 = [];
+          if (hasDetail) {
+            if (item)  rows2.push(`<div class="iv-ke-row"><span class="iv-ke-label">Item revealed</span><span class="iv-ke-value">${escapeHtml(item)}</span></div>`);
+            if (agent) rows2.push(`<div class="iv-ke-row"><span class="iv-ke-label">Target agent</span><span class="iv-ke-value">${escapeHtml(actorLabel(agent))}</span></div>`);
+          } else {
+            rows2.push(`<div class="iv-ke-row"><span class="iv-ke-label iv-ke-muted">Detail</span><span class="iv-ke-value iv-ke-muted">Revealed information was surfaced to the team.</span></div>`);
+          }
+          if (wasBlocker) {
+            rows2.push(`<div class="iv-ke-row"><span class="iv-ke-label">Context</span><span class="iv-ke-value">Active blocker — this item was blocking progress</span></div>`);
+          }
+          if (cr.consequence) {
+            rows2.push(`<div class="iv-ke-row"><span class="iv-ke-label">Follow-through</span><span class="iv-ke-value">${escapeHtml(cr.consequence)}</span></div>`);
+          } else if (cr.note && !iv.confirmed) {
+            rows2.push(`<div class="iv-ke-row"><span class="iv-ke-label">Follow-through</span><span class="iv-ke-value iv-ke-muted">${escapeHtml(cr.note)}</span></div>`);
+          } else if (!iv.confirmed) {
+            rows2.push(`<div class="iv-ke-row"><span class="iv-ke-label">Follow-through</span><span class="iv-ke-value iv-ke-muted">Pending — check Live log for the next step</span></div>`);
+          }
+          if (ar.stress_delta != null && Math.abs(ar.stress_delta) > 0.001) {
+            const sign = ar.stress_delta < 0 ? "−" : "+";
+            const agentDisplay = agent ? actorLabel(agent) : "agent";
+            rows2.push(`<div class="iv-ke-row"><span class="iv-ke-label">Stress on ${escapeHtml(agentDisplay)}</span><span class="iv-ke-value">${sign}${Math.abs(ar.stress_delta * 100).toFixed(0)}%</span></div>`);
+          }
+          return `<div class="iv-knowledge-evidence"><div class="iv-ke-head">Knowledge impact</div>${rows2.join("")}</div>`;
+        })();
 
         const latestClass = i === state.interventionLog.length - 1 ? " is-latest" : "";
         return `
@@ -4608,10 +4991,11 @@
             <div class="iv-impact-head">
               <span class="iv-impact-step">#${i + 1}</span>
               <span class="iv-impact-title">${escapeHtml(iv.label || iv.type)}</span>
-              <span class="iv-tick-tag">Step ${iv.atTick}</span>
+              <span class="iv-tick-tag">Step ${state.tickToDisplayStep.get(iv.displayAtTick ?? iv.atTick) ?? iv.displayAtTick ?? iv.atTick}</span>
               ${i === state.interventionLog.length - 1 ? '<span class="iv-impact-badge is-pending">Latest</span>' : ""}
               <span class="iv-impact-badge ${badge.cls}">${badge.text}</span>
             </div>
+            ${knowledgeEvidence}
             <div class="iv-impact-body iv-two-col">
               <div class="iv-impact-summary">
                 <p class="iv-summary-text">${escapeHtml(summary)}</p>
@@ -4644,6 +5028,24 @@
       scrollEl.addEventListener("scroll", sync, { passive: true });
       // Re-check whenever content changes (new cards added, etc.)
       new ResizeObserver(sync).observe(scrollEl);
+      sync();
+    }());
+
+    // ── Agents panel scroll hint ──────────────────────────────────────
+    (function () {
+      const scrollEl = agentList?.closest(".panel-scroll");
+      const hintEl   = $("agentScrollHint");
+      const panelEl  = agentList?.closest(".panel-agents");
+      if (!scrollEl || !hintEl) return;
+      function sync() {
+        const canScroll = scrollEl.scrollHeight - scrollEl.clientHeight > 8;
+        const atBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight < 8;
+        hintEl.classList.toggle("hidden", !canScroll || atBottom);
+        panelEl?.classList.toggle("show-scroll-cue", canScroll && !atBottom);
+      }
+      scrollEl.addEventListener("scroll", sync, { passive: true });
+      new ResizeObserver(sync).observe(scrollEl);
+      new ResizeObserver(sync).observe(agentList);
       sync();
     }());
 
@@ -5108,7 +5510,7 @@
           boost_urgency:  "Boost Pressure",
           ease_pressure:  "Ease Pressure",
           inject_tension: "Inject Tension",
-          inject_emotion: "Inject Mood",
+          inject_emotion: "Emotion Input",
         };
         return map[String(type || "")] ||
           String(type || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -5127,9 +5529,19 @@
         const currGs     = snap.group_state     || {};
 
         for (const iv of ivList) {
+          // iv.params is present for runs saved after the params-persistence fix.
+          // Old saved runs have no params — treat as empty and show safe fallback.
+          const ivParams = (iv.params && typeof iv.params === "object") ? iv.params : {};
+
+          // For reveal_info: synthesise a confirmResult so the badge/summary logic
+          // fires correctly without a live applyConfirmationUpdate call.
+          const confirmResult = (iv.type === "reveal_info")
+            ? { confirmed: true, note: null, consequence: null }
+            : undefined;
+
           state.interventionLog.push({
             type:   iv.type || "",
-            params: {},
+            params: ivParams,
             label:  _label(iv.type),
             before: {
               urgency:  Number(prevGs.pressure ?? currGs.pressure ?? 0),
@@ -5144,9 +5556,11 @@
               tension:  Number(currGs.tension    ?? 0),
               cohesion: Number(currGs.cohesion   ?? 0),
             },
-            atTick:     Number(snap.tick ?? 0),
-            postUrgency: Number(currGs.pressure ?? prevGs.pressure ?? 0),
-            confirmed:  true,
+            atTick:        Number(snap.tick ?? 0),
+            displayAtTick: Number(snap.tick ?? 0),
+            postUrgency:   Number(currGs.pressure ?? prevGs.pressure ?? 0),
+            confirmed:     true,
+            confirmResult,
           });
         }
       }
@@ -5214,6 +5628,13 @@
         // so we reconstruct it here from before/after metrics in adjacent ticks.
         reconstructInterventionLogFromHistory(history);
 
+        // If the run had no interventions and the current view is the Impact
+        // tab (e.g. persisted from a previous session), switch to Live Simulation
+        // so the page doesn't open on a blank empty-state.
+        if (state.currentView === "impact" && !state.interventionLog.length) {
+          setView("live");
+        }
+
         // Point navigation to the last snapshot (most recent step shown by default)
         state.replayIndex = Math.max(0, history.length - 1);
 
@@ -5247,7 +5668,20 @@
         const status = await fetchRunStatus(state.runId);
         liveSession.classList.remove("hidden");
         applyStatusSnapshot(status);
+
+        // Restore Intervention Impact tab from the tick history included in the
+        // GET /runs/{id} response.  This must run for BOTH ended and in-progress
+        // runs — on a refresh the frontend starts with an empty interventionLog
+        // regardless of run state, because the live WS only populates it in
+        // real-time during the original session.
+        // The guard inside reconstructInterventionLogFromHistory (length > 0) prevents
+        // double-population if the WS later re-delivers ticks for the same run.
+        reconstructInterventionLogFromHistory(status.history || []);
+
         if (state.ended) {
+          if (state.currentView === "impact" && !state.interventionLog.length) {
+            setView("live");
+          }
           syncDashboardLinks();
           return;
         }
@@ -5256,8 +5690,6 @@
           syncDashboardLinks();
           if (state.autoRunning && !state.ended) {
             enforceManualMode();
-          } else if (!state.ended) {
-            showBanner(`Live Interactive is ready. <strong>${advanceActionLabel()}</strong> or apply an intervention to advance the run.`, "info");
           }
         } catch (e) {
           showBanner("WebSocket could not open, so this live run cannot be controlled right now.", "error");
