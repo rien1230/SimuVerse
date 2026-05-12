@@ -23,3 +23,4 @@ data/replays/*.jsonl
 data/replays/*.json
 personality_test_results.json
 backend/personality_test_results.json
+backend/data/runs/run_*.json
