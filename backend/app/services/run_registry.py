@@ -1,4 +1,6 @@
 # backend/app/services/run_registry.py
+# In-memory registry of live runs.
+# RunManager handles one run; RunRegistry keeps track of all active runs.
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -58,7 +60,7 @@ class RunRegistry:
         self.idle_timeout_sec = 3600  # 1 hour - runs idle longer than this get cleaned up
         self._initialized = True  # Mark as initialized
 
-    def create_run(self, seed: int, config: Optional[Dict[str, Any]] = None) -> str:
+    def create_run(self, seed: int, config: Optional[Dict[str, Any]] = None, owner: Optional[str] = None) -> str:
         """
         Create a new simulation run and add it to the registry.
 
@@ -76,6 +78,7 @@ class RunRegistry:
         Returns:
             str: The unique run_id for the newly created run
         """
+        # This is where a live run first appears in backend memory.
         with self._runs_lock:  # Lock the registry to prevent race conditions
             self._cleanup_idle_locked()  # Remove runs that have been idle too long
 
@@ -86,7 +89,7 @@ class RunRegistry:
                 del self._runs[oldest_id]  # Remove it to make space
 
             # Create the new simulation run
-            rm = RunManager(seed=seed, config=(config or {}))
+            rm = RunManager(seed=seed, config=(config or {}), owner=owner)
 
             # Create an entry to store the run and its metadata
             entry = RunEntry(

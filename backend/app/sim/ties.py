@@ -1,4 +1,8 @@
-"""Relationship-tie helpers for trust links between agents."""
+"""Relationship-tie helpers for trust links between agents.
+
+This file only computes the pairwise trust snapshot used by the frontend and
+history layer.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +16,7 @@ def compute_ties(
     model: "SimModel",
     agents_sorted: list,
 ) -> List[Dict[str, Any]]:
+    """Build one undirected trust edge per agent pair."""
     ties: List[Dict[str, Any]] = []
     id_to_agent = {agent.public_id: agent for agent in agents_sorted}
     ids = [agent.public_id for agent in agents_sorted]

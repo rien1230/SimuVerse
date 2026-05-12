@@ -10,6 +10,12 @@ This revision tightens the office flow:
 - non-owner partial shares require explicit recent delegation
 - duplicate owner shares and duplicate delegated partials are blocked
 - dialogue is made less meta / robotic and more workplace-natural
+
+This file owns the Office-specific behaviour rules.
+The model asks this logic class questions like:
+- what should an office agent do next?
+- what counts as valid office progress?
+- how should office pressure/challenge/cooperation feel?
 """
 from __future__ import annotations
 
@@ -25,20 +31,27 @@ if TYPE_CHECKING:
     from app.sim.model import SimModel
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Scenario constants + tuning tables
+# Office-specific owners, requesters, aliases, and style multipliers live here.
+# ──────────────────────────────────────────────────────────────────────────
 def _lbl(item: str) -> str:
     from app.sim.agent import ITEM_LABELS
     return ITEM_LABELS.get(item, item.replace("_", " ").title())
 
 
+# Per-personality action probability multipliers for the office scenario.
+# These scale the base probabilities in choose_action() — a value > 1.0 means
+# this personality type is more likely to take that action, < 1.0 means less likely.
 OFFICE_STYLE = {
     "Leader": {
         "ask": 0.90,
-        "pressure": 1.40,
+        "pressure": 1.40,   # Leaders escalate when things stall
         "challenge": 0.85,
-        "share": 1.20,
-        "hesitate": 0.20,
+        "share": 1.20,      # Leaders freely share to unblock the group
+        "hesitate": 0.20,   # Leaders rarely hesitate
         "reframe": 0.35,
-        "coord": 1.80,
+        "coord": 1.80,      # Leaders drive coordination
     },
     "Easygoing": {
         "ask": 0.65,
@@ -88,6 +101,8 @@ OFFICE_STYLE = {
 }
 
 
+# Who owns each document — only the owner can do a "full" share that counts for task completion.
+# Non-owners can do partial shares (covering delegated content) but not the canonical reveal.
 DOC_OWNER = {
     "budget": "A1",
     "requirements": "A2",
@@ -95,6 +110,7 @@ DOC_OWNER = {
     "tech_specs": "A4",
 }
 
+# Who is the "natural" recipient of each document — the agent most likely to ask for it.
 DOC_REQUESTER = {
     "budget": "A4",
     "requirements": "A4",
@@ -102,6 +118,7 @@ DOC_REQUESTER = {
     "tech_specs": "A1",
 }
 
+# Human-readable names for each document — (long form, short form, definite article form).
 DOC_ALIAS = {
     "budget": ("the budget", "budget", "the budget"),
     "requirements": ("the requirements", "requirements", "the requirements"),
@@ -109,6 +126,8 @@ DOC_ALIAS = {
     "tech_specs": ("the spec doc", "spec doc", "the spec doc"),
 }
 
+# How many times an agent must be asked about an item before their personality
+# allows them to challenge back instead of just answering. Skeptical agents challenge fast.
 CHALLENGE_ASK_THRESHOLD = {
     "Easygoing": 6,
     "Creative": 5,
@@ -129,6 +148,11 @@ _ENV_KEY_MAP = {
 
 
 def _style(agent: "SimAgent", key: str, base: float) -> float:
+    """
+    Apply personality and environment multipliers to a base probability.
+    Combines the OFFICE_STYLE personality weight with the env-level modifier
+    from ENVIRONMENT_MODIFIERS, then clamps the result to [0.02, 0.95].
+    """
     ptype = getattr(agent, "personality_type", "Easygoing")
     mult = OFFICE_STYLE.get(ptype, {}).get(key, 1.0)
     # Layer on per-personality environment modifier (personality × environment)
@@ -156,6 +180,7 @@ class OfficeProposalLogic(BaseLogic):
 
     # ──────────────────────────────────────────────────────────────────────────
     # Scenario hooks for model.py
+    # These are the main entry points model.py calls while an Office run is active.
     # ──────────────────────────────────────────────────────────────────────────
 
     def init_scenario_state(self, model: "SimModel") -> None:
@@ -303,6 +328,8 @@ class OfficeProposalLogic(BaseLogic):
             "conflict": conflict,
         }
 
+    # ── Tick resolution + state setup ───────────────────────────────────────
+    # Handles office post-tick progress and the extra per-run state it needs.
     def post_tick(
         self,
         model: "SimModel",
@@ -523,6 +550,8 @@ class OfficeProposalLogic(BaseLogic):
         if not hasattr(model, "_office_last_refusal_tick"):
             model._office_last_refusal_tick = {}
 
+    # ── Office decision helpers ─────────────────────────────────────────────
+    # Utility methods for ownership, delegation, recent shares, and confirmations.
     def _priority_missing(self, model: "SimModel") -> List[str]:
         self._init_office_state(model)
         order = ["requirements", "design", "tech_specs", "budget"]
@@ -1485,6 +1514,7 @@ class OfficeProposalLogic(BaseLogic):
 
     # ──────────────────────────────────────────────────────────────────────────
     # Main decision logic
+    # Core action selection for the Office scenario.
     # ──────────────────────────────────────────────────────────────────────────
 
     def choose_action(
@@ -1512,7 +1542,8 @@ class OfficeProposalLogic(BaseLogic):
                 try:
                     agent.memory.update_impressions(tick)
                     agent._memory_impression_tick = tick
-                    # Feed impression patterns back into trust (subtle drift)
+                    # memory impressions feed back into trust — positive history nudges
+                    # trust up slightly; conflict history nudges it down
                     from app.sim.agent import clamp as _iclamp
                     for _oid, _imp in (agent.memory.impressions or {}).items():
                         _pats = _imp.get("patterns", {})
@@ -1528,6 +1559,7 @@ class OfficeProposalLogic(BaseLogic):
                 except Exception:
                     pass
 
+        # tasks must resolve in priority order: requirements → design → tech_specs → budget
         missing = self._priority_missing(agent.model)
         if not missing:
             return None
@@ -1645,7 +1677,7 @@ class OfficeProposalLogic(BaseLogic):
                     if _ce:
                         return _ce
 
-        # 1b) Forced release for the blocker if the team has stalled on it.
+        # 1b) Owner held too long — release regardless of hesitation score
         if (
             self._is_owner(agent, current_blocker)
             and current_blocker in getattr(agent, "known_items", set())
@@ -1659,7 +1691,7 @@ class OfficeProposalLogic(BaseLogic):
                 if event:
                     return event
 
-        # 1c) After a refusal, bias hard toward a fast recovery share instead of another loop.
+        # 1c) guilt window: owner gets 2 ticks to reconsider after refusing
         if (
             self._is_owner(agent, current_blocker)
             and current_blocker in getattr(agent, "known_items", set())
@@ -1683,7 +1715,7 @@ class OfficeProposalLogic(BaseLogic):
                     if event:
                         return event
 
-        # 2) Owner structured refusal intercept
+        # 2) Owner may refuse before sharing — probability scales with ask count and trust
         for item in missing:
             if item != current_blocker:
                 continue
@@ -1717,7 +1749,7 @@ class OfficeProposalLogic(BaseLogic):
             if agent._intervention_strategy_active("cooperative"):
                 base_refuse_prob *= 0.08
 
-            # Final-item fast release: sharply lower refusal when only 1 task left and it's been stuck
+            # last item standing — don't let refusal deadlock the whole run
             if len(missing) == 1 and blocker_age >= 3:
                 base_refuse_prob *= 0.18
             elif len(missing) == 1 and blocker_age >= 2:
@@ -2256,7 +2288,9 @@ class OfficeProposalLogic(BaseLogic):
         return None
 
     # ──────────────────────────────────────────────────────────────────────────
-    # Base overrides
+    # ──────────────────────────────────────────────────────────────────────────
+    # Public scenario API + text generation
+    # Methods agent.py calls for ask/share text and scenario-specific hooks.
     # ──────────────────────────────────────────────────────────────────────────
 
     def should_share(

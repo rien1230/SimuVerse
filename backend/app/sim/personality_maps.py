@@ -13,6 +13,16 @@ Scenario-specific base maps:
 
 User picks personality only.
 System fixes roles (office), preferences (cafe), archetypes (escape).
+
+The OCEAN model (Big Five) is a well-established framework in personality psychology.
+Each trait is a float between 0 and 1:
+  E = Extraversion  (sociable, assertive)
+  A = Agreeableness (cooperative, kind)
+  N = Neuroticism   (anxious, emotionally unstable)
+  C = Conscientiousness (organised, dependable)
+  O = Openness      (curious, creative)
+
+This file is the raw personality data layer behind agent_builder.py.
 """
 from __future__ import annotations
 
@@ -20,32 +30,49 @@ from typing import Dict, List
 import random
 
 
+# The five OCEAN trait keys used across all personality maps
 TRAIT_KEYS = ("E", "A", "N", "C", "O")
 
 
 def clamp01(x: float) -> float:
+    """Clamp a float to [0.0, 1.0] so trait values never go out of range."""
     return max(0.0, min(1.0, x))
 
 
 # ── 1. Six personality types as OCEAN deltas ─────────────────────────────────
+# Each personality is stored as a set of *deltas* — offsets added on top of a
+# scenario's base OCEAN values. This way, a "Leader" in an office isn't the
+# same absolute values as a "Leader" in a café; the role/preference/archetype
+# base map sets the starting point and personality just nudges it from there.
 
 PERSONALITIES = {
     "Leader": {
+        # High E and C push this agent to take charge and drive decisions
         "E": 0.18, "A": -0.04, "N": -0.04, "C": 0.18, "O": 0.04,
     },
     "Decisive": {
+        # Moderately high C means quick, committed decisions; lower A means
+        # less patience for lengthy group discussion
         "E": 0.08, "A": -0.08, "N": 0.06, "C": 0.10, "O": -0.04,
     },
     "Easygoing": {
+        # High A and low N = avoids conflict; the negative N delta is the key
+        # signal that this agent keeps its cool under pressure
         "E": 0.00, "A": 0.18, "N": -0.18, "C": -0.04, "O": 0.04,
     },
     "Skeptical": {
+        # Low A and high C together produce the "I need proof before I commit"
+        # pattern — agreeable enough to stay civil but demanding on evidence
         "E": -0.08, "A": -0.18, "N": 0.08, "C": 0.12, "O": -0.08,
     },
     "Overthinker": {
+        # High N is the defining trait here — emotional instability amplifies
+        # the hesitate action bias and keeps this agent from finalising decisions
         "E": -0.16, "A": 0.00, "N": 0.24, "C": 0.08, "O": 0.16,
     },
     "Creative": {
+        # High O drives reframing and theory actions; low C means they're less
+        # focused on closure and more on exploring new angles
         "E": 0.04, "A": 0.00, "N": 0.00, "C": -0.04, "O": 0.24,
     },
 }
@@ -61,6 +88,10 @@ PERSONALITY_DESCRIPTIONS = {
 
 
 # ── 2. Action probability biases per personality ─────────────────────────────
+# These offsets get added to a base action probability when an agent picks what
+# to do next. A positive value makes that action more likely; negative makes it
+# less likely. The values are small on purpose — they nudge behaviour rather than
+# force it, so agents still act somewhat randomly within their personality range.
 
 PERSONALITY_ACTION_BIAS = {
     "Leader": {
@@ -91,6 +122,11 @@ PERSONALITY_ACTION_BIAS = {
 
 
 # ── 3. Phrase pools per personality per action type ──────────────────────────
+# When an agent speaks, the simulation picks a random phrase from the pool that
+# matches that agent's personality and the action they're performing. Not every
+# personality needs a phrase for every action — if there's no pool for a
+# combination, get_personality_phrase() just returns None and the model falls
+# back to a generic utterance.
 
 PERSONALITY_PHRASES = {
     "Leader": {
@@ -276,6 +312,10 @@ PERSONALITY_PHRASES = {
 
 
 # ── Role / preference / archetype base maps ──────────────────────────────────
+# These are the *base* OCEAN values for each scenario-specific identity.
+# The user-chosen personality's deltas get layered on top via merge_traits().
+# Each scenario has its own map because the same "takes charge" archetype in an
+# escape room shouldn't have the same starting traits as a Project Manager.
 
 OFFICE_ROLE_MAP = {
     "Project Manager": {"E": 0.68, "A": 0.52, "N": 0.48, "C": 0.72, "O": 0.52},
@@ -300,6 +340,8 @@ ESCAPE_ARCHETYPE_MAP = {
 
 
 # ── Default assignments ──────────────────────────────────────────────────────
+# Maps each agent slot (A1–A4) to a default role/preference/archetype for each
+# scenario. These are used when the user hasn't picked custom assignments.
 
 OFFICE_DEFAULT_ROLES = {
     "A1": "Project Manager",
@@ -326,27 +368,39 @@ ESCAPE_DEFAULT_ARCHETYPES = {
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def merge_traits(base_traits: Dict[str, float], personality_name: str) -> Dict[str, float]:
-    """
-    Merge a scenario base map with user-selected personality deltas.
-    Output is clamped to [0.0, 1.0].
+    """Add a personality's OCEAN deltas on top of a scenario's base trait values.
+
+    If a personality name isn't found (e.g. the user passed something invalid),
+    no delta is applied and the base traits are returned unchanged.
+    Output is always clamped to [0.0, 1.0] per trait.
     """
     deltas = PERSONALITIES.get(personality_name, {})
     merged = {}
     for key in TRAIT_KEYS:
+        # Default base to 0.5 (midpoint) if the scenario map is missing a key
         merged[key] = clamp01(base_traits.get(key, 0.5) + deltas.get(key, 0.0))
     return merged
 
 
 def get_personality_bias(personality_name: str, action_name: str) -> float:
-    """Safe lookup for action bias."""
+    """Return the action probability bias for a personality/action pair.
+
+    Returns 0.0 if either the personality or the action isn't in the table,
+    so calling code doesn't need to handle missing keys.
+    """
     return PERSONALITY_ACTION_BIAS.get(personality_name, {}).get(action_name, 0.0)
 
 
 def get_personality_phrase(personality_name: str, action_name: str) -> str | None:
-    """Return a random phrase for a personality/action pair, or None."""
+    """Return a random phrase for a personality/action pair, or None.
+
+    Returns None when there's no phrase pool for that combination, which tells
+    the caller to fall back to a generic utterance template.
+    """
     pool = PERSONALITY_PHRASES.get(personality_name, {}).get(action_name, [])
     return random.choice(pool) if pool else None
 
 
 def get_personality_description(personality_name: str) -> str:
+    """Return the short human-readable description for a personality type."""
     return PERSONALITY_DESCRIPTIONS.get(personality_name, "")

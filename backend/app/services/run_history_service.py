@@ -1,4 +1,20 @@
-"""Loads saved runs and reshapes them for the history and replay views."""
+"""Loads saved runs and reshapes them for the history and replay views.
+
+Run files are stored as JSON in backend/data/runs/. Each file holds everything
+the frontend needs: agent states, tick-by-tick history, metrics, interventions.
+
+Key functions:
+  save_run()     — serialise a finished SimModel to disk
+  load_run()     — load one run by ID (with optional ownership check)
+  list_runs()    — list all runs (sorted newest first)
+  replay_run()   — return just the tick history for the replay panel
+  compare_runs() — side-by-side metric diff between two runs
+  prune_runs()   — clean up old/excess run files automatically
+
+This is the storage / replay layer for finished runs.
+If the live run system is "what is happening right now?",
+this module is "what do we keep after the run ends?"
+"""
 
 from __future__ import annotations
 
@@ -10,30 +26,45 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+
 logger = logging.getLogger(__name__)
 
+# Lock prevents two concurrent requests from pruning at the same time
 _prune_lock = threading.Lock()
 
+# All run files live in backend/data/runs/
 RUNS_DIR = Path(__file__).resolve().parents[2] / "data" / "runs"
+# Hard limits to stop the disk filling up over time
 MAX_SAVED_RUNS = 50
 MAX_RUN_AGE_DAYS = 14
 
 
 def _ensure_dir() -> None:
+    """Create the runs directory if it doesn't exist yet."""
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _run_path(run_id: str) -> Path:
+    """Return the full path for a run file given its ID."""
     return RUNS_DIR / f"run_{run_id}.json"
 
 
 def _iter_run_files() -> List[Path]:
+    """Return all run JSON files, sorted alphabetically by name."""
     _ensure_dir()
     return sorted(RUNS_DIR.glob("run_*.json"))
 
 
 def prune_runs(max_saved_runs: int = MAX_SAVED_RUNS, max_age_days: int = MAX_RUN_AGE_DAYS) -> int:
-    """Delete old saved run files by age and retention count."""
+    """Delete old saved run files by age and retention count.
+
+    Two pruning passes:
+      1. Remove any file older than max_age_days (by filesystem mtime)
+      2. If more than max_saved_runs files remain, delete the oldest ones
+
+    Negative values for either param disables that pass.
+    Returns the total number of files deleted.
+    """
     with _prune_lock:
         removed = 0
         now = datetime.now(timezone.utc)
@@ -43,6 +74,7 @@ def prune_runs(max_saved_runs: int = MAX_SAVED_RUNS, max_age_days: int = MAX_RUN
         for fpath in _iter_run_files():
             try:
                 mtime = datetime.fromtimestamp(fpath.stat().st_mtime, tz=timezone.utc)
+                # First pass: delete anything older than the cutoff date
                 if max_age_days >= 0 and mtime < cutoff:
                     fpath.unlink(missing_ok=True)
                     removed += 1
@@ -51,7 +83,9 @@ def prune_runs(max_saved_runs: int = MAX_SAVED_RUNS, max_age_days: int = MAX_RUN
             except OSError:
                 continue
 
+        # Second pass: if we still have too many files, drop the oldest ones
         if max_saved_runs >= 0 and len(files_with_time) > max_saved_runs:
+            # Sort newest-first so we can slice off the oldest at the end
             files_with_time.sort(key=lambda item: item[1], reverse=True)
             for fpath, _ in files_with_time[max_saved_runs:]:
                 try:
@@ -65,7 +99,32 @@ def prune_runs(max_saved_runs: int = MAX_SAVED_RUNS, max_age_days: int = MAX_RUN
         return removed
 
 
-def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+# ──────────────────────────────────────────────────────────────────────────
+# Run serialisation
+# This section turns a finished SimModel into the JSON shape used by history,
+# replay, dashboard results, and PDF export.
+# ──────────────────────────────────────────────────────────────────────────
+
+def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = None, owner: Optional[str] = None) -> Dict[str, Any]:
+    """Build the full JSON structure that gets written to disk for a completed run.
+
+    This is the most data-rich function in this module. It pulls together:
+      - agent states (stress, trust, known items, strategy)
+      - event counts (messages, clues, agreements, challenges)
+      - metric trajectory (trust/stress start → peak → end)
+      - blocker timeline (which constraints were active and for how long)
+      - full tick-by-tick history for replay
+      - interventions applied during the run
+
+    Parameters
+    ----------
+    model  : the finished SimModel instance
+    run_id : ID string that will be used as the filename
+    config : the launch config to embed (scenario, ticks, team_type, etc.)
+    owner  : email of the user who created this run, or None for anonymous
+    """
+    # The summary object is intentionally rich so frontend pages do not each
+    # have to recalculate counts, peaks, chains, and replay metadata themselves.
     metrics = model.last_diff.get("metrics", {}) if model.last_diff else {}
 
     # Collect ALL interventions from the full run-level log (not just the last tick's diff).
@@ -86,6 +145,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
             {"type": t, "tick": None}
             for t in getattr(model, "_applied_interventions_log", [])
         ]
+    # Strip None values from config before saving — keeps the JSON clean
     persisted_config = {k: v for k, v in (config or {}).items() if v is not None}
 
     # Compute whole-run peak tension and time_to_first_share from metric_history
@@ -95,6 +155,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
         (h["tick"] for h in history if h.get("share_count", 0) > 0), None
     )
 
+    # Snapshot of each agent's final state at the end of the run
     agents_summary = [
         {
             "id":            a.public_id,
@@ -105,6 +166,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
             "final_stress":  round(a.stress, 3),
             "final_valence": round(a.valence, 3),
             "known_items":   list(a.known_items),
+            # Round trust values to 3dp to keep the JSON readable
             "trust":         {k: round(v, 3) for k, v in a.trust.items()},
         }
         for a in model.agents
@@ -181,7 +243,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
         "stress_end":       _mt_stress_end,
     }
 
-    # ── Blocker timeline ──────────────────────────────────────────────────────
+    # ── Progress timeline ─────────────────────────────────────────────────────
     # Scans metric_history for constraint/task transitions to build one timeline
     # entry per active blocker.
     #
@@ -198,6 +260,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
     _blocker_start = 1
     for _h in mh:
         _item = _h.get("active_blocker") or _h.get("bottleneck_item")
+        # When the active focus changes, close the previous segment and start a new one
         if _item != _prev_blocker:
             if _prev_blocker is not None:
                 _end = _h["tick"] - 1
@@ -210,7 +273,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
             if _item is not None:
                 _blocker_start = _h["tick"]
             _prev_blocker = _item
-    # Close the final open segment
+    # Close the final open segment — the last blocker runs to the end of the simulation
     if _prev_blocker is not None and mh:
         _last = mh[-1]["tick"]
         blocker_timeline.append({
@@ -265,6 +328,7 @@ def build_run_summary(model, run_id: str, config: Optional[Dict[str, Any]] = Non
 
     return {
         "run_id":         run_id,
+        "owner":          owner,        # email of creating user; None means legacy/shared
         "scenario_id":    model.scenario.id,
         "scenario_name":  model.scenario.name,
         "team_preset":    getattr(model, "team_preset", None),
@@ -323,27 +387,56 @@ def save_run(
     model,
     run_id: Optional[str] = None,
     config: Optional[Dict[str, Any]] = None,
+    owner: Optional[str] = None,
 ) -> str:
+    """Serialise a completed SimModel to a JSON file and return the run ID.
+
+    Generates a random 8-character ID if one isn't provided.
+    Prunes old runs before saving to keep disk usage under control.
+    """
     _ensure_dir()
     prune_runs()
     if run_id is None:
+        # Use first 8 chars of UUID for short but unique IDs
         run_id = str(uuid.uuid4())[:8]
-    summary = build_run_summary(model, run_id, config=config)
-    with open(_run_path(run_id), "w") as f:
+    summary = build_run_summary(model, run_id, config=config, owner=owner)
+    run_path = _run_path(run_id)
+    with open(run_path, "w") as f:
         json.dump(summary, f, indent=2)
     logger.info(f"Run saved: id={run_id}, outcome={model.end_reason}, ticks={model.tick}")
     return run_id
 
 
-def load_run(run_id: str) -> Optional[Dict[str, Any]]:
+# ──────────────────────────────────────────────────────────────────────────
+# Run lookup / listing
+# Read saved runs back from disk for history, replay, and dashboard views.
+# ──────────────────────────────────────────────────────────────────────────
+def load_run(run_id: str, owner: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Load a saved run by ID.
+
+    Ownership filtering is applied **only when** *owner* is a non-None value.
+    When *owner* is ``None`` (no authentication / anonymous), all runs are
+    accessible — this keeps the app functional when login is not in use.
+    When *owner* is a specific email string, only runs saved by that user are
+    returned; a mismatched run is treated as not found.
+    """
     path = _run_path(run_id)
     if not path.exists():
         return None
     with open(path) as f:
-        return json.load(f)
+        data = json.load(f)
+    # Apply ownership filter only when a specific owner is supplied
+    if owner is not None and data.get("owner") != owner:
+        return None
+    return data
 
 
-def list_runs(scenario_id: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_runs(scenario_id: Optional[str] = None, owner: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Return a list of saved run summaries, sorted newest first.
+
+    Optionally filter by scenario_id or owner email. When owner is None,
+    all runs are returned regardless of who created them (for anonymous use).
+    """
     _ensure_dir()
     prune_runs()
     runs = []
@@ -352,14 +445,20 @@ def list_runs(scenario_id: Optional[str] = None) -> List[Dict[str, Any]]:
             with open(fpath) as f:
                 data = json.load(f)
             config = data.get("config", {}) or {}
+            # Skip this run if it doesn't match the requested scenario
             if scenario_id and data.get("scenario_id") != scenario_id:
                 continue
             timestamp = data.get("timestamp")
             if not timestamp:
+                # Fall back to filesystem mtime for legacy run files that lack a timestamp
                 timestamp = datetime.fromtimestamp(
                     fpath.stat().st_mtime,
                     tz=timezone.utc,
                 ).isoformat()
+            # Apply ownership filter only when a specific owner is supplied.
+            # owner=None (no auth) returns all runs so History works without login.
+            if owner is not None and data.get("owner") != owner:
+                continue
             runs.append({
                 "run_id":             data["run_id"],
                 "scenario_id":        data["scenario_id"],
@@ -389,17 +488,18 @@ def list_runs(scenario_id: Optional[str] = None) -> List[Dict[str, Any]]:
     return runs
 
 
-def delete_run(run_id: str) -> bool:
+def delete_run(run_id: str, owner: Optional[str] = None) -> bool:
+    """Delete a saved run."""
     path = _run_path(run_id)
-    if path.exists():
-        path.unlink()
-        logger.info(f"Run deleted: id={run_id}")
-        return True
-    logger.warning(f"Delete requested for non-existent run: id={run_id}")
-    return False
+    if not path.exists():
+        logger.warning(f"Delete requested for non-existent run: id={run_id}")
+        return False
+    path.unlink()
+    logger.info(f"Run deleted: id={run_id}")
+    return True
 
 
-def clear_runs() -> int:
+def clear_runs(owner: Optional[str] = None) -> int:
     """Delete all saved run files and return the number removed."""
     removed = 0
     for fpath in _iter_run_files():
@@ -408,35 +508,50 @@ def clear_runs() -> int:
             removed += 1
         except OSError:
             continue
+        except Exception:
+            continue
     logger.info("Cleared %s saved run file(s) from history", removed)
     return removed
 
 
-def replay_run(run_id: str) -> Optional[List[Dict[str, Any]]]:
+# ──────────────────────────────────────────────────────────────────────────
+# Replay + comparison
+# These helpers reshape saved runs for replay mode and side-by-side review.
+# ──────────────────────────────────────────────────────────────────────────
+def replay_run(run_id: str, owner: Optional[str] = None) -> Optional[List[Dict[str, Any]]]:
+    """Return the full tick-by-tick history for a saved run.
+
+    Passes *owner* to load_run() so ownership is enforced consistently.
+    Returns None if the run is not found or the caller does not own it.
     """
-    Return the full tick-by-tick history for a saved run.
-    Returns None if the run is not found.
-    """
-    run = load_run(run_id)
+    run = load_run(run_id, owner=owner)
     if run is None:
-        logger.warning(f"Replay requested for non-existent run: id={run_id}")
+        logger.warning(f"Replay requested for non-existent/unauthorized run: id={run_id}")
         return None
     history = run.get("history", [])
     logger.debug(f"Replay loaded: id={run_id}, ticks={len(history)}")
     return history
 
 
-def compare_runs(run_id_a: str, run_id_b: str) -> Optional[Dict[str, Any]]:
-    run_a = load_run(run_id_a)
-    run_b = load_run(run_id_b)
+def compare_runs(run_id_a: str, run_id_b: str, owner: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Compare two saved runs side-by-side and return per-metric deltas.
+
+    Returns None if either run can't be found or isn't owned by the caller.
+    The "better" field on each metric indicates which run performed better
+    on that metric (higher trust = better, lower stress = better, etc.).
+    """
+    run_a = load_run(run_id_a, owner=owner)
+    run_b = load_run(run_id_b, owner=owner)
     if run_a is None or run_b is None:
         return None
 
     def _delta(key: str, source: str = "metrics") -> Dict[str, Any]:
+        """Extract a value from a specific sub-dict of each run and compute the diff."""
         src_a = run_a.get(source, {}) if source else run_a
         src_b = run_b.get(source, {}) if source else run_b
         a_val = src_a.get(key, 0) if isinstance(src_a, dict) else run_a.get(key, 0)
         b_val = src_b.get(key, 0) if isinstance(src_b, dict) else run_b.get(key, 0)
+        # delta is always b - a, so positive means run_b is higher
         return {"run_a": a_val, "run_b": b_val, "delta": round(b_val - a_val, 4)}
 
     m_a, m_b = run_a.get("metrics", {}), run_b.get("metrics", {})
@@ -444,14 +559,17 @@ def compare_runs(run_id_a: str, run_id_b: str) -> Optional[Dict[str, Any]]:
     return {
         "run_a_id":      run_id_a,
         "run_b_id":      run_id_b,
+        # These flags help the UI show contextual labels like "same scenario"
         "same_scenario": run_a.get("scenario_id") == run_b.get("scenario_id"),
         "same_seed":     run_a.get("seed") == run_b.get("seed"),
         "scenario":      {"run_a": run_a.get("scenario_id"), "run_b": run_b.get("scenario_id")},
         "outcome":       {"run_a": run_a.get("outcome"),     "run_b": run_b.get("outcome")},
 
+        # source=None means look at the top-level run dict, not the "metrics" sub-dict
         "ticks":          _delta("ticks",          source=None),
         "final_progress": _delta("final_progress", source=None),
 
+        # "better" tells the UI which run won on each metric
         "avg_trust":      {**_delta("avg_trust"),      "better": "run_a" if m_a.get("avg_trust", 0)      > m_b.get("avg_trust", 0)      else "run_b"},
         "avg_stress":     {**_delta("avg_stress"),     "better": "run_a" if m_a.get("avg_stress", 0)     < m_b.get("avg_stress", 0)     else "run_b"},
         "conflict_rate":  {**_delta("conflict_rate"),  "better": "run_a" if m_a.get("conflict_rate", 0)  < m_b.get("conflict_rate", 0)  else "run_b"},
@@ -460,6 +578,7 @@ def compare_runs(run_id_a: str, run_id_b: str) -> Optional[Dict[str, Any]]:
         "group_tension":  _delta("group_tension"),
         "group_cohesion": _delta("group_cohesion"),
 
+        # Fewer ticks to finish = faster; use 999 as a fallback for unfinished runs
         "faster_completion": "run_a" if (run_a.get("ticks") or 999) < (run_b.get("ticks") or 999) else "run_b",
 
         "interventions": {

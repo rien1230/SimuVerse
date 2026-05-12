@@ -1,4 +1,7 @@
-"""Core agent behaviour: choices, event handling, and per-tick updates."""
+"""Core agent behaviour: choices, event handling, and per-tick updates.
+
+Per-agent behaviour file for one participant inside a simulation run.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +10,7 @@ from typing import Any, Dict, List, Optional, Set, TypedDict
 
 
 class AgentState(TypedDict):
+    """Frontend/replay-friendly snapshot of one agent at a point in time."""
     id: str
     name: str
     role: str
@@ -37,16 +41,24 @@ from app.sim.dialogue_banks import pick_line, get_tone
 logger = logging.getLogger(__name__)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Shared tiny helpers
+# Simple formatting / lookup / clamping functions used throughout the file.
+# ──────────────────────────────────────────────────────────────────────────
+
 def _lbl(item: str) -> str:
+    """Get a human-readable label for a scenario item key (e.g. "dietary_constraint" → "Dietary Constraint")."""
     return ITEM_LABELS.get(item, item.replace("_", " ").title())
 
 
 def _role(agent_id: str, scenario_id: str) -> str:
+    """Look up the in-scenario role name for an agent (e.g. "A1" → "Project Manager")."""
     roles = SCENARIO_ROLES.get(scenario_id, {})
     return roles.get(agent_id, agent_id)
 
 
 def clamp(x: float, lo: float, hi: float) -> float:
+    """Clamp x to [lo, hi]. Used everywhere to prevent emotional/trust values drifting out of range."""
     return max(lo, min(hi, x))
 
 
@@ -58,7 +70,7 @@ TRUST_DELTA_BASE = {
     "insult": -0.18,
     "ask_info": +0.02,
     "share_info": +0.12,
-    "refuse": -0.22,
+    "refuse": -0.22,  # refusing a request has the biggest single negative impact
     "agree": +0.08,
     "challenge": -0.10,
     "suggest": +0.05,
@@ -200,7 +212,20 @@ STRATEGY_PROFILES: Dict[str, Dict[str, float]] = {
 }
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Main agent implementation
+# This class owns one participant's state, decisions, and event reactions.
+# ──────────────────────────────────────────────────────────────────────────
+
 class SimAgent(mesa.Agent):
+    """One participant in the simulation.
+
+    Each agent has OCEAN personality traits, emotional state (valence, arousal,
+    stress), a trust map toward every other agent, a short- and long-term memory,
+    and a current social strategy. On each tick it produces exactly one event via
+    decide_event(), then updates its state based on all events that occurred.
+    """
+
     def __init__(
         self,
         model: mesa.Model,
@@ -209,16 +234,32 @@ class SimAgent(mesa.Agent):
         speech_style: str,
         long_goal: str,
     ) -> None:
+        """Initialise agent state with personality traits and default emotional values.
+
+        Parameters
+        ----------
+        model : mesa.Model
+            The SimModel this agent belongs to.
+        public_id : str
+            Short identifier used everywhere (e.g. "A1").
+        traits : dict
+            OCEAN trait scores in [0, 1]. Keys: E, A, N, C, O.
+        speech_style : str
+            Dialogue register hint used by text-generation helpers.
+        long_goal : str
+            The agent's personal long-term objective (affects goal_progress tracking).
+        """
         super().__init__(public_id, model)
         self.public_id = public_id
         self.traits = traits
         self.speech_style = speech_style
 
-        self.E = traits.get("E", 0.5)
-        self.A = traits.get("A", 0.5)
-        self.N = traits.get("N", 0.5)
-        self.C = traits.get("C", 0.5)
-        self.O = traits.get("O", 0.5)
+        # Unpack OCEAN traits as direct attributes for convenience in probability calculations
+        self.E = traits.get("E", 0.5)  # Extraversion
+        self.A = traits.get("A", 0.5)  # Agreeableness
+        self.N = traits.get("N", 0.5)  # Neuroticism
+        self.C = traits.get("C", 0.5)  # Conscientiousness
+        self.O = traits.get("O", 0.5)  # Openness
 
         self.valence = random.uniform(*INITIAL_VALENCE_RANGE)
         self.arousal = 0.3
@@ -278,8 +319,20 @@ class SimAgent(mesa.Agent):
         self.grudge_against: Optional[str] = None
         self.secrets: Dict[str, str] = {}
 
+    # ── Strategy / state updates ─────────────────────────────────────────────
+    # These methods keep one agent's internal behaviour state up to date.
     def update_strategy(self) -> None:
+        """Recalculate this agent's social strategy based on their current emotional state.
+
+        Strategy affects how likely an agent is to share info, initiate conversations,
+        trust others, etc. (see STRATEGY_PROFILES). We derive a candidate strategy from
+        trust/stress/personality, optionally override it using emotional trend signals
+        from memory, then commit with some probability to avoid rapid oscillation.
+
+        Strategies can be locked by interventions — if locked, we skip the update entirely.
+        """
         current_tick = getattr(self.model, "tick", 0)
+        # Don't override an intervention-applied strategy lock
         if current_tick <= getattr(self, "strategy_locked_until", -1):
             return
 
@@ -302,12 +355,13 @@ class SimAgent(mesa.Agent):
                 )
                 return
 
+        # map current emotional state to a candidate strategy
         if high_stress or very_negative:
             candidate = "defensive"
         elif low_trust and self.stress > 0.35:
             candidate = "defensive"
         elif high_neuro:
-            candidate = "confrontational"
+            candidate = "confrontational"  # high neuroticism → friction-seeking behaviour
         elif high_agree:
             candidate = "cooperative"
         elif avg_trust > 0.5 and self.stress < 0.25:
@@ -362,6 +416,7 @@ class SimAgent(mesa.Agent):
             )
 
     def _profile(self) -> Dict[str, float]:
+        """Return the behaviour multipliers for the agent's current strategy."""
         return STRATEGY_PROFILES.get(self.strategy, STRATEGY_PROFILES["neutral"])
 
     def _get_env_rules(self) -> Dict[str, float]:
@@ -369,6 +424,7 @@ class SimAgent(mesa.Agent):
         return get_env_rules(self.model)
 
     def _r(self, agent_id: str) -> str:
+        """Get the display role name for an agent, preferring the scenario logic's version."""
         logic = getattr(self.model, "behaviour", None)
         if logic and hasattr(logic, "role"):
             return logic.role(agent_id)
@@ -376,6 +432,10 @@ class SimAgent(mesa.Agent):
         return _role(agent_id, sid)
 
     def _queue_pending_event(self, event: Dict[str, Any]) -> None:
+        """Push an event into the model's pending queue so it appears next tick.
+        Used for reaction events (e.g. praise after a task resolves) that the
+        agent generates in response to something it just received.
+        """
         if not hasattr(self.model, "_pending_events"):
             self.model._pending_events = []
         self.model._pending_events.append(event)
@@ -558,7 +618,14 @@ class SimAgent(mesa.Agent):
 
         return None
 
+    # ── Event selection helpers ──────────────────────────────────────────────
+    # Small helpers used by decide_event() to choose the next useful action.
     def _intervention_strategy_active(self, strategy: Optional[str] = None) -> bool:
+        """Check if an intervention-applied strategy lock is currently in effect.
+
+        Optionally checks whether the locked strategy matches a specific value.
+        Used to give bonus sharing probability when a cooperative nudge is active.
+        """
         current_tick = getattr(self.model, "tick", 0)
         if getattr(self, "strategy_lock_source", None) != "intervention":
             return False
@@ -569,11 +636,17 @@ class SimAgent(mesa.Agent):
         return True
 
     def _active_forced_topic(self) -> Optional[str]:
+        """Return the current forced-topic item if still active, or None.
+
+        Auto-clears if the topic deadline has passed or the task already resolved,
+        so callers don't need to check expiry themselves.
+        """
         item = getattr(self, "forced_topic_item", None)
         if not item:
             return None
 
         current_tick = getattr(self.model, "tick", 0)
+        # Clear if expired or already resolved
         if (
             current_tick > getattr(self, "forced_topic_until", -1)
             or self.model.scenario.tasks.get(item, False)
@@ -584,6 +657,9 @@ class SimAgent(mesa.Agent):
         return item
 
     def _recent_item_share_count(self, item: str, within: int = 2) -> int:
+        """Count how many times this item was shared in the last `within` ticks.
+        Used to prevent the same item from being shared repeatedly in quick succession.
+        """
         current_tick = getattr(self.model, "tick", 0)
         count = 0
         for snap in reversed(getattr(self.model, "history", [])[-(within + 2):]):
@@ -596,6 +672,9 @@ class SimAgent(mesa.Agent):
         return count
 
     def _item_knowledge_count(self, item: str) -> int:
+        """Return how many agents currently know about this item.
+        Used to avoid re-sharing something the whole group already knows.
+        """
         return sum(
             1
             for agent in getattr(self.model, "agents", [])
@@ -603,6 +682,9 @@ class SimAgent(mesa.Agent):
         )
 
     def _item_recently_revealed(self, item: str, within: int = 1) -> bool:
+        """Return True if any agent was given this item via an intervention very recently.
+        Prevents the agent from immediately re-sharing something just revealed.
+        """
         current_tick = getattr(self.model, "tick", 0)
         for agent in getattr(self.model, "agents", []):
             reveal_tick = getattr(agent, "intervention_reveal_ticks", {}).get(item)
@@ -658,8 +740,18 @@ class SimAgent(mesa.Agent):
         return False
 
     def _should_share(self, item: str, target: "SimAgent", message_text: str = "") -> bool:
+        """Decide whether to share a piece of information with a target agent.
+
+        This is the core sharing probability function — it combines personality
+        traits, trust, environmental urgency, memory impressions of the target,
+        repeat-ask pressure, and several other signals into a final probability.
+
+        Returns True if we should share, False if we should refuse (or stay quiet).
+        """
+        # Don't share something that's already resolved
         if self.model.scenario.tasks.get(item, False):
             return False
+        # Don't share what the target already knows
         if item in target.known_items:
             return False
 
@@ -764,15 +856,17 @@ class SimAgent(mesa.Agent):
         env_urgency = getattr(env, "urgency_modifier", 1.0)
         cooperation = getattr(env, "cooperation_modifier", 1.0)
 
+        # A raises share chance, N lowers it
         base = 0.18 + (self.A * 0.62) - (self.N * 0.42)
-        trust_effect = (trust - 0.5) * 1.65
-        mem_penalty = self._count_recent_refusals_from(target, 6) * 0.08
+        trust_effect = (trust - 0.5) * 1.65  # trust above 0.5 helps, below 0.5 hurts
+        mem_penalty = self._count_recent_refusals_from(target, 6) * 0.08  # past refusals reduce willingness
 
+        # personality type shifts the base sharing probability
         personality_share_mod = {
             "Leader": +0.08,
             "Decisive": +0.05,
-            "Easygoing": +0.20,
-            "Skeptical": -0.22,
+            "Easygoing": +0.20,   # most open to sharing
+            "Skeptical": -0.22,   # most reluctant
             "Overthinker": -0.10,
             "Creative": +0.05,
         }.get(getattr(self, "personality_type", "Easygoing"), 0.0)
@@ -883,13 +977,21 @@ class SimAgent(mesa.Agent):
                 )
 
         final_prob = additive * strat_mult * cooperation * env_coop
-        final_prob = clamp(final_prob, 0.10, 0.94)
+        final_prob = clamp(final_prob, 0.10, 0.94)  # floor/ceiling: always some chance either way
         return random.random() < final_prob
 
     def _should_refuse(self, requester: "SimAgent", item: str) -> bool:
+        """Decide whether to refuse a request — just the inverse of _should_share."""
         return not self._should_share(item, requester)
 
     def _pick_best_target_for_item(self, item: str, others: List["SimAgent"]) -> Optional["SimAgent"]:
+        """Choose the most appropriate agent to approach about an item.
+
+        Delegates to scenario logic first (which may have specialised rules), then
+        falls back to a trust-based ranking. Agents who know the item get a big bonus
+        (+0.60) because they're the most useful to talk to. Anyone who recently
+        refused us about this item gets a heavy penalty (*0.18) to avoid pestering.
+        """
         logic = getattr(self.model, "behaviour", None)
         if logic and hasattr(logic, "pick_best_target_for_item"):
             picked = logic.pick_best_target_for_item(self, item, others)
@@ -901,8 +1003,10 @@ class SimAgent(mesa.Agent):
             if agent == self or agent.current_conversation_with:
                 continue
             trust = self.trust.get(agent.public_id, 0.5)
+            # Heavily discount agents who just refused us — approach someone else
             if self._was_recently_refused_by(agent, item):
                 trust *= 0.18
+            # Big bonus for the agent who actually owns the item in the knowledge map
             if item in self.model.scenario.knowledge_map.get(agent.public_id, set()):
                 trust += 0.60
             scored.append((trust, agent))
@@ -918,6 +1022,10 @@ class SimAgent(mesa.Agent):
         item: str,
         lookback_ticks: int = 5,
     ) -> bool:
+        """Check if a specific agent refused to share a specific item recently.
+        Used by _pick_best_target_for_item to avoid repeatedly approaching someone
+        who has already said no.
+        """
         cutoff = getattr(self.model, "tick", 0) - lookback_ticks
         for mem in self.stm:
             if (
@@ -930,6 +1038,10 @@ class SimAgent(mesa.Agent):
         return False
 
     def _count_recent_refusals_from(self, agent: "SimAgent", lookback: int = 6) -> int:
+        """Count how many times a specific agent has refused us in recent memory.
+        Used as a penalty in _should_share — repeated refusals lower our willingness
+        to approach the same person again.
+        """
         count = 0
         for mem in list(self.stm)[-lookback:]:
             if mem.get("from") == agent.public_id and mem.get("kind") == "refuse":
@@ -937,13 +1049,24 @@ class SimAgent(mesa.Agent):
         return count
 
     def _count_recent_refusals_for_item(self, item: str, lookback: int = 8) -> int:
+        """Count total refusals related to a specific item across all agents.
+        Helps detect items that are being consistently blocked.
+        """
         count = 0
         for mem in list(self.stm)[-lookback:]:
             if mem.get("kind") == "refuse" and mem.get("item") == item:
                 count += 1
         return count
 
+    # ── Conversation handling ────────────────────────────────────────────────
+    # Reply / follow-up logic for live back-and-forth between two agents.
     def _generate_reply(self, target: "SimAgent") -> Optional[Dict[str, Any]]:
+        """Generate a response to the last message we received from a target agent.
+
+        Interprets the intent of the incoming message (ask_info, suggest, etc.)
+        and produces the appropriate reply event. Falls back to ending the
+        conversation if the message is uninterpretable.
+        """
         msg = self.last_message_received or ""
         interp = self._interpret_message(msg)
         intent = interp["intent"]
@@ -1086,6 +1209,11 @@ class SimAgent(mesa.Agent):
         return None
 
     def _continue_conversation(self, target: "SimAgent") -> Optional[Dict[str, Any]]:
+        """Try to extend an ongoing conversation by sharing info or following up a topic.
+
+        Ends the conversation if we've hit the turn limit, there's nothing left to
+        resolve, or the random continue threshold isn't met (probability varies by strategy).
+        """
         profile = self._profile()
         continue_threshold = profile["conversation_continue"]
         tick = getattr(self.model, "tick", 0)
@@ -1139,6 +1267,13 @@ class SimAgent(mesa.Agent):
         focus_item: str,
         reason: str = "forced_meeting_followthrough",
     ) -> Optional[Dict[str, Any]]:
+        """Generate a follow-up event pushing the conversation toward a forced focus item.
+
+        Used during forced meetings (intervention) to keep agents on-topic. We check
+        who knows what and produce the most useful event: share if we know and they
+        don't, ask if they know and we don't, suggest if both know but it's not resolved,
+        or a coordination "say" if neither has the information yet.
+        """
         if focus_item in self.known_items and focus_item not in target.known_items:
             if self._should_share(focus_item, target, message_text=f"focus:{focus_item}"):
                 text = self._generate_share_text(focus_item, target.public_id)
@@ -1275,6 +1410,9 @@ class SimAgent(mesa.Agent):
         }
 
     def _end_conversation(self) -> None:
+        """Clean up conversation state for both parties when a dialogue ends.
+        Ensures neither agent is left waiting for a reply that will never come.
+        """
         if self.current_conversation_with:
             target = next(
                 (a for a in self.model.agents if a.public_id == self.current_conversation_with),
@@ -1288,7 +1426,16 @@ class SimAgent(mesa.Agent):
             if hasattr(self.model, "conversation_ongoing"):
                 self.model.conversation_ongoing = False
 
+    # ── Message interpretation ───────────────────────────────────────────────
+    # Lightweight text parsing so agents can react to asks, suggestions, and refusals.
     def _interpret_message(self, text: str) -> Dict[str, Any]:
+        """Parse incoming dialogue text to extract intent and topic.
+
+        Returns a dict with keys: intent (ask_info / refuse / agree / challenge /
+        suggest / unknown), item (a scenario task key if mentioned), and preference
+        (a named preference option if mentioned). We use keyword matching rather
+        than NLP here because we only need intent detection, not full understanding.
+        """
         lower = text.lower()
         result: Dict[str, Any] = {"intent": "unknown", "item": None, "preference": None}
 
@@ -1409,6 +1556,7 @@ class SimAgent(mesa.Agent):
         return result
 
     def _recent_event_count(self, kind: str, lookback: int = 8) -> int:
+        """Count how many events of a given kind appear in our recent short-term memory."""
         return sum(1 for m in list(self.stm)[-lookback:] if m.get("kind") == kind)
 
     # ── Text generation — delegated to agent_text.py ────────────────────────
@@ -1480,12 +1628,22 @@ class SimAgent(mesa.Agent):
         from app.sim.agent_text import generate_info_text
         return generate_info_text(self, item)
 
+    # ── Tick application / memory updates ────────────────────────────────────
+    # Apply this tick's events to trust, stress, memory, and relationships.
     def _apply_tick_stress(self, env_rules: dict) -> None:
         from app.sim.agent_stress import apply_tick_stress
         apply_tick_stress(self, env_rules, self.model)
 
     def apply_events(self, events: List[Dict[str, Any]], tick: int) -> None:
-        self.energy = max(0, self.energy - 1)
+        """Process all events from this tick and update the agent's emotional/social state.
+
+        This is called once per tick with the full event list. We handle two sides:
+          - events where we are the TARGET (someone spoke to us → affects trust, stress, memory)
+          - events where we are the ACTOR (we spoke → small self-stress changes)
+
+        After processing relevant events, we update relationships and possibly change strategy.
+        """
+        self.energy = max(0, self.energy - 1)  # energy depletes passively each tick
 
         # ── Environment-modulated recovery ──────────────────────────────────
         # recovery_multiplier > 1 = faster decay back to baseline (e.g. cafe)
@@ -1531,9 +1689,9 @@ class SimAgent(mesa.Agent):
 
                 dt = TRUST_DELTA_BASE.get(etype, 0.0)
                 if etype == "refuse":
-                    dt *= (1.0 + self.N * 0.50)
+                    dt *= (1.0 + self.N * 0.50)  # neurotic agents take refusals harder
                 elif etype == "share_info":
-                    dt *= (0.9 + self.A * 0.40)
+                    dt *= (0.9 + self.A * 0.40)  # agreeable agents respond more warmly to shares
 
                 # Scale trust deltas by environment rules
                 if dt > 0:
@@ -1547,6 +1705,7 @@ class SimAgent(mesa.Agent):
                 if reason_dt > 0:
                     reason_dt *= trust_gain_mult
                 dt += reason_dt
+                # trust is directional — this agent's view of the actor, not the other way round
                 self.trust[actor_id] = clamp(self.trust.get(actor_id, 0.5) + dt, 0.0, 1.0)
 
                 dv = VALENCE_DELTA.get(etype, 0.0) * 0.45
@@ -1594,7 +1753,7 @@ class SimAgent(mesa.Agent):
                             )
 
                 if etype == "share_info" and item and item not in self.known_items:
-                    self.known_items.add(item)
+                    self.known_items.add(item)  # learning an item is permanent for this run
                     was_task = item in self.model.scenario.tasks
                     if was_task:
                         self.trust[actor_id] = clamp(self.trust.get(actor_id, 0.5) + 0.10, 0.0, 1.0)
@@ -1658,7 +1817,14 @@ class SimAgent(mesa.Agent):
                         self.valence = clamp(self.valence + 0.08, -1.0, 1.0)
 
                 if text:
-                    self.process_emotional_message(text, actor_id, tick)
+                    try:
+                        self.process_emotional_message(text, actor_id, tick)
+                    except Exception:
+                        import logging as _log
+                        _log.getLogger(__name__).debug(
+                            "Emotion analysis skipped for agent %s tick %s",
+                            self.public_id, tick, exc_info=True,
+                        )
 
                 mem = {
                     "tick": tick,
@@ -1815,6 +1981,15 @@ class SimAgent(mesa.Agent):
                 )
 
     def process_emotional_message(self, text: str, speaker: str, tick: int) -> Dict[str, float]:
+        """Run NLP emotion analysis on a received message and update internal state.
+
+        Extracts emotion labels and valence/arousal scores, applies them to stress,
+        valence, trust, and arousal, then stores the result in STM/LTM. Also checks
+        for recurring emotional patterns from the same speaker and amplifies the
+        effect if a negative pattern keeps repeating (cue-dependent memory escalation).
+
+        Returns the raw emotion dict, or {} if NLP is disabled or text is empty.
+        """
         if not text or getattr(self.model, "skip_emotions", False):
             return {}
 
@@ -1957,7 +2132,15 @@ class SimAgent(mesa.Agent):
 
         return emotions
 
+    # ── Relationship + export helpers ────────────────────────────────────────
+    # Final per-agent status classification and frontend-facing serialisation.
     def update_relationships(self, tick: int) -> None:
+        """Classify each relationship as ally, rival, or neutral based on trust levels.
+
+        Called every time we're involved in an event so the relationship status
+        stays up to date. The thresholds are intentionally high (ally > 0.83,
+        rival < 0.24) so these labels only appear when trust has genuinely moved.
+        """
         # Classify relationships based on trust thresholds.
         # These align with TRUST_CAPS in game_config so the upper bound is reachable
         # in easy scenarios but represents genuinely strong cohesion.
@@ -1972,6 +2155,11 @@ class SimAgent(mesa.Agent):
                     self.rivals.append(oid)
 
     def to_state(self) -> AgentState:
+        """Serialise the agent's current state into a plain dict for the frontend/API.
+
+        This snapshot is included in every tick's last_diff and stored in history
+        for replay. All floats are rounded to 3 decimal places to keep JSON clean.
+        """
         return {
             "id": self.public_id,
             "name": self.public_id,

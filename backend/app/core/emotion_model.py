@@ -1,13 +1,8 @@
 """
 Singleton loader for the GoEmotions classifier.
 
-PROBLEM SOLVED:
-  Before: EmotionAnalyser.__init__() called pipeline() every time a SimAgent
-  was created. With 4 agents per run and 20+ runs per experiment, this loaded
-  the model 80-400+ times. Slow and wasteful.
 
-  After: pipeline() is called exactly once per process. Every EmotionAnalyser
-  instance shares the same classifier object via get_emotion_classifier().
+This file exists so NLP model loading stays separate from the sim loop itself.
 """
 from __future__ import annotations
 
@@ -19,6 +14,11 @@ logger = logging.getLogger(__name__)
 _classifier: Optional[Any] = None
 _load_attempted: bool = False
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Shared classifier access
+# Keeps the expensive NLP pipeline cached per backend process.
+# ──────────────────────────────────────────────────────────────────────────
 
 def get_emotion_classifier(use_gpu: bool = False) -> Optional[Any]:
     """
@@ -57,7 +57,7 @@ def get_emotion_classifier(use_gpu: bool = False) -> Optional[Any]:
 def reset_classifier() -> None:
     """
     Reset the singleton — used in tests only so each tests gets a clean state.
-    Do NOT call this in production code.
+
     """
     global _classifier, _load_attempted
     _classifier = None

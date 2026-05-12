@@ -14,6 +14,9 @@ Per-tick action modifiers for the escape-room scenario:
 
 Imported by escape_logic.py.  All three functions reference agent/model
 attributes at call time, so they carry no mutable state themselves.
+
+This file is intentionally focused on Escape-specific per-tick stress/pressure
+adjustments, rather than the full scenario flow.
 """
 
 from __future__ import annotations
@@ -25,6 +28,10 @@ if TYPE_CHECKING:
     from app.sim.model import SimModel
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Stress profile helpers
+# These decide how much Escape pressure should build for the current team.
+# ──────────────────────────────────────────────────────────────────────────────
 def _pressure_personality_ids(model: "SimModel") -> Set[str]:
     ids: Set[str] = set()
     for agent in getattr(model, "agents", []):
@@ -86,7 +93,7 @@ def _apply_escape_tick_stress(agent: "SimAgent") -> None:
     neuroticism = agent.traits.get("N", 0.5)
     profile = _stress_profile(model)
 
-    # Base tick stress: time pressure escalates as tick_pct rises
+    # stress grows linearly with time; high-C agents (logical) offset it
     base_tick_stress = (0.010 + 0.014 * tick_pct) * (0.65 + neuroticism) - (logic * 0.040)
 
     if profile == "pressure":
@@ -111,6 +118,7 @@ def _apply_escape_tick_stress(agent: "SimAgent") -> None:
     agent.stress = clamp(agent.stress + base_tick_stress, 0.0, 1.0)
 
     blocker_age = getattr(model, "_escape_bottleneck_age", 0)
+    # pressure teams feel stalls hardest; smooth teams absorb them better
     bottleneck_mult = {
         "smooth": 0.30,
         "creative": 0.70,
@@ -118,6 +126,7 @@ def _apply_escape_tick_stress(agent: "SimAgent") -> None:
         "pressure": 1.25,
     }[profile]
 
+    # cumulative hits — tiers stack, so a 6-tick stall adds all three
     if blocker_age >= 2:
         agent.stress = clamp(agent.stress + 0.012 * bottleneck_mult * (0.7 + neuroticism), 0.0, 1.0)
     if blocker_age >= 4:

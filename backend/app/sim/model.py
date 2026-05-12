@@ -1,4 +1,15 @@
-"""Main simulation model that owns agents, ticks, and shared group state."""
+"""Main simulation model that owns agents, ticks, and shared group state.
+
+Core simulation state machine.
+
+Useful landmarks in this file:
+- __init__()              -> builds one fresh run
+- _update_group_state()   -> updates tension/cohesion/progress after each tick
+- _build_tick_diff()      -> shapes the frontend/replay payload for one tick
+- step()                  -> advances the simulation by one tick
+- apply_intervention()    -> accepts a live intervention inside the model
+- inject_user_emotion()   -> applies the NLP/rule-based mood effect
+"""
 
 from __future__ import annotations
 
@@ -79,24 +90,42 @@ from app.sim.scenario_logic import get_scenario_logic
 
 # ============================================================
 # AGENT TRAIT HELPERS
-# Module-level utilities: translate OCEAN personality scores
-# into initial trust values and behavioural strategies.
-# Called once per agent during SimModel.__init__.
+# These helpers turn personality trait scores into starting
+# trust and starting strategy before the tick loop begins.
 # ============================================================
 
 def _trait_initial_trust(
     agent_traits: Dict[str, float],
     other_traits: Dict[str, float],
 ) -> float:
+    """Calculate the initial trust that one agent has toward another, based on OCEAN traits.
+
+    Agreeableness (A) raises trust — agreeable people extend more good faith.
+    Neuroticism (N) lowers trust — anxious/neurotic people are more guarded by default.
+    The other agent's traits also matter slightly: a highly agreeable target gets
+    a small bonus, and a neurotic one gets a small penalty.
+
+    Result is clamped to [0.05, 0.95] so no agent starts with zero or perfect trust.
+    """
+    # clamped to [0.05, 0.95] — no agent starts fully trusting or fully suspicious
     base = 0.40
-    base += 0.20 * agent_traits.get("A", 0.5)
-    base -= 0.15 * agent_traits.get("N", 0.5)
-    base += 0.10 * other_traits.get("A", 0.5)
-    base -= 0.05 * other_traits.get("N", 0.5)
+    base += 0.20 * agent_traits.get("A", 0.5)   # agreeable agents trust more easily
+    base -= 0.15 * agent_traits.get("N", 0.5)   # neurotic agents are less trusting
+    base += 0.10 * other_traits.get("A", 0.5)   # we trust agreeable people a bit more
+    base -= 0.05 * other_traits.get("N", 0.5)   # we're slightly wary of neurotic people
     return round(max(0.05, min(0.95, base)), 3)
 
 
 def _trait_initial_strategy(traits: Dict[str, float]) -> str:
+    """Determine the most appropriate starting strategy from an agent's OCEAN traits.
+
+    The rules try to capture the most behaviorally relevant combinations:
+    - High Neuroticism → defensive (anxious agents withdraw and guard themselves)
+    - High Agreeableness + Extraversion → cooperative (sociable and warm)
+    - Low Agreeableness + high Neuroticism → avoidant (reluctant and anxious)
+    - High Conscientiousness + Extraversion → assertive (goal-driven and outgoing)
+    - Everything else → neutral (baseline, no strong personality pull)
+    """
     a_val = traits.get("A", 0.5)
     n_val = traits.get("N", 0.5)
     e_val = traits.get("E", 0.5)
@@ -115,13 +144,18 @@ def _trait_initial_strategy(traits: Dict[str, float]) -> str:
 
 # ============================================================
 # SIMULATION MODEL INITIALISATION
-# SimModel is the central class for a simulation run.
-# __init__ sets up: scenario, environment, agents (with
-# personality/trust/stress seeds), team preset corrections,
-# scenario logic, and all per-run state tracking variables.
+# SimModel represents one full run from start to finish.
+# __init__ is where a run is assembled before any ticks happen.
 # ============================================================
 
 class SimModel(mesa.Model):
+    """The top-level simulation model — owns agents, scenario state, and the tick loop.
+
+    On creation it sets up the scenario, environment, four agents (with personality/
+    trust/stress seeds based on the team preset), and all the per-run tracking
+    variables. The main entry point is step(), which advances one tick.
+    """
+
     def __init__(
         self,
         seed: int,
@@ -133,6 +167,27 @@ class SimModel(mesa.Model):
         team_type: Optional[str] = None,
         team_preset: Optional[str] = None,
     ) -> None:
+        """Set up all simulation state for a new run.
+
+        Parameters
+        ----------
+        seed : int
+            RNG seed for reproducibility.
+        min_events_per_tick : int
+            Minimum number of events generated each tick (currently advisory).
+        episode_max_ticks : int
+            Hard tick limit — the run ends when this is reached regardless of outcome.
+        environment : str, optional
+            Override the scenario's default environment string.
+        scenario_id : str
+            Which scenario to run (e.g. "office_proposal", "cafe_lunch").
+        use_nlp : bool
+            If True, NLP-based emotion analysis is active; otherwise rule-based only.
+        team_type : str, optional
+            Team composition label used to resolve personalities (e.g. "smooth").
+        team_preset : str, optional
+            Preset label that seeds initial group tension/cohesion/stress.
+        """
         super().__init__(seed=seed)
 
         self.tick = 0
@@ -219,11 +274,13 @@ class SimModel(mesa.Model):
         # ── Intervention tracking ──────────────────────────────────────────
         # _tick_interventions:   cleared at the start of each step(); holds
         #   interventions applied since the previous step ended.
-        # _applied_interventions_log: full run-level list, never cleared;
-        #   used by classify_run_outcome() and describe_run().
-        self._tick_interventions: List[str] = []
+        #   Each entry is {"type": str, "params": dict} so that per-tick history
+        #   snapshots can carry the full detail (item, agent_id, etc.) for replay.
+        # _applied_interventions_log: full run-level list (strings only), never
+        #   cleared; used by classify_run_outcome() and describe_run().
+        self._tick_interventions: List[Dict[str, Any]] = []
         self._applied_interventions_log: List[str] = []
-        self._current_tick_interventions: List[str] = []  # snapshot for this tick
+        self._current_tick_interventions: List[Dict[str, Any]] = []  # snapshot for this tick
 
         self._final_relief_applied = False
         self._final_decision: Optional[str] = None
@@ -415,9 +472,10 @@ class SimModel(mesa.Model):
 
     # ============================================================
     # SCENARIO AND TASK HELPERS
-    # Utilities for task completion, blocker priority ordering,
-    # and scenario-specific modifier lookups.  These are called
-    # from the step loop and from intervention handlers.
+    # These helpers answer questions like:
+    # - what is the current focus?
+    # - what order should tasks resolve in?
+    # - which scenario-specific weights/modifiers apply?
     # ============================================================
 
     def mark_task_complete(self, item: str) -> None:
@@ -504,6 +562,7 @@ class SimModel(mesa.Model):
         self.reply_inbox = inbox
 
     def _event_priority(self, event_type: str) -> int:
+        # share_info highest — only type that resolves tasks
         priority = {
             "share_info": 9,
             "refuse": 8,
@@ -527,6 +586,7 @@ class SimModel(mesa.Model):
         self,
         events: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
+        # one event per agent per tick — user-triggered always beats autonomous
         agent_events: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
         passthrough: List[Dict[str, Any]] = []
 
@@ -604,10 +664,8 @@ class SimModel(mesa.Model):
 
     # ============================================================
     # GROUP STATE AND DYNAMICS
-    # _update_group_state updates group_tension, group_cohesion,
-    # progress tracking, stall counters, and bottleneck tracking
-    # after each tick's events are known.  It also propagates
-    # group tension back to individual agents as an env modifier.
+    # This section keeps the shared team state in sync after
+    # each tick: tension, cohesion, stalls, progress, and focus.
     # ============================================================
 
     def _update_group_state(
@@ -962,7 +1020,7 @@ class SimModel(mesa.Model):
             "share_count":                metrics["share_count"],
             "refusal_count":              metrics["refusal_count"],
             "progress":                   round(self.scenario.progress_ratio(), 3),
-            "interventions":              list(self._current_tick_interventions),
+            "interventions":              [iv["type"] for iv in self._current_tick_interventions],
             # active_blocker: the constraint/task that was being worked on at the
             # START of this tick (before any task completions).  Use this for the
             # blocker timeline — it correctly records an item that resolved in its
@@ -1011,9 +1069,11 @@ class SimModel(mesa.Model):
                     self.ended      = True
                     self.end_reason = "failure" if progress < 0.50 else "partial"
                 elif avg_trust > 0.85 and self.group_tension < 0.25 and self.recent_success_ticks >= 6:
+                    # harmony: trust high, tension low, and consistent recent wins
                     self.ended      = True
                     self.end_reason = "harmony"
                 elif self.bottleneck_age >= 15 and self.progress_stall_ticks >= 15 and progress < 1.0:
+                    # deadlock: same item has been stuck for 15+ ticks with no progress
                     self.ended      = True
                     self.end_reason = "failure" if progress < 0.50 else "partial"
 
@@ -1043,11 +1103,11 @@ class SimModel(mesa.Model):
             "events":  events,
             "metrics": metrics,
             # Interventions applied since the previous tick (set via apply_intervention).
-            # Pre-populated here so the history snapshot carries them; apply_intervention
-            # may add further entries to last_diff["interventions"] for the live view.
+            # Each entry carries full params (item, agent_id, etc.) so that replay
+            # and history inspect can reconstruct the Intervention Impact card in full.
             "interventions": [
-                {"type": t, "tick": self.tick}
-                for t in self._current_tick_interventions
+                {"type": iv_entry["type"], "tick": self.tick, "params": iv_entry.get("params", {})}
+                for iv_entry in self._current_tick_interventions
             ],
             "group_state": {
                 "tension":          self.group_tension,
@@ -1137,6 +1197,7 @@ class SimModel(mesa.Model):
         self._tick_interventions = []
 
         self.tick += 1
+        # snapshot tasks at tick start so we can detect what resolved this tick
         self._tick_start_tasks = copy.deepcopy(getattr(self.scenario, "tasks", {}) or {})
         self._tick_active_blocker = self._active_blocker_from_tasks(self._tick_start_tasks)
         self._tick_resolved_items = []
@@ -1155,9 +1216,6 @@ class SimModel(mesa.Model):
         # 0.002 (< 0.2% of original), which is below any observable threshold.
         # Stacking: if a second injection fires before the first has fully
         # decayed, I add the remainders together (bounded by clamp in apply).
-        # Each tick we reverse a fraction (decay_rate = 0.5) of whatever
-        # stress/valence/trust delta was applied by inject_user_emotion().
-        # This creates an exponential fade: after 2 ticks only 25% remains.
         if self._emotion_effect:
             _eff = self._emotion_effect
             _decay = _eff.get("decay_rate", 0.5)
@@ -1193,7 +1251,7 @@ class SimModel(mesa.Model):
         self._build_reply_inbox()
         agents_sorted = sorted(list(self.agents), key=lambda a: a.public_id)
 
-        # Collect raw events from every agent
+        # each agent produces at most one event — None means they stayed silent this tick
         collected_events: List[Dict[str, Any]] = []
         for agent in agents_sorted:
             others = [other for other in agents_sorted if other is not agent]
@@ -1275,8 +1333,9 @@ class SimModel(mesa.Model):
 
         result = _apply(self, intervention_type, params)
 
-        # Track for per-tick history and run-level log
-        self._tick_interventions.append(intervention_type)
+        # Track for per-tick history (full detail) and run-level log (type string only).
+        # Storing params here means the history snapshot can carry item/agent_id for replay.
+        self._tick_interventions.append({"type": intervention_type, "params": dict(params)})
         self._applied_interventions_log.append(intervention_type)
 
         if self.last_diff is not None:

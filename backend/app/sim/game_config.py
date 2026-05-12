@@ -1,8 +1,17 @@
-"""Game balance constants — all tuning values live here so they're easy to find and adjust."""
+"""
+Game balance constants — all tuning values live here so they're easy to find and adjust.
+
+Rather than scattering magic numbers across model.py and behaviour files, everything
+that controls how the simulation feels (stress, trust, tension, challenge rates, etc.)
+is centralised here. If the simulation feels off, this is the first place to look.
+
+This is the main balancing file for the simulation.
+"""
 from typing import Dict, List, Tuple
 
 # ── Stress caps per (scenario_type, team_preset) ─────────────────────────────
-# Prevents agent stress from exceeding scenario-appropriate ceilings.
+# Hard ceiling on how stressed any agent can get in a given scenario + team combo.
+# Escape room scenarios allow much higher stress because urgency is part of the theme.
 STRESS_CAPS: Dict[Tuple[str, str], float] = {
     ("office", "smooth_team"):   0.24,
     ("office", "balanced_team"): 0.35,
@@ -64,6 +73,9 @@ SCENARIO_TENSION_FLOOR: Dict[str, float] = {
 
 # ── Trust deltas per team preset ─────────────────────────────────────────────
 # Added on top of trait-derived initial trust for each agent pair.
+# How much to bump (or drop) initial trust between agents based on their team preset.
+# These deltas are added on top of each agent pair's trait-derived starting trust.
+# Negative values mean the team starts out more suspicious of each other.
 PRESET_TRUST_DELTA: Dict[str, float] = {
     "smooth_team":   0.12,
     "balanced_team": 0.00,
@@ -74,6 +86,9 @@ PRESET_TRUST_DELTA: Dict[str, float] = {
 
 # ── Initial stress seeds per team preset ─────────────────────────────────────
 # Base stress value before scenario delta and per-agent noise are applied.
+# Starting stress value before the scenario offset and per-agent noise are applied.
+# Pressure and tension teams begin noticeably more stressed, which affects their
+# early dialogue choices and how quickly conflicts escalate.
 PRESET_STRESS_SEED: Dict[str, float] = {
     "smooth_team":   0.06,
     "balanced_team": 0.11,
@@ -84,6 +99,8 @@ PRESET_STRESS_SEED: Dict[str, float] = {
 
 # ── Trust caps per scenario environment ──────────────────────────────────────
 # Prevents trust from rising unrealistically high in low-stakes scenarios.
+# Maximum trust any agent pair can reach, capped per environment.
+# Escape room has the highest cap because shared urgency bonds teams quickly.
 TRUST_CAPS: Dict[str, float] = {
     "office": 0.82,
     "cafe":   0.78,   # warm cooperation encouraged — let trust build naturally
@@ -93,6 +110,8 @@ TRUST_CAPS: Dict[str, float] = {
 # ── Challenge probability bias per team preset ───────────────────────────────
 # Direct multiplier on the base challenge-event probability in each scenario.
 # Tension/pressure teams escalate faster; smooth teams de-escalate naturally.
+# Multiplier on the base probability of a challenge event firing each tick.
+# 1.0 = balanced_team baseline. Values above 1 mean more frequent challenges.
 PRESET_CHALLENGE_BIAS: Dict[str, float] = {
     "smooth_team":   0.55,
     "balanced_team": 1.00,
@@ -104,6 +123,8 @@ PRESET_CHALLENGE_BIAS: Dict[str, float] = {
 # ── Agree/compromise probability bias per team preset ────────────────────────
 # Direct multiplier on the base agree/compromise probability in each scenario.
 # Smooth teams converge easily; tension teams resist agreement longer.
+# Multiplier on the base probability of agree/compromise events.
+# Pairs nicely with PRESET_CHALLENGE_BIAS — tension teams both challenge more AND agree less.
 PRESET_AGREE_BIAS: Dict[str, float] = {
     "smooth_team":   1.50,
     "balanced_team": 1.00,
@@ -115,6 +136,9 @@ PRESET_AGREE_BIAS: Dict[str, float] = {
 # ── Outcome label taxonomy ────────────────────────────────────────────────────
 # Human-readable run outcome strings produced by classify_run_outcome().
 # Listed here so the frontend and exports can reference canonical values.
+# All possible outcome strings that classify_run_outcome() can produce.
+# Listed here as a reference so the frontend knows what values to expect,
+# and so we don't accidentally produce an unlisted label by typo.
 OUTCOME_LABELS: List[str] = [
     "In progress",
     "Completed smoothly — high-trust cooperative run",

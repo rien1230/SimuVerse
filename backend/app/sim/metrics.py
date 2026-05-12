@@ -1,4 +1,11 @@
-"""Group-level metric helpers for trust, stress, cohesion, and conflict."""
+"""Group-level metric helpers for trust, stress, cohesion, and conflict.
+
+All the heavy aggregation logic lives here so the route files and model stay
+thin. Functions in this module read simulation state but never write it —
+they're purely for measurement and reporting.
+
+Measurement and reporting helpers for the simulation.
+"""
 
 from __future__ import annotations
 
@@ -13,29 +20,53 @@ def compute_tick_metrics(
     agents_sorted: list,
     events: list,
 ) -> Dict[str, Any]:
+    """Compute all group-level metrics for a single simulation tick.
+
+    Called at the end of each tick so the model can append a snapshot to
+    metric_history. Returns a flat dict that's directly serialised into the
+    run history JSON.
+
+    Parameters
+    ----------
+    model : SimModel
+        The running simulation (used to access cumulative counters and helpers).
+    agents_sorted : list
+        All agents in a deterministic order (consistent across ticks).
+    events : list
+        The events that fired this tick — used to count conflict/share events.
+    """
+    # Compute pairwise trust and average it across all agent pairs
     ties = model._compute_ties(agents_sorted)
     avg_trust = sum(tie["trust"] for tie in ties) / len(ties) if ties else 0.5
 
+    # Collect per-agent stress values; default to 0.5 if attribute is missing
     stresses = [getattr(agent, "stress", 0.5) for agent in agents_sorted]
     avg_stress = sum(stresses) / len(stresses)
+    # Variance tells us how spread out the stress is — high variance means some
+    # agents are much more stressed than others (uneven load / social isolation)
     stress_variance = sum((stress - avg_stress) ** 2 for stress in stresses) / len(
         stresses
     )
 
+    # Count negative event types to get a per-tick conflict rate
+    # these four event types count as conflict — challenge and refuse are the most common
     negative_events = sum(
         1
         for event in events
         if event.get("type") in ("ignore", "insult", "refuse", "challenge")
     )
+    # Dividing by max(1, len) avoids ZeroDivisionError on ticks with no events
     conflict_rate = negative_events / max(1, len(events))
     refusal_count = sum(1 for event in events if event.get("type") == "refuse")
     share_count = sum(1 for event in events if model._counts_as_share(event))
 
+    # Build a frequency table for every event type this tick
     event_counts: Dict[str, int] = {}
     for event in events:
         event_type = str(event.get("type", ""))
         event_counts[event_type] = event_counts.get(event_type, 0) + 1
 
+    # Count events where an agent explicitly applied social pressure on another
     pressure_count = sum(
         1
         for event in events
@@ -43,6 +74,7 @@ def compute_tick_metrics(
         or event.get("pressure", False) is True
     )
 
+    # Count how many agents are using each decision strategy this tick
     strategy_distribution: Dict[str, int] = {}
     for agent in agents_sorted:
         strategy = getattr(agent, "strategy", "unknown")
@@ -65,15 +97,20 @@ def compute_tick_metrics(
     _em_pressures: List[float] = []
     _em_positives: List[float] = []
     for _a in agents_sorted:
+        # Only look at the most recent 15 STM entries per agent — older memories
+        # are less relevant to current emotional state
         _stm = list(getattr(_a, "stm", []))[-15:]
         if not _stm:
             continue
         _total = len(_stm)
         _neg = sum(1 for m in _stm if m.get("primary_emotion") in _neg_emotions)
         _pos = sum(1 for m in _stm if m.get("primary_emotion") in _pos_emotions)
+        # Store the *ratio* not the raw count so results are comparable across
+        # agents with different STM sizes
         _em_pressures.append(_neg / _total)
         _em_positives.append(_pos / _total)
 
+    # Average the ratio across all agents to get a group-level pressure score
     emotional_memory_pressure = (
         round(sum(_em_pressures) / len(_em_pressures), 3) if _em_pressures else 0.0
     )
@@ -116,6 +153,10 @@ def compute_tick_metrics(
     }
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Run outcome labelling
+# Short human-readable labels for how the run ended overall.
+# ──────────────────────────────────────────────────────────────────────────────
 def classify_run_outcome(model: "SimModel") -> str:
     """Return a human-readable outcome label for a finished (or in-progress) run.
 
@@ -132,6 +173,7 @@ def classify_run_outcome(model: "SimModel") -> str:
     technically above threshold.
     """
     progress = model.scenario.progress_ratio()
+    # Default to "running" so a mid-run call doesn't crash on a missing attribute
     end_reason = getattr(model, "end_reason", "running")
 
     if end_reason == "running" and progress < 1.0:
@@ -139,6 +181,7 @@ def classify_run_outcome(model: "SimModel") -> str:
 
     team_preset = getattr(model, "team_preset", "") or ""
     total_events = max(1, model.total_events)
+    # Conflict rate = fraction of all events that were negative-type interactions
     conflict_rate = model.total_conflict_events / total_events
 
     # Recent avg_stress — sample last 3 ticks of metric_history
@@ -152,6 +195,7 @@ def classify_run_outcome(model: "SimModel") -> str:
     # where stress spiked mid-run and recovered is still called "high pressure".
     # Recent avg_stress alone understates pressure for runs like escape rooms
     # where peak stress hits 0.55+ early then partially recovers.
+    # peak stress catches mid-run spikes that avg_stress would smooth over
     all_stresses = [e.get("avg_stress", 0.0) for e in (model.metric_history or [])]
     peak_stress = max(all_stresses) if all_stresses else avg_stress
 
@@ -178,7 +222,10 @@ def classify_run_outcome(model: "SimModel") -> str:
     )
     coop_events     = total_shares + agree_count
     conflict_events = getattr(model, "total_conflict_events", 0)
-    # Cooperation dominates when coop events are at least 1.8× conflict events
+    # The 1.8× multiplier was chosen so that a run with slightly more coop than
+    # conflict still isn't labelled "coop dominant" — it has to be meaningfully
+    # tilted toward cooperation before we downgrade a conflict label.
+    # 1.8x: cooperation has to clearly dominate, not just edge out conflict
     coop_dominates = coop_events >= max(1, conflict_events) * 1.8
 
     # High-stress thresholds match the JS stressBand() function:
@@ -302,12 +349,18 @@ def classify_run_outcome(model: "SimModel") -> str:
     return "Completed with moderate friction"
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Run narrative
+# One plain-English explanation of why the run looked the way it did.
+# ──────────────────────────────────────────────────────────────────────────────
 def describe_run(model: "SimModel") -> str:
     """Return a plain-English paragraph explaining why the run played out as it did.
 
     Suitable for the dashboard footer or export notes.  Pulls from real state
     (scenario type, team preset, conflict rate, intervention list, blocker data)
-    so the explanation is grounded in actual simulation events.
+    so the explanation is grounded in actual simulation events.  The text is
+    written to be readable by someone who didn't watch the run — it includes
+    numbers and context, not just vague labels.
     """
     scenario_type = getattr(model, "scenario_type", "office")
     team_preset = (getattr(model, "team_preset", "") or "").replace("_", " ")
@@ -331,6 +384,7 @@ def describe_run(model: "SimModel") -> str:
         if interventions_used else ""
     )
 
+    # Map the internal scenario type key to a readable description for the output text
     scenario_feel = {
         "cafe":   "low-stakes social setting",
         "office": "structured task-focused environment",
@@ -405,23 +459,16 @@ def describe_run(model: "SimModel") -> str:
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Memory summary
+# Export/report helper for the run summary and PDF layers.
 # ──────────────────────────────────────────────────────────────────────────────
-# I chose to generate narrative text for the memory summary rather than just
-# returning raw numbers because the simulation is part of a study on social
-# agent cognition — readers of the export need to understand *why* an impression
-# formed, not just that conflict_prone = 0.4. Each narrative is grounded in the
-# actual STM data: which events the observer recorded, how many, and what
-# behavioural effect the impression had in that specific scenario type.
-# Café, office, and escape each get different wording because the same
-# pattern (e.g. "conflict_prone") has different consequences depending on
-# the coordination structure — refusing a request blocks a café preference
-# negotiation differently from how it blocks an escape-room clue chain.
+# Memory summaries use real STM evidence and scenario context so exports explain
+# why an impression formed instead of only showing counts.
 
 def _impression_evidence(
     target_id: str,
     observer_stm: list,
     pattern_key: str,
-    max_items: int = 3,
+    max_items: int = 3,  # only show a few examples — more would clutter the UI
 ) -> List[Dict[str, Any]]:
     """Extract the real STM events that drove an impression.
 
@@ -446,7 +493,9 @@ def _impression_evidence(
             if m.get("from") == target_id and m.get("kind") in bad_kinds
         ]
 
-    # Deduplicate by tick (keep first per tick), then take up to max_items
+    # Deduplicate by tick (keep first per tick), then take up to max_items.
+    # This prevents a tick where an agent did multiple things from counting as
+    # multiple pieces of evidence — one tick = one data point.
     seen_ticks: set = set()
     evidence = []
     for m in events:
@@ -457,6 +506,7 @@ def _impression_evidence(
         evidence.append({
             "tick": t,
             "kind": m.get("kind", ""),
+            # Truncate long text so evidence entries don't blow up the payload
             "text": (
                 ((m.get("text") or "")[:117] + "...")
                 if len(m.get("text") or "") > 120
@@ -650,18 +700,16 @@ def _impression_narrative(
     )
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Memory interpretation
+# Turns stored social memories into export-friendly summaries and explanations.
+# ──────────────────────────────────────────────────────────────────────────────
 def _no_impression_reason(model: "SimModel") -> str:
     """Return an honest explanation of why no impression formed in this run.
 
-    I deliberately wrote this to be honest rather than optimistic — it's easy
-    to write "impressions are still forming" as a placeholder, but that would
-    mislead someone reading the export about what actually happened. Instead,
-    this function checks the real reasons: run ended too quickly, agents had
-    too few interactions with any single partner, or the scenario structure
-    (e.g. escape room clues spread across different pairs) prevented enough
-    repeat interactions. The threshold of 3 interactions per pair comes from
-    the update_impressions() logic in EmotionalMemory — no impression can form
-    unless at least 3 memories with the same 'from' speaker exist in STM.
+    Checks the real reasons no impression formed: the run ended too quickly,
+    agents had too few repeated interactions, or the scenario structure kept
+    pairs from building enough memory evidence.
     """
     scenario_type = getattr(model, "scenario_type", "office")
     ticks = model.tick
@@ -762,6 +810,7 @@ def summarize_memory(model: "SimModel") -> Dict[str, Any]:
                     "cafe":   f"{_obs} became more resistant to {target_id}'s choices and more likely to push back.",
                 },
             }
+            # plain-English sentence shown in the dashboard under each memory impression
             effect_sentence = (
                 _eff_maps.get(primary_pattern, {})
                 .get(scenario_type, f"{_obs}'s behaviour toward {target_id} shifted based on this impression.")
@@ -798,14 +847,19 @@ def summarize_memory(model: "SimModel") -> Dict[str, Any]:
     conflict_count     = sum(1 for e in all_impressions if "conflict_prone" in e["patterns"])
 
     # ── Pick strongest of each type ───────────────────────────────────────
+    # "Strength" here is the pattern's stored score value — higher = more
+    # evidence accumulated for that impression type during the run.
     def _strength(entry: Dict[str, Any], key: str) -> float:
         return float(entry["patterns"].get(key, 0.0))
 
+    # Exclude mixed (volatile) impressions from strongest-positive/conflict lists
+    # so the highlighted impressions are unambiguous for the dashboard
     positive_entries = [e for e in all_impressions if "positive" in e["patterns"]
                         and "conflict_prone" not in e["patterns"]]
     conflict_entries = [e for e in all_impressions if "conflict_prone" in e["patterns"]
                         and "positive" not in e["patterns"]]
 
+    # pick the one impression of each type with the most evidence behind it
     strongest_positive = (
         max(positive_entries, key=lambda e: _strength(e, "positive"))
         if positive_entries else None
@@ -835,6 +889,7 @@ def summarize_memory(model: "SimModel") -> Dict[str, Any]:
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Emotion summary
+# Export/report helper for the user-emotion injection feature.
 # ──────────────────────────────────────────────────────────────────────────────
 # I designed the emotion_summary to be self-contained and dissertation-ready.
 # The key question I wanted it to answer is: "did injecting this emotion actually
@@ -933,6 +988,10 @@ def _agent_emotional_pressure_summary(model: "SimModel") -> Dict[str, Any]:
     }
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Emotion summary
+# Explains user emotion injections and the emotional texture left in memory.
+# ──────────────────────────────────────────────────────────────────────────────
 def summarize_emotions(model: "SimModel") -> Dict[str, Any]:
     """Build the emotion_summary section for a finished run's export.
 
@@ -958,7 +1017,7 @@ def summarize_emotions(model: "SimModel") -> Dict[str, Any]:
 
     n = len(log)
 
-    # Dominant emotion = most frequent top-label
+    # Dominant emotion = whichever emotion label appeared most across all injections
     from collections import Counter
     emotion_counts: Counter = Counter(e["detected_emotion"] for e in log)
     dominant = emotion_counts.most_common(1)[0][0]
@@ -966,7 +1025,8 @@ def summarize_emotions(model: "SimModel") -> Dict[str, Any]:
     avg_valence = round(sum(e["valence"] for e in log) / n, 3)
     avg_arousal = round(sum(e["arousal"] for e in log) / n, 3)
 
-    # Strongest input = highest |stress_delta|
+    # The "strongest" injection is the one that moved stress the most,
+    # regardless of direction — useful for highlighting in the UI
     strongest = max(log, key=lambda e: abs(e.get("stress_delta", 0.0)))
 
     total_stress_delta = sum(e.get("stress_delta", 0.0) for e in log)
@@ -1062,17 +1122,26 @@ def summarize_emotions(model: "SimModel") -> Dict[str, Any]:
     }
 
 
+# ──────────────────────────────────────────────────────────────────────────────
+# Experiment-facing interpretation
+# Packs the finished run into structured findings for dashboard/export use.
+# ──────────────────────────────────────────────────────────────────────────────
 def generate_run_interpretation(model: "SimModel") -> Dict[str, Any]:
     """Generate experiment-framed interpretation of a completed simulation run.
 
     Aggregates per-agent and group-level metrics from model.history and returns
     two structured experiment findings (personality effect, environment effect)
     plus a plain-English summary.  Kept in metrics.py so route files stay thin.
+
+    The two "experiments" mirror the framing in the dissertation — Experiment 1
+    looks at whether personality mix shaped behaviour, and Experiment 2 looks at
+    how the scenario environment shaped coordination patterns.
     """
     agents = list(model.agents)
     history = model.history
 
     # ── Aggregate metrics across the run ──────────────────────────────────────
+    # Grab avg_stress from every tick that has a metrics snapshot
     all_stress = [tick["metrics"]["avg_stress"] for tick in history if "metrics" in tick]
     peak_stress = max(all_stress) if all_stress else 0.0
     final_stress = all_stress[-1] if all_stress else 0.0
@@ -1080,6 +1149,7 @@ def generate_run_interpretation(model: "SimModel") -> Dict[str, Any]:
     all_trust = [tick["metrics"]["avg_trust"] for tick in history if "metrics" in tick]
     final_trust = all_trust[-1] if all_trust else 0.5
 
+    # Sum refusals and shares across all ticks for the full-run totals
     refusal_total = sum(
         tick["metrics"].get("refusal_count", 0)
         for tick in history if "metrics" in tick
@@ -1090,6 +1160,7 @@ def generate_run_interpretation(model: "SimModel") -> Dict[str, Any]:
     )
 
     # ── Per-agent stats ────────────────────────────────────────────────────────
+    # Walk the full event log to count refusals and shares per agent ID
     per_agent_refusals: Dict[str, int] = {}
     per_agent_shares: Dict[str, int] = {}
     for tick in history:
@@ -1100,10 +1171,10 @@ def generate_run_interpretation(model: "SimModel") -> Dict[str, Any]:
             elif ev.get("type") == "share_info":
                 per_agent_shares[actor] = per_agent_shares.get(actor, 0) + 1
 
-    # Agent personalities
+    # Build a quick agent_id → personality lookup so we can label findings
     personalities = {a.public_id: getattr(a, "personality_type", "Easygoing") for a in agents}
 
-    # Most reluctant agent (most refusals)
+    # Most reluctant agent (most refusals) — good signal for Experiment 1
     reluctant_id = max(per_agent_refusals, key=per_agent_refusals.get) if per_agent_refusals else None
     reluctant_personality = personalities.get(reluctant_id, "") if reluctant_id else ""
     reluctant_refusals = per_agent_refusals.get(reluctant_id, 0) if reluctant_id else 0
@@ -1206,7 +1277,9 @@ def generate_run_interpretation(model: "SimModel") -> Dict[str, Any]:
     }
 
     # ── Overall summary — scenario-aware thresholds ───────────────────────────
-    # Escape is inherently high-pressure; adjust what counts as "smooth"
+    # The stress thresholds are lower for escape rooms because baseline stress
+    # in that scenario is already higher — 0.35 would be "calm" for an escape
+    # room but considered tense in a café or office.
     stress_hi = 0.30 if env_type == "escape" else 0.35
     stress_lo = 0.12 if env_type == "escape" else 0.20
 

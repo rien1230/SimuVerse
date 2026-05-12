@@ -14,6 +14,8 @@ The logic class handles:
 - what action to take
 - what to say
 - how to complete tasks
+
+This file is the contract that Cafe / Office / Escape logic classes follow.
 """
 from __future__ import annotations
 import random
@@ -25,13 +27,14 @@ if TYPE_CHECKING:
 
 
 def _lbl(item: str) -> str:
-    """Fallback label formatter for items."""
+    """Fallback label formatter for items — used when ITEM_LABELS doesn't have a match."""
     return item.replace("_", " ").title() if item else "that"
 
 
 # ── Environment physics rules ───────────────────────────────────────────────
 # These multipliers are applied by agent.py to scale the social physics
 # (stress, trust, recovery) based on which scenario type is running.
+# Think of these as the "physics constants" for each setting.
 
 ENVIRONMENT_RULES: Dict[str, Dict[str, float]] = {
     "office": {
@@ -89,6 +92,7 @@ ENVIRONMENT_RULES: Dict[str, Dict[str, float]] = {
 # Applied on top of base personality weights in choose_action().
 # Keys: ask_bias, challenge_bias, share_bias, confirm_bias
 # Format: ENVIRONMENT_MODIFIERS[env_type][personality_type] = {key: float}
+# Escape has high ask/challenge biases because urgency drives more assertive behaviour
 
 ENVIRONMENT_MODIFIERS: Dict[str, Dict[str, Dict[str, float]]] = {
     "office": {
@@ -327,10 +331,19 @@ def get_env_dialogue(model: "SimModel", action: str) -> List[str]:
 
 
 class BaseLogic:
+    """
+    Base class for all scenario logics. Subclasses (OfficeProposalLogic,
+    CafeRestaurantLogic, EscapeLogic) override choose_action() and the text
+    generators to give each scenario its own feel and task flow.
+
+    The base implementations here are env-aware fallbacks — they read
+    ENVIRONMENT_DIALOGUE and ENVIRONMENT_RULES so they're never completely generic.
+    """
     scenario_type: str = "base"
     ROLES: dict = {"A1": "A1", "A2": "A2", "A3": "A3", "A4": "A4"}
 
     def role(self, agent_id: str) -> str:
+        """Return the display role name for an agent in this scenario."""
         return self.ROLES.get(agent_id, agent_id)
 
     # ── Main action decision ────────────────────────────────────────────────
@@ -344,6 +357,7 @@ class BaseLogic:
 
     # ── Agreement ───────────────────────────────────────────────────────────
     def agree_text(self, agent: "SimAgent", pref: str, target_id: str) -> str:
+        """Generate generic agreement text, pulled from the env-appropriate pool."""
         pool = get_env_dialogue(agent.model, "agree")
         if pool:
             return random.choice(pool)
@@ -352,31 +366,41 @@ class BaseLogic:
         return f"{pref.capitalize()} makes sense. Let's go with that."
 
     def should_complete_on_agree(self, model: "SimModel", pref: str) -> bool:
+        """Override in subclass to auto-complete a task when the group agrees on a preference."""
         return False
 
     def task_to_complete(self, model: "SimModel", pref: str) -> Optional[str]:
+        """Override in subclass to map a preference to a task key that gets completed on agree."""
         return None
 
     def build_final_decision(self, model: "SimModel") -> Optional[str]:
+        """Override in subclass (cafe) to build the final venue decision string from resolved constraints."""
         return None
 
     # ── Suggestions ─────────────────────────────────────────────────────────
     def suggestion_options(self, agent: "SimAgent") -> List[str]:
+        """Return a list of valid preferences this agent can suggest. Override in subclass."""
         return []
 
     def suggest_text(self, agent: "SimAgent", pref: str, target_id: str) -> str:
+        """Generate text for proposing a preference to another agent."""
         return f"I suggest {pref}."
 
     # ── Info text ───────────────────────────────────────────────────────────
     def info_text(self, item: str) -> Optional[str]:
+        """Return the factual content for an item. Override in subclass with scenario-specific facts."""
         return None
 
     # ── Completion hooks ────────────────────────────────────────────────────
     def extra_completion_cascade(self, model: "SimModel") -> None:
+        """Called after a task is marked complete. Override to trigger follow-on completions."""
         pass
 
     # ── Generic fallback dialogue (env-aware) ───────────────────────────────
+    # These are used when the subclass doesn't provide a more specific override.
+
     def generate_help_text(self, agent: "SimAgent", target_id: str, item: str) -> str:
+        """Generate an offer-to-help line using the env-appropriate pool."""
         pool = get_env_dialogue(agent.model, "help")
         if pool:
             return random.choice(pool)
@@ -389,6 +413,7 @@ class BaseLogic:
         return random.choice(options)
 
     def generate_ignore_text(self, agent: "SimAgent", target_id: str) -> str:
+        """Generate a dismissive non-response using the env-appropriate pool."""
         pool = get_env_dialogue(agent.model, "ignore")
         if pool:
             return random.choice(pool)
@@ -401,6 +426,7 @@ class BaseLogic:
         return random.choice(options)
 
     def generate_insult_text(self, agent: "SimAgent", target_id: str) -> str:
+        """Generate a hostile/dismissive line using the env-appropriate pool."""
         pool = get_env_dialogue(agent.model, "insult")
         if pool:
             return random.choice(pool)
@@ -413,6 +439,7 @@ class BaseLogic:
         return random.choice(options)
 
     def generate_say_text(self, agent: "SimAgent", target_id: str) -> str:
+        """Generate a generic filler/coordination line using the env-appropriate pool."""
         pool = get_env_dialogue(agent.model, "say")
         if pool:
             return random.choice(pool)
@@ -425,6 +452,10 @@ class BaseLogic:
         return random.choice(options)
 
     def generate_ask_text(self, agent: "SimAgent", item: str, target_id: str) -> str:
+        """
+        Generate a question for a specific item using the env-appropriate pool.
+        Replaces {item} placeholder in pool templates with the readable item label.
+        """
         pool = get_env_dialogue(agent.model, "ask")
         if pool:
             # Fill {item} placeholder if present
@@ -439,6 +470,10 @@ class BaseLogic:
         return random.choice(options)
 
     def generate_share_text(self, agent: "SimAgent", item: str, target_id: str) -> str:
+        """
+        Generate a share line combining the item's factual info with env-appropriate phrasing.
+        Falls back to generic phrasing if the item has no info text.
+        """
         info = self.info_text(item)
         pool = get_env_dialogue(agent.model, "share")
         if pool and info:
@@ -451,6 +486,7 @@ class BaseLogic:
                 f"I found something useful: {info}",
             ]
         else:
+            # No info available — be vague but still say something
             options = [
                 f"I've got something on {_lbl(item)}.",
                 f"Here's what I know about {_lbl(item)}.",

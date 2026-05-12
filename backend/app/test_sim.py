@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 Test script for goal-driven simulation.
+
+This is a manual backend debugging script for printing a run tick by tick.
 """
 
 import sys
@@ -15,6 +17,7 @@ import random
 
 
 def run_test(scenario_id: str, max_ticks: int = 30, seed: int = 42):
+    """Run one scenario in the terminal and print a readable tick-by-tick trace."""
     print(f"\n=== Testing Scenario: {scenario_id} ===\n")
 
     # Configure the simulation

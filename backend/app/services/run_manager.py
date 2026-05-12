@@ -1,4 +1,7 @@
 # Manages one simulation run: starting, pausing, stepping, and logging everything for replay.
+# This is the "one run" controller.
+# If RunRegistry answers "which run are we talking about?",
+# RunManager answers "what is happening inside that run right now?"
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -17,9 +20,10 @@ from app.sim.agent_builder import apply_personality_to_agent, build_agent_traits
 from app.services.event_logger import EventLogger
 from app.services.run_history_service import save_run
 
-# Define possible states for the simulation run.
+# All the states a run can be in — used to guard methods like step() and start()
 RunStatus = Literal["idle", "running", "paused", "stopped"]
 
+# Bumped when the replay file format changes — lets us detect stale replays
 SIMUVERSION = "0.3.0"
 SCHEMA_VERSION = 1
 
@@ -38,15 +42,27 @@ class RunManager:
     config: Dict[str, Any] = field(default_factory=dict)
     run_id: str = field(default_factory=lambda: uuid.uuid4().hex[:10])
     status: RunStatus = "idle"  # Current state of the run
+    owner: Optional[str] = None  # Email of the user who created this run (None = legacy/shared)
     model: SimModel = field(init=False)
     logger: EventLogger = field(init=False)  # Handles logging for replay
     history_saved: bool = field(init=False, default=False)
+
+    # ──────────────────────────────────────────────────────────────────────
+    # Run setup
+    # Build the model, attach the selected config, and start replay logging.
+    # ──────────────────────────────────────────────────────────────────────
 
     def __post_init__(self) -> None:
         """
         Called automatically after __init__ by the dataclass machinery.
         Sets defaults, builds SimModel, applies personality/team settings,
         starts the event logger, and writes the replay metadata header.
+
+        In other words:
+        1. build the model
+        2. attach team/personality config
+        3. start replay logging
+        4. keep everything ready for step-by-step control
         """
         logger.debug("RunManager init — seed=%s config=%s", self.seed, self.config)
 
@@ -56,7 +72,7 @@ class RunManager:
             "episode_max_ticks": 120,
             "environment": "office",
             "scenario_id": "office_proposal",
-            "use_nlp": False,
+            "use_nlp": True,
             "team_type": None,
             "team_preset": None,
         }
@@ -78,7 +94,7 @@ class RunManager:
             "episode_max_ticks": self.config.get("episode_max_ticks", 120),
             "environment": self.config.get("environment", "office"),
             "scenario_id": self.config.get("scenario_id", "office_proposal"),
-            "use_nlp": self.config.get("use_nlp", False),
+            "use_nlp": self.config.get("use_nlp", True),
             "team_type": None,
             "team_preset": None,
         }
@@ -104,15 +120,18 @@ class RunManager:
 
         personalities = list(self.config.get("agent_personalities") or [])
         if personalities:
+            # Sort agents by public_id so the same personality list always maps to the same agent
             for index, agent in enumerate(sorted(self.model.agents, key=lambda a: a.public_id)):
+                # If the list is shorter than the number of agents, default the extras to Easygoing
                 personality = personalities[index] if index < len(personalities) else "Easygoing"
                 apply_personality_to_agent(agent, personality)
                 traits, _ = build_agent_traits(
                     self.config.get("scenario_id", "office_proposal"),
                     agent_id=agent.public_id,
                     personality=personality,
-                    add_noise=False,
+                    add_noise=False,  # no noise here so tests are deterministic
                 )
+                # Apply each trait both as an attribute and inside the traits dict
                 for key, value in traits.items():
                     setattr(agent, key, value)
                     agent.traits[key] = value
@@ -136,6 +155,11 @@ class RunManager:
         )
         logger.debug("RunManager ready — run_id=%s", self.run_id)
 
+    # ──────────────────────────────────────────────────────────────────────
+    # Lifecycle state changes
+    # Simple state transitions used by routes and the live WebSocket flow.
+    # ──────────────────────────────────────────────────────────────────────
+
     def start(self) -> None:
         """Move status to running. Raises if the run is already stopped."""
         if self.status == "stopped":
@@ -153,6 +177,11 @@ class RunManager:
         if self.model.tick > 0:
             self._persist_history_once()
 
+    # ──────────────────────────────────────────────────────────────────────
+    # History writes
+    # Final save vs temporary checkpoint save.
+    # ──────────────────────────────────────────────────────────────────────
+
     def _persist_history_once(self) -> None:
         """Write the final run snapshot to disk exactly once.
 
@@ -168,6 +197,7 @@ class RunManager:
             self.model,
             run_id=self.run_id,
             config=self.config,
+            owner=self.owner,
         )
         self.history_saved = True
 
@@ -188,17 +218,26 @@ class RunManager:
                 self.model,
                 run_id=self.run_id,
                 config=self.config,
+                owner=self.owner,
             )
         except Exception:
             logger.exception(
                 "Failed to write disconnect checkpoint for run %s", self.run_id
             )
 
+    # ──────────────────────────────────────────────────────────────────────
+    # Simulation execution
+    # One tick at a time, or a repeated loop for automated running.
+    # ──────────────────────────────────────────────────────────────────────
+
     def step(self) -> Dict[str, Any]:
         """Advance the simulation by one tick and return the state diff.
 
         Calls model.step(), logs the diff, and stops the run automatically
         if the scenario ended. Raises if the run is already stopped.
+
+        This method is the main hand-off point between API/service code and
+        the actual simulation engine in sim/model.py.
         """
         if self.status == "stopped":
             raise RuntimeError("Run is stopped. Create a new RunManager for a new run.")
@@ -239,19 +278,23 @@ class RunManager:
             raise RuntimeError("Call start() before run_loop().")
 
         steps_done = 0
+        # Pre-compute sleep time so we don't divide on every iteration
         sleep_s = (1.0 / tick_hz) if (tick_hz and tick_hz > 0) else 0.0
 
         while self.status == "running":
             diff = self.step()
             steps_done += 1
 
+            # step() already sets status=stopped when ended, but check the diff too
             if diff.get("ended") is True:
                 self.status = "stopped"
                 break
 
+            # Pause (not stop) when the step cap is reached — caller can resume
             if max_steps is not None and steps_done >= max_steps:
                 self.pause()
                 break
 
+            # Throttle to the requested tick rate when running real-time simulations
             if sleep_s > 0:
                 time.sleep(sleep_s)

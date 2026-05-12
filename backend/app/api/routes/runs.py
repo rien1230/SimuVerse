@@ -1,4 +1,14 @@
-"""API routes for creating, controlling, and streaming live runs."""
+"""API routes for creating, controlling, and streaming live runs.
+
+Main route file for the interactive simulation flow.
+
+Route layout in here:
+- POST   /runs              -> create a new run
+- GET    /runs/{run_id}     -> read current state for one run
+- POST   /runs/{run_id}/step -> advance one tick
+- POST   /runs/{run_id}/start/pause/stop -> lifecycle controls
+- WS     /runs/{run_id}/ws  -> live streaming channel for the interaction page
+"""
 
 from __future__ import annotations
 
@@ -23,15 +33,19 @@ from app.services.simulation_config import (
 from app.services.personality_test_service import run_personality_test
 
 router = APIRouter()
+# Singleton registry shared across all requests in this process
 registry = RunRegistry()
 logger = logging.getLogger(__name__)
 
 
 class CreateRunBody(BaseModel):
-    """For validating create run requests."""
-    seed: Optional[int] = None
+    """Validated request body for POST /runs.
+
+    'environment' and 'scenario' are both accepted so the frontend can use either field name.
+    """
+    seed: Optional[int] = None          # if not provided, a cryptographically random seed is used
     environment: Optional[str] = None
-    scenario: Optional[str] = None
+    scenario: Optional[str] = None      # alias for environment (checked as fallback)
     goal: Optional[str] = None
     team_type: Optional[str] = None
     save_history: bool = True
@@ -43,11 +57,21 @@ class CreateRunBody(BaseModel):
     run_mode: Optional[str] = None
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Shared route helper
+# Small wrapper so any action on a run happens under that run's own lock.
+# ──────────────────────────────────────────────────────────────────────────
+
 def _locked_call(entry, fn, *args, **kwargs):
-    """Run a method under a run's lock for thread safety."""
+    """Acquire a run's per-run lock and then call fn — keeps concurrent step calls safe."""
     with entry.lock:
         return fn(*args, **kwargs)
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Read-only helper routes
+# Small endpoints the frontend uses to populate dropdowns or preview data.
+# ──────────────────────────────────────────────────────────────────────────
 
 @router.get("/runs/options")
 async def get_run_options() -> Dict[str, Any]:
@@ -78,10 +102,19 @@ async def get_personality_results(scenario: str, team_style: str, seed: Optional
         )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Run creation
+# This is where setup-page selections become a real RunManager in memory.
+# ──────────────────────────────────────────────────────────────────────────
+
 @router.post("/runs")
 async def create_run(body: CreateRunBody) -> Dict[str, Any]:
-    """Create a new simulation run."""
+    """Create a new simulation run and register it for WebSocket streaming.
+
+    Returns the run_id the client uses for all subsequent step/start/stop calls.
+    """
     try:
+        # Accept either 'environment' or 'scenario' as the environment name
         requested_environment = body.environment or body.scenario
         if not requested_environment:
             raise ValueError("environment is required")
@@ -92,6 +125,7 @@ async def create_run(body: CreateRunBody) -> Dict[str, Any]:
             body.team_type or "balanced",
         )
         config["save_history"] = bool(body.save_history)
+
         # Map frontend mode to a canonical source value saved in the run config.
         # "step" (Watch Mode) → "watch"; "live" (Live Interactive) → "live_interactive".
         # Runs created without run_mode (legacy / API calls) keep "interactive".
@@ -102,8 +136,12 @@ async def create_run(body: CreateRunBody) -> Dict[str, Any]:
             config["source"] = "live_interactive"
         else:
             config["source"] = "interactive"
+
+        # Use a crypto-random seed if none was supplied so runs are non-deterministic by default
         seed = body.seed if body.seed is not None else random.SystemRandom().randint(1, 2_147_483_647)
-        run_id = await anyio.to_thread.run_sync(registry.create_run, seed, config)
+
+        # RunManager creation is CPU-bound (builds the SimModel), so run it in a thread
+        run_id = await anyio.to_thread.run_sync(registry.create_run, seed, config, None)
         entry = registry.get_run(run_id)
 
         # Apply initial group mood if provided — classifies the text and injects
@@ -113,10 +151,12 @@ async def create_run(body: CreateRunBody) -> Dict[str, Any]:
             if _model is not None:
                 _text = body.emotion_text.strip()
                 try:
+                    # NLP is blocking, so keep it off the event loop
                     await anyio.to_thread.run_sync(
                         lambda: _model.inject_user_emotion(_text, tick=0)
                     )
                 except Exception:
+                    # Emotion injection is best-effort — don't fail the whole run creation
                     logger.warning(
                         "Could not apply initial emotion for run %s: text=%r",
                         run_id, _text[:60],
@@ -150,6 +190,11 @@ async def create_run(body: CreateRunBody) -> Dict[str, Any]:
         )
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Run status / CRUD
+# These routes read or remove runs that already exist in the registry.
+# ──────────────────────────────────────────────────────────────────────────
+
 @router.get("/runs")
 async def list_runs() -> Dict[str, Any]:
     """Get a list of all active simulation runs."""
@@ -179,12 +224,14 @@ async def get_run_status(run_id: str) -> Dict[str, Any]:
     # The UI can ask for status before the first streamed diff lands, so keep
     # these fallbacks around and build a readable snapshot straight from model state.
     if not agents and hasattr(model, "agents"):
+        # Build a state snapshot directly from agent objects when no diff is available yet
         agents = [
             agent.to_state()
             for agent in sorted(list(model.agents), key=lambda a: a.public_id)
         ]
 
     if not scenario and hasattr(model, "scenario"):
+        # Same idea — build a scenario snapshot so the UI has something to display on first load
         scenario = {
             "id": model.scenario.id,
             "name": getattr(model.scenario, "name", model.scenario.id),
@@ -229,6 +276,11 @@ async def get_run_status(run_id: str) -> Dict[str, Any]:
         "saved_to_history": getattr(entry.manager, "history_saved", False),
     }
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Run control routes
+# These are the core POST actions used once a live run already exists.
+# ──────────────────────────────────────────────────────────────────────────
 
 @router.post("/runs/{run_id}/start")
 async def start_run(run_id: str) -> Dict[str, Any]:
@@ -296,30 +348,51 @@ async def delete_run(run_id: str) -> Dict[str, Any]:
     return {"run_id": run_id, "deleted": True}
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Live WebSocket flow
+# The interaction page uses this channel for real-time step-by-step updates.
+# ──────────────────────────────────────────────────────────────────────────
+
 @router.websocket("/runs/{run_id}/ws")
 async def run_ws(websocket: WebSocket, run_id: str) -> None:
-    """
-    WebSocket endpoint for real-time simulation updates.
+    """WebSocket endpoint for real-time simulation updates.
+
+    Accepts JSON messages with a 'cmd' field. Supported commands:
+      step       — advance one tick and send the diff back
+      start      — mark the run as running
+      pause      — pause the run
+      stop       — stop the run
+      auto       — start a background loop stepping at tick_hz per second
+      auto_stop  — cancel the auto loop
+
+    Each tick diff is sent as {"type": "tick", "data": <diff>}.
+    Status changes are sent as {"type": "status", "status": <new_status>}.
     """
     entry = registry.get_run(run_id)
     if not entry:
+        # Close with policy violation code if the run doesn't exist
         await websocket.close(code=1008)
         return
 
     await websocket.accept()
+    # Track how many clients are watching this run (used for checkpoint-on-disconnect logic)
     await anyio.to_thread.run_sync(_inc_clients, run_id, +1)
 
     stop_event = asyncio.Event()
     auto_task: Optional[asyncio.Task] = None
 
     async def auto_loop(tick_hz: float) -> None:
-        """Continuously step the simulation at a fixed rate."""
-        sleep_s = 1.0 / max(0.1, tick_hz)
+        """Background task that steps the sim repeatedly at a fixed rate.
+
+        Stops itself when the scenario ends, or when stop_event is set externally.
+        """
+        sleep_s = 1.0 / max(0.1, tick_hz)  # clamp to avoid infinite speed
 
         while not stop_event.is_set():
             diff = await anyio.to_thread.run_sync(_locked_call, entry, entry.manager.step)
             await websocket.send_json({"type": "tick", "data": diff})
 
+            # Stop looping if the scenario ended naturally
             if diff.get("ended") is True:
                 stop_event.set()
                 return
@@ -332,6 +405,7 @@ async def run_ws(websocket: WebSocket, run_id: str) -> None:
             cmd = msg.get("cmd")
 
             if cmd == "step":
+                # Single manual tick — runs in a thread so the event loop stays responsive
                 diff = await anyio.to_thread.run_sync(_locked_call, entry, entry.manager.step)
                 await websocket.send_json({"type": "tick", "data": diff})
 
@@ -351,6 +425,7 @@ async def run_ws(websocket: WebSocket, run_id: str) -> None:
                 tick_hz = float(msg.get("tick_hz", 2))
                 stop_event.clear()
 
+                # Cancel any existing auto loop before starting a new one
                 if auto_task and not auto_task.done():
                     auto_task.cancel()
 
@@ -375,14 +450,21 @@ async def run_ws(websocket: WebSocket, run_id: str) -> None:
                 )
 
     except WebSocketDisconnect:
+        # Normal disconnection — handled in finally block
         pass
     finally:
+        # Always clean up: stop the auto loop, decrement clients, checkpoint if needed
         stop_event.set()
         if auto_task and not auto_task.done():
             auto_task.cancel()
         await anyio.to_thread.run_sync(_inc_clients, run_id, -1)
         await anyio.to_thread.run_sync(_save_run_on_disconnect, run_id)
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Disconnect support helpers
+# These make sure a live run is checkpointed if the last client disappears.
+# ──────────────────────────────────────────────────────────────────────────
 
 def _save_run_on_disconnect(run_id: str) -> None:
     """Checkpoint the run to history when the last WebSocket client disconnects.
@@ -402,9 +484,13 @@ def _save_run_on_disconnect(run_id: str) -> None:
 
 
 def _inc_clients(run_id: str, delta: int) -> None:
-    """Safely change client_count for a run."""
+    """Increment or decrement the WebSocket client count for a run.
+
+    Clamped to 0 so it can never go negative even if disconnect fires twice.
+    """
     entry = registry.get_run(run_id)
     if not entry:
         return
 
     entry.client_count = max(0, entry.client_count + delta)
+

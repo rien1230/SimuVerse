@@ -1,6 +1,13 @@
-"""Shared scenario labels and lookup tables used across the sim."""
+"""
+Shared scenario labels and lookup tables used across the sim.
+
+Central data store for scenario item labels, role names, info templates,
+scenario definitions, and aliases.
+"""
 
 from __future__ import annotations
+
+# ── Shared display labels ────────────────────────────────────────────────
 # Human-readable labels for task items used in agent messages
 ITEM_LABELS = {
     "budget": "Budget Information",
@@ -22,7 +29,7 @@ ITEM_LABELS = {
     "order": "Digit Order",
     "map": "Room Map",
     "key": "Key Location",
-    "lock": "Lock Combination",
+    "lock": "Lock Pattern",
     "door": "Door Code",
     "italian": "Italian Restaurant",
     "vegan": "Vegan Option",
@@ -31,6 +38,8 @@ ITEM_LABELS = {
 }
 
 
+# ── Agent role labels per environment ────────────────────────────────────
+# Role names for each agent in each environment — used for display and dialogue flavour
 SCENARIO_ROLES = {
     "office": {
         "A1": "Project Manager",
@@ -58,6 +67,9 @@ SCENARIO_ROLES = {
     },
 }
 
+# ── Reusable dialogue fragments for shared information ───────────────────
+# Multiple phrasing options per item so agents don't always say the exact same thing.
+# When an agent shares a piece of info, one of these strings is picked at random.
 ITEM_INFO_TEMPLATES = {
     "budget": [
         "$50k total, with 10% held back.",
@@ -124,6 +136,9 @@ ITEM_INFO_TEMPLATES = {
     ],
 }
 
+# ── Canonical scenario definitions ───────────────────────────────────────
+# Full scenario definitions — each one specifies the environment, tasks, and which
+# agent starts out knowing which piece of information (the knowledge_map).
 SCENARIOS = {
     "office_proposal": {
         "environment": "office",
@@ -197,15 +212,28 @@ SCENARIOS = {
     }}
 
 
+# Short-hand aliases so the frontend or API can use simple names like "cafe"
+# without needing to know the full canonical ID like "cafe_restaurant".
 SCENARIO_ID_ALIASES = {
+    "cafe":           "cafe_restaurant",
     "cafe_vacation":  "cafe_restaurant",
     "cafe_outing":    "cafe_restaurant",
+    "escape":         "escape_puzzle",
     "escape_code":    "escape_puzzle",
     "escape_room":    "escape_puzzle",
+    "office":         "office_proposal",
     "office_project": "office_proposal",
+    "office_room":    "office_proposal",
 }
 
 
 def resolve_scenario_id(scenario_id: str) -> str:
+    """
+    Normalise any scenario ID string to its canonical key in SCENARIOS.
+
+    Strips whitespace, lowercases, and checks the alias table.
+    If nothing matches, the original string is returned as-is so the caller
+    can decide whether to raise an error.
+    """
     sid = str(scenario_id or "").strip().lower()
     return SCENARIO_ID_ALIASES.get(sid, sid)

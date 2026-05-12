@@ -1,4 +1,14 @@
-"""Service helpers for building and running experiment batches."""
+"""Service helpers for building and running experiment batches.
+
+Main experiment service used by the routes. It handles:
+  - Single simulation runs with configurable team types and seeds
+  - Multi-run experiments with statistical aggregation
+  - Controlled comparisons (NLP on/off, team styles, scenarios, robustness)
+
+All data comes from live SimModel runs — nothing is hardcoded or faked.
+
+experiment service layer used by several API routes.
+"""
 
 from __future__ import annotations
 
@@ -17,11 +27,22 @@ DEFAULT_TEAM_STYLE_SET = ["smooth", "tension", "creative"]
 DEFAULT_SCENARIO_SET = ["office_proposal", "cafe_restaurant", "escape_puzzle"]
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Shared normalisation helpers
+# These keep experiment routes and service functions aligned on labels.
+# ──────────────────────────────────────────────────────────────────────────
+
 def _normalize_scenario_ids(scenario_ids: List[str]) -> List[str]:
+    """Resolve and deduplicate a list of scenario IDs.
+
+    Handles short aliases (e.g. "escape") and removes duplicates while
+    preserving order, so the same scenario isn't run twice by accident.
+    """
     normalized: List[str] = []
     seen = set()
     for scenario_id in scenario_ids:
         resolved = resolve_scenario_id(scenario_id)
+        # Skip if we've already included this canonical ID
         if resolved not in seen:
             normalized.append(resolved)
             seen.add(resolved)
@@ -29,17 +50,16 @@ def _normalize_scenario_ids(scenario_ids: List[str]) -> List[str]:
 
 
 def _display_team_type(team_type: Optional[str]) -> str:
+    """Convert internal team type keys to readable display labels for the UI."""
     labels = {
         "smooth": "Smooth Team",
         "tension": "Tension Team",
         "creative": "Creative Team",
         "pressure": "Pressure Team",
-        "balanced": "Balanced Team",
-        "cooperative": "Cooperative Team",
-        "tense": "Tense Team",
-        "random": "Random Team",
+        "balanced": "Balanced Team"
     }
     key = str(team_type or "not_recorded").lower()
+    # Fall back to title-cased version if the key isn't in our labels dict
     return labels.get(key, str(team_type or "Not recorded").replace("_", " ").title())
 
 
@@ -52,6 +72,22 @@ def _run_single_simulation(
     persist_run: bool = False,
     experiment_type: Optional[str] = None,
 ) -> Dict[str, Any]:
+    """Run one simulation and return a dict of metrics for this run.
+
+    This is the core function that all experiment types call — it's a clean
+    wrapper around SimModel that handles metric extraction, fallbacks, and
+    optional persistence to disk.
+
+    Parameters
+    ----------
+    scenario_id       : canonical scenario to run
+    seed              : RNG seed for reproducibility
+    episode_max_ticks : step limit; simulation may also end via its own end conditions
+    skip_emotions     : if True, NLP emotion pipeline is disabled (for control runs)
+    team_type         : which personality preset to use (e.g. "smooth", "tension")
+    persist_run       : whether to save this run to disk as part of history
+    experiment_type   : label stored in the run file (e.g. "batch", "team_styles")
+    """
     scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
         return {"error": f"Unknown scenario '{scenario_id}'"}
@@ -63,15 +99,18 @@ def _run_single_simulation(
         episode_max_ticks=episode_max_ticks,
         team_type=team_type,
     )
+    # Store the seed on the model so it shows up in saved run files
     model.seed_value = seed
     if skip_emotions:
         model.skip_emotions = True
 
+    # Step until the simulation ends naturally or hits the tick limit
     while not model.ended and model.tick < episode_max_ticks:
         model.step()
 
     history = model.metric_history
     if history:
+        # Whole-run averages are more representative than just the final tick
         run_avg_trust = round(statistics.mean(h["avg_trust"] for h in history), 4)
         run_avg_stress = round(statistics.mean(h["avg_stress"] for h in history), 4)
         run_conflict_rate = round(statistics.mean(h["conflict_rate"] for h in history), 4)
@@ -96,6 +135,7 @@ def _run_single_simulation(
             run_peak_stress = run_avg_stress
         run_peak_tension = model.group_tension
 
+    # Find the first tick where any information was shared — useful for coordination timing
     first_share_tick = next(
         (h["tick"] for h in history if h.get("share_count", 0) > 0),
         None,
@@ -103,6 +143,7 @@ def _run_single_simulation(
 
     run_id = None
     if persist_run:
+        # Only save to disk if explicitly requested — batch runs usually don't need persistence
         run_id = save_run(
             model,
             config={
@@ -177,6 +218,7 @@ def run_experiment(
 
     results = []
 
+    # Use seeds 0..n_runs-1 so results are fully reproducible across runs
     for seed in range(n_runs):
         logger.debug("  Run %s/%s (seed=%s)", seed + 1, n_runs, seed)
         results.append(
@@ -192,6 +234,7 @@ def run_experiment(
         )
 
     result = _aggregate(scenario_id, n_runs, skip_emotions, results)
+    # team_type isn't part of _aggregate's output, so attach it here
     result["team_type"] = team_type
     logger.info(
         "Experiment complete: success_rate=%s, deadlock_rate=%s",
@@ -201,6 +244,10 @@ def run_experiment(
     return result
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Controlled batch variants
+# These keep one factor fixed while changing another for dissertation-style tests.
+# ──────────────────────────────────────────────────────────────────────────
 def run_multi_scenario_experiment(
     scenario_ids: List[str],
     n_runs: int = 20,
@@ -211,6 +258,10 @@ def run_multi_scenario_experiment(
     """
     Run multiple scenarios and return results for all of them.
     Useful for cross-scenario comparison in the dissertation.
+
+    Each scenario is treated as an independent experiment (same n_runs, same
+    team type). The returned dict is keyed by scenario_id so results can be
+    compared side-by-side.
     """
     results = {}
     for sid in _normalize_scenario_ids(scenario_ids):
@@ -234,7 +285,14 @@ def _aggregate(
     skip_emotions: bool,
     results: List[Dict[str, Any]],
 ) -> Dict[str, Any]:
+    """Aggregate per-run results into summary statistics for the whole experiment.
+
+    Computes outcome counts, rates, and distribution stats (mean/median/stdev)
+    for every metric. This is what gets returned from run_experiment() and is
+    also embedded in the comparison experiments.
+    """
     outcomes = [r["outcome"] for r in results]
+    # Count how many runs ended in each possible outcome type
     outcome_counts = {
         "success":   outcomes.count("success"),
         "partial":   outcomes.count("partial"),
@@ -244,15 +302,18 @@ def _aggregate(
         "harmony":   outcomes.count("harmony"),
         "max_ticks": outcomes.count("max_ticks"),
     }
+    # Convert counts to rates (0.0–1.0) for easier comparison across different n_runs
     outcome_rates = {k: round(v / n_runs, 3) for k, v in outcome_counts.items()}
 
     def _stats(key: str) -> Dict[str, float]:
+        """Return mean/median/stdev/min/max for a given metric across all runs."""
         vals = [r[key] for r in results if r.get(key) is not None]
         if not vals:
             return {"mean": 0.0, "median": 0.0, "stdev": 0.0, "min": 0.0, "max": 0.0}
         return {
             "mean":   round(statistics.mean(vals), 4),
             "median": round(statistics.median(vals), 4),
+            # stdev needs at least 2 values
             "stdev":  round(statistics.stdev(vals), 4) if len(vals) > 1 else 0.0,
             "min":    round(min(vals), 4),
             "max":    round(max(vals), 4),
@@ -260,11 +321,14 @@ def _aggregate(
 
     total_ref   = sum(r["total_refusals"] for r in results)
     total_share = sum(r["total_shares"]   for r in results)
+    # Refusal-to-share ratio tells us how often agents refused compared to how often they shared
     ref_share_ratio = round(total_ref / total_share, 3) if total_share > 0 else None
 
+    # Only average ticks from runs that actually succeeded (not deadlocked or timed out)
     success_ticks = [r["ticks"] for r in results if r["outcome"] == "success"]
     avg_ticks_to_success = round(statistics.mean(success_ticks), 2) if success_ticks else None
 
+    # Track how quickly information sharing started across runs
     first_share_ticks = [r["first_share_tick"] for r in results if r.get("first_share_tick")]
     avg_first_share_tick = round(statistics.mean(first_share_ticks), 2) if first_share_ticks else None
 
@@ -303,11 +367,18 @@ def compare_team_styles(
     team_types: Optional[List[str]] = None,
     persist_runs: bool = True,
 ) -> Dict[str, Any]:
+    """Compare different team personality styles on the same scenario and seed.
+
+    The key controlled variable here is team_type — everything else (scenario,
+    seed, tick limit) stays fixed so results are directly comparable. This is
+    a single-run-per-style comparison, not a multi-run experiment.
+    """
     scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
         return {"error": f"Unknown scenario '{scenario_id}'"}
 
     selected_team_types = list(team_types or DEFAULT_TEAM_STYLE_SET)
+    # Run each team type once with the same fixed seed — only the team changes
     rows = [
         _run_single_simulation(
             scenario_id=scenario_id,
@@ -320,6 +391,7 @@ def compare_team_styles(
         for team_type in selected_team_types
     ]
 
+    # Sort by overall performance: higher progress and trust, lower stress and conflict is better
     sorted_rows = sorted(
         rows,
         key=lambda row: (
@@ -332,6 +404,7 @@ def compare_team_styles(
     )
     best = sorted_rows[0]
     worst = sorted_rows[-1]
+    # Auto-generate a plain-English summary that highlights the most notable difference
     key_difference = (
         f"Only team style changed. Scenario and seed stayed fixed at "
         f"{SCENARIOS[scenario_id]['name']} and {seed}. "
@@ -366,7 +439,14 @@ def compare_scenarios(
     scenario_ids: Optional[List[str]] = None,
     persist_runs: bool = True,
 ) -> Dict[str, Any]:
+    """Compare different scenarios with the same team type and seed.
+
+    The key controlled variable here is scenario_id — the team personality and
+    random seed stay fixed. This isolates how much the environment/scenario
+    affects outcomes, independent of who is in the team.
+    """
     selected_scenarios = _normalize_scenario_ids(list(scenario_ids or DEFAULT_SCENARIO_SET))
+    # Skip any scenario IDs that aren't in the known SCENARIOS dict
     rows = [
         _run_single_simulation(
             scenario_id=scenario_id,
@@ -380,6 +460,7 @@ def compare_scenarios(
         if scenario_id in SCENARIOS
     ]
 
+    # Find which scenario was the most stressful vs. most calm to highlight in the summary
     highest_stress = max(rows, key=lambda row: row.get("peak_stress", 0))
     calmest = min(rows, key=lambda row: row.get("peak_stress", 0))
     key_difference = (
@@ -415,10 +496,18 @@ def robustness_experiment(
     episode_max_ticks: int = 120,
     persist_runs: bool = True,
 ) -> Dict[str, Any]:
+    """Test how robust the simulation is to different random seeds.
+
+    Runs the same scenario+team combination with n_runs consecutive seeds
+    (seed_start, seed_start+1, ...) and aggregates the results. A high
+    success rate and low spread across seeds means the simulation behaves
+    consistently rather than depending heavily on random chance.
+    """
     scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
         return {"error": f"Unknown scenario '{scenario_id}'"}
 
+    # Use offset-based seeds so results are reproducible but cover different random paths
     rows = [
         _run_single_simulation(
             scenario_id=scenario_id,
@@ -435,6 +524,7 @@ def robustness_experiment(
     aggregate["team_type"] = team_type
     aggregate["seed_start"] = seed_start
 
+    # Progress spread = how much final progress varied across seeds (lower = more stable)
     progress_spread = aggregate["final_progress"]["max"] - aggregate["final_progress"]["min"]
     key_difference = (
         f"Only seed changed. Scenario stayed fixed as {SCENARIOS[scenario_id]['name']} and team style stayed fixed as "
@@ -465,6 +555,10 @@ def robustness_experiment(
     }
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Head-to-head comparisons
+# Directly compare conditions like NLP on/off or baseline vs intervention.
+# ──────────────────────────────────────────────────────────────────────────
 def compare_experiments(
     scenario_id: str,
     n_runs: int = 20,
@@ -475,21 +569,25 @@ def compare_experiments(
     Directly answers: does the emotion pipeline affect coordination outcomes?
     """
     scenario_id = resolve_scenario_id(scenario_id)
+    # Run the same scenario twice — once with NLP emotion pipeline on, once off
     with_nlp    = run_experiment(scenario_id, n_runs, episode_max_ticks, skip_emotions=False)
     without_nlp = run_experiment(scenario_id, n_runs, episode_max_ticks, skip_emotions=True)
 
     def _safe_get(data: Dict, key: str, subkey: str = "mean") -> float:
+        """Extract a value from a results dict, handling both flat and nested (stats) formats."""
         val = data.get(key)
         if isinstance(val, dict):
             return val.get(subkey, 0.0)
         return float(val) if val is not None else 0.0
 
     def _diff(key: str) -> Dict[str, Any]:
+        """Compute the delta between NLP-on and NLP-off for a given metric."""
         a = _safe_get(with_nlp, key)
         b = _safe_get(without_nlp, key)
         return {"with_nlp": a, "without_nlp": b, "delta": round(a - b, 4)}
 
     def _outcome_diff(key: str) -> Dict[str, Any]:
+        """Compute the delta in outcome rates (e.g. success rate) between the two conditions."""
         a = with_nlp["outcome_rates"].get(key, 0)
         b = without_nlp["outcome_rates"].get(key, 0)
         return {"with_nlp": a, "without_nlp": b, "delta": round(a - b, 4)}
@@ -504,6 +602,8 @@ def compare_experiments(
         "deadlock_rate": _outcome_diff("deadlock"),
         "partial_rate":  _outcome_diff("partial"),
 
+        # "nlp_better" flags tell the UI whether the NLP condition improved this metric.
+        # Higher trust/shares is better; lower stress/conflict/refusals/stalls is better.
         "avg_trust":      {**_diff("avg_trust"),      "nlp_better": _safe_get(with_nlp, "avg_trust")      > _safe_get(without_nlp, "avg_trust")},
         "avg_stress":     {**_diff("avg_stress"),     "nlp_better": _safe_get(with_nlp, "avg_stress")     < _safe_get(without_nlp, "avg_stress")},
         "peak_stress":    {**_diff("peak_stress"),    "nlp_better": _safe_get(with_nlp, "peak_stress")    < _safe_get(without_nlp, "peak_stress")},
@@ -609,6 +709,10 @@ def compare_intervention_experiment(
     }
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Intervention batch helpers
+# Re-run the same scenario many times while applying one fixed intervention.
+# ──────────────────────────────────────────────────────────────────────────
 def _run_with_intervention(
     scenario_id: str,
     n_runs: int,
@@ -617,7 +721,12 @@ def _run_with_intervention(
     intervention_params: Dict[str, Any],
     intervention_tick: int,
 ) -> Dict[str, Any]:
-    """Run n_runs simulations applying an intervention at a specific tick."""
+    """Run n_runs simulations applying an intervention at a specific tick.
+
+    Used by compare_intervention_experiment() to generate the 'with intervention'
+    side of the comparison. The intervention fires exactly once per run at the
+    specified tick, then the simulation continues to its natural end.
+    """
     scenario_id = resolve_scenario_id(scenario_id)
     if scenario_id not in SCENARIOS:
         return {"error": f"Unknown scenario '{scenario_id}'"}
@@ -634,7 +743,7 @@ def _run_with_intervention(
 
         while not model.ended and model.tick < episode_max_ticks:
             model.step()
-            # Apply intervention at the specified tick
+            # Trigger the intervention once, at the exact tick specified
             if model.tick == intervention_tick:
                 model.apply_intervention(intervention_type, intervention_params)
 
@@ -686,6 +795,11 @@ def _generate_intervention_summary(
     intervention_type: str,
     intervention_params: Dict,
 ) -> str:
+    """Generate a plain-English summary comparing baseline vs intervention results.
+
+    Describes what changed (or didn't) across success rate, deadlock rate, and
+    information sharing. All conclusions come from the actual numbers.
+    """
     sr_base = baseline["outcome_rates"].get("success", 0)
     sr_int  = with_intervention["outcome_rates"].get("success", 0)
     dl_base = baseline["outcome_rates"].get("deadlock", 0)
@@ -694,6 +808,7 @@ def _generate_intervention_summary(
     param_str = ", ".join(f"{k}={v}" for k, v in intervention_params.items())
     lines = [f"Intervention: {intervention_type} ({param_str})."]
 
+    # Compare success rates first — this is the most important outcome metric
     if sr_int > sr_base:
         lines.append(
             f"The intervention improved success rate from {sr_base:.0%} to {sr_int:.0%}, "
@@ -707,6 +822,7 @@ def _generate_intervention_summary(
     else:
         lines.append("Success rate was unchanged by the intervention.")
 
+    # Separately report on deadlock since it's a distinct failure mode from plain failure
     if dl_int < dl_base:
         lines.append(
             f"Deadlock frequency decreased from {dl_base:.0%} to {dl_int:.0%}, "
@@ -810,3 +926,4 @@ def _generate_summary(with_nlp: Dict, without_nlp: Dict) -> str:
         )
 
     return " ".join(lines) if lines else "No significant differences observed between conditions."
+

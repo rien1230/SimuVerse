@@ -1,6 +1,10 @@
 """Personality test service — runs a full SimModel simulation for a given scenario/team
 combination and returns structured metrics. Extracted from routes/runs.py to keep route
 files as thin handlers."""
+
+# This service is a focused evaluation helper.
+# It is separate from the live run routes because it runs full simulations to
+# compare team-style outcomes rather than driving one interactive session.
 from __future__ import annotations
 
 import io
@@ -38,6 +42,11 @@ _TEAM_STYLE_ALIASES: Dict[str, str] = {
     "pressure_team": "pressure_team",
 }
 
+
+# ──────────────────────────────────────────────────────────────────────────
+# Normalisation helpers
+# These keep the route layer simple by resolving scenario/team aliases here.
+# ──────────────────────────────────────────────────────────────────────────
 
 def _resolve_scenario(candidates: List[str]) -> Optional[str]:
     return next((s for s in candidates if s in SCENARIOS), None)

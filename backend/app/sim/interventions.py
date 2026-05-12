@@ -1,15 +1,29 @@
-"""Intervention helpers that push a run toward movement, clarity, or tension."""
+"""Intervention helpers that push a run toward movement, clarity, or tension.
+
+This file contains the low-level simulation mutations behind intervention
+buttons. The service layer validates requests first; this file actually changes
+model/agent state and queues visible events.
+"""
 
 from __future__ import annotations
 from typing import Any, Dict, Optional
 import random
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Public intervention actions
+# These are the main entry points called through intervention_service.py.
+# ──────────────────────────────────────────────────────────────────────────
+
 def reveal_info(model, agent_id: str, item: str, complete_task: bool = False) -> Dict[str, Any]:
     """
     Give an agent immediate knowledge of an item.
     Optionally also marks the task as complete.
     Also queues a visible conversation event so it appears in the log.
+
+    This is called when the user clicks "Reveal Info" in the UI. The goal is to
+    unblock a stalled run by giving an agent the piece of info they're missing,
+    then triggering a realistic-looking dialogue exchange so it doesn't feel abrupt.
     """
     agent = _find_agent(model, agent_id)
     if not agent:
@@ -25,6 +39,7 @@ def reveal_info(model, agent_id: str, item: str, complete_task: bool = False) ->
 
     agent.known_items.add(item)
     if not already_known:
+        # record reveal tick so the agent doesn't immediately re-share it next tick
         agent.intervention_reveal_ticks[item] = getattr(model, "tick", 0)
 
     if complete_task:
@@ -33,17 +48,24 @@ def reveal_info(model, agent_id: str, item: str, complete_task: bool = False) ->
     else:
         message = f"{agent_id} now knows '{item}'."
 
+    # receiving new information is a positive event — lift mood, drop stress
     agent.valence = min(1.0, agent.valence + 0.14)
+    stress_before = float(agent.stress)
     agent.stress = max(0.0, agent.stress - 0.10)
+    stress_after = float(agent.stress)
 
+    # Find someone to share the new info with — pick the most relevant partner
     target = None
     if not task_already_complete and not already_known:
         target = _pick_focus_partner(model, agent, item)
 
     if not task_already_complete and not already_known:
+        # Lock in the topic for 2 ticks so agents don't drift off this item immediately
         focus_until = getattr(model, "tick", 0) + 2
         current_blocker = _current_blocker_item(model)
         if target is not None:
+            # Only surface right now if this item is already the group's active blocker
+            # (or close enough to it). Otherwise queue a "coming soon" coordination line.
             if _should_surface_reveal_now(model, item):
                 _set_intervention_focus(model, item, focus_until, quiet_ticks=2)
                 _prime_focus_pair(model, agent, target, item, focus_until)
@@ -126,13 +148,23 @@ def reveal_info(model, agent_id: str, item: str, complete_task: bool = False) ->
             },
         )
 
-    return {"success": True, "message": message}
+    return {
+        "success": True,
+        "message": message,
+        "stress_before": round(stress_before, 4),
+        "stress_after":  round(stress_after, 4),
+        "stress_delta":  round(stress_after - stress_before, 4),
+    }
 
 
 def nudge_strategy(model, agent_id: str, strategy: str) -> Dict[str, Any]:
     """
     Push an agent toward a behavioural strategy.
     Also queues a visible line so the change is reflected in conversation.
+
+    The strategy lock prevents the agent's normal strategy-update logic from
+    immediately overriding the intervention. The lock lasts longer when the
+    agent is already on this strategy (reinforcement vs. fresh change).
     """
     valid = {"cooperative", "defensive", "confrontational", "avoidant", "neutral", "assertive"}
     if strategy not in valid:
@@ -151,10 +183,12 @@ def nudge_strategy(model, agent_id: str, strategy: str) -> Dict[str, Any]:
     # stress effect anyway so the next tick still shows a visible behavioural
     # shift instead of silently succeeding.
     is_noop = (old == strategy)
-    lock_ticks = 6 if is_noop else 4
+    lock_ticks = 6 if is_noop else 4  # reinforce longer when already on this strategy
+    # lock prevents the agent's own update_strategy() from overriding us next tick
     agent.strategy_locked_until = current_tick + lock_ticks
     agent.strategy_lock_source = "intervention"
 
+    nudge_stress_before = float(agent.stress)
     queued_event = None
 
     if strategy == "cooperative":
@@ -174,7 +208,7 @@ def nudge_strategy(model, agent_id: str, strategy: str) -> Dict[str, Any]:
             agent_knows = (action_item or focus_item) in getattr(agent, "known_items", set())
             target_knows = target is not None and (action_item or focus_item) in getattr(target, "known_items", set())
 
-            # Cooperative nudge must look like *help*, not a question. If the
+            # Cooperative nudge should look like *help*, not a question. If the
             # nudged agent knows the blocker, they share — even if the partner
             # also knows (acts as a confirm/lock-in). Only fall back to asking
             # when the nudged agent has no information at all.
@@ -300,12 +334,26 @@ def nudge_strategy(model, agent_id: str, strategy: str) -> Dict[str, Any]:
         message = f"{agent_id} reinforced as {strategy}."
     else:
         message = f"{agent_id} strategy changed: {old} → {strategy}."
-    return {"success": True, "message": message}
+    nudge_stress_after = float(agent.stress)
+    return {
+        "success": True,
+        "message": message,
+        "strategy_before": old,
+        "strategy_after":  strategy,
+        "lock_duration":   lock_ticks,
+        "stress_before":   round(nudge_stress_before, 4),
+        "stress_after":    round(nudge_stress_after, 4),
+        "stress_delta":    round(nudge_stress_after - nudge_stress_before, 4),
+    }
 
 def boost_urgency(model, amount: float) -> Dict[str, Any]:
     """
     Raise group-level urgency.
     Also queues visible pressure dialogue.
+
+    Urgency affects both the environment modifier (read by scenario logics each tick)
+    and agents' stress directly. The share_boost flag additionally nudges reluctant
+    owners to release their clues sooner than they normally would.
     """
     amount = max(0.0, min(1.0, amount))
 
@@ -314,17 +362,17 @@ def boost_urgency(model, amount: float) -> Dict[str, Any]:
     env.urgency_modifier = min(3.0, pressure_before + amount)
     pressure_after = float(env.urgency_modifier)
 
+    # reset the stall counter so urgency doesn't immediately trigger deadlock-break logic
     model.progress_stall_ticks = max(0, model.progress_stall_ticks - 5)
 
-    # Direct stress bump so urgency is visible on agents immediately
+    # stress bump makes the urgency visible on agents right away
     for _agent in model.agents:
         _agent.stress = min(1.0, _agent.stress + 0.08 * amount)
 
-    # Set a model-level urgency flag that scenario logics read to boost
-    # the probability of blocker owners sharing their information.
+    # scenario logics check _urgency_share_boost to raise blocker owners' share probability
     tick_now = getattr(model, "tick", 0)
     model._urgency_share_boost = min(1.0, getattr(model, "_urgency_share_boost", 0.0) + 0.35 * amount)
-    model._urgency_share_boost_until = tick_now + 3
+    model._urgency_share_boost_until = tick_now + 3  # fades after 3 ticks
 
     speaker = _pick_leaderish_agent(model)
     focus_item = _current_blocker_item(model)
@@ -377,8 +425,9 @@ def boost_urgency(model, amount: float) -> Dict[str, Any]:
     return {
         "success": True,
         "message": f"Urgency boosted by {amount:.2f}. Environment urgency now {env.urgency_modifier:.2f}.",
-        "pressure_before": round(pressure_before, 4),
-        "pressure_after":  round(pressure_after, 4),
+        "pressure_before":   round(pressure_before, 4),
+        "pressure_after":    round(pressure_after, 4),
+        "share_boost_ticks": 3,
     }
 
 
@@ -458,9 +507,16 @@ def inject_tension(model, amount: float) -> Dict[str, Any]:
     """
     Raise group tension.
     Also queues a visible tense interaction.
+
+    Tension is different from urgency — it represents interpersonal friction rather
+    than time pressure. The impulse floor keeps tension elevated for at least 2 ticks
+    so it doesn't immediately decay away before the player can see its effect.
     """
     amount = max(0.0, min(1.0, amount))
+    tension_before = float(model.group_tension)
     model.group_tension = min(1.0, model.group_tension + amount)
+    tension_after = float(model.group_tension)
+    # Set a floor so tension doesn't instantly bounce back down next tick
     model._tension_impulse_floor = max(
         float(getattr(model, "_tension_impulse_floor", 0.0) or 0.0),
         float(model.group_tension),
@@ -519,6 +575,8 @@ def inject_tension(model, amount: float) -> Dict[str, Any]:
     return {
         "success": True,
         "message": f"Group tension raised by {amount:.2f}. Now at {model.group_tension:.2f}.",
+        "tension_before": round(tension_before, 4),
+        "tension_after":  round(tension_after, 4),
     }
 
 
@@ -526,6 +584,9 @@ def force_meeting(model, agent_a_id: str, agent_b_id: str) -> Dict[str, Any]:
     """
     Force two agents into a conversation next tick.
     Also queues visible opening lines so the meeting shows in the log.
+
+    This clears any ongoing conversations so the two agents can have exclusive
+    airspace. Other agents won't interrupt during the meeting window.
     """
     agent_a = _find_agent(model, agent_a_id)
     agent_b = _find_agent(model, agent_b_id)
@@ -535,6 +596,7 @@ def force_meeting(model, agent_a_id: str, agent_b_id: str) -> Dict[str, Any]:
     if agent_a_id == agent_b_id:
         return {"success": False, "reason": "Cannot force a meeting between the same agent"}
 
+    # Clear everyone else's conversation state so nobody interrupts
     for agent in getattr(model, "agents", []):
         agent.current_conversation_with = None
         agent.conversation_turn = 0
@@ -559,8 +621,12 @@ def force_meeting(model, agent_a_id: str, agent_b_id: str) -> Dict[str, Any]:
     # forced topic across the whole window (set below once we know the item).
     model._forced_meeting_item = None
 
-    agent_a.trust[agent_b_id] = min(1.0, agent_a.trust.get(agent_b_id, 0.5) + 0.05)
-    agent_b.trust[agent_a_id] = min(1.0, agent_b.trust.get(agent_a_id, 0.5) + 0.05)
+    fm_trust_a_before = float(agent_a.trust.get(agent_b_id, 0.5))
+    fm_trust_b_before = float(agent_b.trust.get(agent_a_id, 0.5))
+    agent_a.trust[agent_b_id] = min(1.0, fm_trust_a_before + 0.05)
+    agent_b.trust[agent_a_id] = min(1.0, fm_trust_b_before + 0.05)
+    fm_trust_before = round((fm_trust_a_before + fm_trust_b_before) / 2, 4)
+    fm_trust_after  = round((agent_a.trust[agent_b_id] + agent_b.trust[agent_a_id]) / 2, 4)
 
     # Anchor the opener to the most relevant unresolved task. Prefer the
     # current bottleneck and knowledge asymmetry between the chosen agents so
@@ -578,6 +644,7 @@ def force_meeting(model, agent_a_id: str, agent_b_id: str) -> Dict[str, Any]:
         b_knows = blocked_item in getattr(agent_b, "known_items", set())
 
         if a_knows ^ b_knows:
+            # XOR: exactly one agent has the info, so set up a natural ask → share exchange
             asker, knower = (agent_b, agent_a) if a_knows else (agent_a, agent_b)
             _queue_event(
                 model,
@@ -680,29 +747,41 @@ def force_meeting(model, agent_a_id: str, agent_b_id: str) -> Dict[str, Any]:
     return {
         "success": True,
         "message": f"Meeting forced between {agent_a_id} and {agent_b_id}. They will interact next tick.",
+        "trust_before": fm_trust_before,
+        "trust_after":  fm_trust_after,
+        "trust_delta":  round(fm_trust_after - fm_trust_before, 4),
     }
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
+# Shared support functions used by the public intervention actions above.
 # ---------------------------------------------------------------------------
 
 def _find_agent(model, agent_id: str):
+    """Look up an agent by their public ID. Returns None if not found."""
     return next((a for a in model.agents if a.public_id == agent_id), None)
 
 
 def _queue_event(model, event: Dict[str, Any]) -> None:
+    """Add an event to the model's pending queue so it gets processed next tick."""
     if not hasattr(model, "_pending_events"):
         model._pending_events = []
     model._pending_events.append(event)
 
 
 def _pick_other_agent(model, agent_id: str):
+    """Return a random agent that isn't the given one."""
     others = [a for a in model.agents if a.public_id != agent_id]
     return random.choice(others) if others else None
 
 
 def _pick_leaderish_agent(model):
+    """
+    Return the agent most suited to lead/direct — prefers Leader/Decisive
+    personalities, falls back to a random agent if nobody fits.
+    Used to pick who delivers urgency/pressure lines.
+    """
     preferred = None
 
     for agent in model.agents:
@@ -718,6 +797,7 @@ def _pick_leaderish_agent(model):
 
 
 def _pick_high_stress_agent(model):
+    """Return the agent currently under the most stress — they're likely to react most visibly."""
     agents = list(model.agents)
     if not agents:
         return None
@@ -725,6 +805,11 @@ def _pick_high_stress_agent(model):
 
 
 def _spoken_item(item: str) -> str:
+    """
+    Convert an internal item key to a natural spoken phrase.
+    E.g. "lock" → "pattern", "tech_specs" → "spec doc".
+    Keeps dialogue sounding human rather than system-generated.
+    """
     spoken_map = {
         "lock": "pattern",
         "door": "door code",
@@ -738,6 +823,11 @@ def _spoken_item(item: str) -> str:
 
 
 def _direct_intervention_share_text(agent, item: str, target_id: str) -> str:
+    """
+    Build the text for a share event triggered by an intervention.
+    Pulls the agent's actual info for the item and wraps it in natural phrasing.
+    Scenario-specific so the dialogue fits the setting's tone.
+    """
     info = agent._generate_info_text(item) or _spoken_item(item)
     spoken = _spoken_item(item)
     scenario_type = getattr(getattr(agent.model, "behaviour", None), "scenario_type", "office")
@@ -774,16 +864,23 @@ def _direct_intervention_share_text(agent, item: str, target_id: str) -> str:
 
 
 def _scenario_kind(model) -> str:
+    """Quick helper to get the scenario type string from the model."""
     return getattr(getattr(model, "behaviour", None), "scenario_type", "office")
 
 
 def _current_blocker_item(model, prefer_agents=None) -> Optional[str]:
+    """
+    Find the item currently blocking group progress.
+    Tries to use the model's own bottleneck tracker first, then falls back to
+    picking the best unresolved item from the scenario tasks dict.
+    """
     scenario = getattr(model, "scenario", None)
     tasks = getattr(scenario, "tasks", {}) or {}
     bottleneck = getattr(model, "bottleneck_item", None)
     canonical = None
     if hasattr(model, "_active_blocker_from_tasks"):
         canonical = model._active_blocker_from_tasks(tasks)
+    # Prefer the model's existing bottleneck if it matches the canonical and isn't "unlock"
     if bottleneck and bottleneck != "unlock":
         if canonical is not None and bottleneck == canonical and not bool(tasks.get(bottleneck, False)):
             return bottleneck
@@ -795,6 +892,11 @@ def _current_blocker_item(model, prefer_agents=None) -> Optional[str]:
 
 
 def _should_surface_reveal_now(model, item: str) -> bool:
+    """
+    Decide whether to play the reveal dialogue immediately or defer it.
+    Defers if the item isn't the current blocker and nobody's been asking for it —
+    avoids jumping ahead of the natural task order.
+    """
     current = _current_blocker_item(model)
     if current and item != current:
         if _recent_requester_for_item(model, item) is None and getattr(model, "progress_stall_ticks", 0) < 4:
@@ -1202,6 +1304,10 @@ def _delayed_reveal_coordination_text(agent, item: str) -> str:
 
 
 def _prime_focus_agents(agents, item: str, until_tick: int) -> None:
+    """
+    Lock agents onto a specific topic item for a set number of ticks.
+    This stops them from drifting to other tasks mid-conversation.
+    """
     for agent in agents:
         if agent is None:
             continue
@@ -1210,6 +1316,10 @@ def _prime_focus_agents(agents, item: str, until_tick: int) -> None:
 
 
 def _prime_focus_pair(model, agent_a, agent_b, item: str, until_tick: int) -> None:
+    """
+    Set two agents into an active conversation with each other, focused on a specific item.
+    Essentially wires them together for the next few ticks.
+    """
     _prime_focus_agents([agent_a, agent_b], item, until_tick)
     for agent, other in ((agent_a, agent_b), (agent_b, agent_a)):
         agent.current_conversation_with = other.public_id
@@ -1220,9 +1330,15 @@ def _prime_focus_pair(model, agent_a, agent_b, item: str, until_tick: int) -> No
 
 
 def _set_intervention_focus(model, item: Optional[str], until_tick: int, quiet_ticks: int = 2) -> None:
+    """
+    Tell the model to treat this item as the active focus for scenario logic.
+    Also sets a "quiet" window so the same item isn't immediately re-raised
+    by other agents (giving the intervention room to breathe).
+    """
     if not item:
         return
     model._intervention_focus_item = item
+    # Only extend; never shorten an existing focus window
     model._intervention_focus_until = max(
         getattr(model, "_intervention_focus_until", -1),
         until_tick,
@@ -1236,7 +1352,13 @@ def _set_intervention_focus(model, item: Optional[str], until_tick: int, quiet_t
 
 
 def _recent_requester_for_item(model, item: str, exclude: Optional[str] = None):
+    """
+    Find the agent who most recently asked for a given item.
+    Checks both the current tick's prev_events and the recent history snapshots.
+    Used to direct share dialogue at the right person.
+    """
     current_tick = getattr(model, "tick", 0)
+    # First check the live event buffer (current tick)
     for event in reversed(getattr(model, "prev_events", [])[-10:]):
         if event.get("type") != "ask_info" or event.get("item") != item:
             continue
@@ -1244,6 +1366,7 @@ def _recent_requester_for_item(model, item: str, exclude: Optional[str] = None):
         if actor and actor != exclude:
             return _find_agent(model, actor)
 
+    # Fall back to recent history snapshots (up to 3 ticks back)
     for snap in reversed(getattr(model, "history", [])[-4:]):
         snap_tick = snap.get("tick", current_tick)
         if current_tick - snap_tick > 3:
@@ -1259,6 +1382,16 @@ def _recent_requester_for_item(model, item: str, exclude: Optional[str] = None):
 
 
 def _pick_focus_partner(model, source_agent, item: Optional[str]):
+    """
+    Pick the best conversation partner for a given source agent and item.
+
+    Priority order:
+    1. Someone who already asked for this item recently (answer them directly)
+    2. The agent whose knowledge_map assigns this item to them
+    3. The known bottleneck holder
+    4. Someone who doesn't have the item yet (most useful recipient)
+    5. A leader/decisive type, or just the first other agent
+    """
     if source_agent is None:
         return None
 
@@ -1282,6 +1415,7 @@ def _pick_focus_partner(model, source_agent, item: Optional[str]):
             if holder is not None:
                 return holder
 
+        # Prefer agents who don't have the item yet — they're the useful target
         lacking = [a for a in others if item not in getattr(a, "known_items", set())]
         if lacking:
             lacking.sort(key=lambda ag: (ag.public_id != "A1", ag.public_id))
@@ -1296,11 +1430,17 @@ def _pick_focus_partner(model, source_agent, item: Optional[str]):
 
 
 def _actionable_intervention_item(model, item: Optional[str]) -> Optional[str]:
+    """
+    For escape, "unlock" is the final meta-task — it can't be directly worked on.
+    This function maps it back to the actual unresolved clue that's blocking unlock.
+    For other scenarios it just returns the item unchanged.
+    """
     if not item:
         return item
 
     scenario_type = getattr(getattr(model, "behaviour", None), "scenario_type", "office")
     if scenario_type == "escape" and item == "unlock":
+        # Find the earliest unsolved prerequisite and target that instead
         tasks = getattr(getattr(model, "scenario", None), "tasks", {}) or {}
         if not tasks.get("door", False):
             return "door"
@@ -1316,6 +1456,15 @@ def _actionable_intervention_item(model, item: Optional[str]) -> Optional[str]:
 
 
 def _item_ready_for_immediate_surface(model, item: str) -> bool:
+    """
+    Check whether surfacing this item right now makes narrative sense.
+    Avoids jumping ahead several steps in the task chain and making the
+    dialogue feel out of order. Returns True when:
+    - it's the current bottleneck
+    - someone already asked for it recently
+    - it's close enough to the current progress level
+    - the run has been stalled long enough that any progress is welcome
+    """
     tasks = list((getattr(getattr(model, "scenario", None), "tasks", {}) or {}).keys())
     if not tasks or item not in tasks:
         return True
@@ -1326,11 +1475,13 @@ def _item_ready_for_immediate_surface(model, item: str) -> bool:
     if _recent_requester_for_item(model, item) is not None:
         return True
 
+    # Allow surface if item is at most one step ahead of current progress
     completed = sum(1 for done in getattr(model.scenario, "tasks", {}).values() if done)
     idx = tasks.index(item)
     if idx <= completed + 1:
         return True
 
+    # After a long stall, just unblock whatever we can
     if getattr(model, "progress_stall_ticks", 0) >= 4:
         return True
 

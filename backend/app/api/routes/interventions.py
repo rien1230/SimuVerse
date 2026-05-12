@@ -1,4 +1,10 @@
-"""API routes for applying live interventions to an active run."""
+"""API routes for applying live interventions to an active run.
+
+This route file is the API-facing entry point for intervention buttons in the
+Live Interaction page. The actual behaviour lives deeper in:
+- services/intervention_service.py -> validation + dispatch
+- sim/interventions.py             -> low-level simulation mutations
+"""
 
 import logging
 from typing import Any, Dict
@@ -11,11 +17,15 @@ from app.services.run_registry import RunRegistry
 
 
 class _InterventionRequestBase(BaseModel):
-    """Minimal validated shape for intervention payloads (used for documentation)."""
+    """Minimal validated shape for intervention payloads — used for inline docs only.
+    The real validation happens in InterventionRequest from app.schemas.intervention.
+    """
     run_id: str
     type: str
     params: Dict[str, Any] = {}
 
+
+# Reuse the singleton registry so we can look up the active run by ID
 registry = RunRegistry()
 
 router = APIRouter(prefix="/interventions", tags=["interventions"])
@@ -24,9 +34,18 @@ logger = logging.getLogger(__name__)
 
 @router.post("/apply", response_model=InterventionResponse)
 async def apply_intervention_endpoint(request: InterventionRequest) -> InterventionResponse:
+    """Apply a user-triggered intervention to a live simulation run.
+
+    Interventions let the user nudge agent behaviour mid-run — e.g. boosting urgency,
+    injecting an emotion, or forcing a meeting between two agents.
+
+    The result contains before/after values for whatever metric the intervention touched,
+    so the frontend can show the user what changed.
     """
-    Apply a user intervention to a running simulation.
-    """
+    # This endpoint stays intentionally thin:
+    # 1. find the active run
+    # 2. call model.apply_intervention(...)
+    # 3. reshape the result into the API response model
     try:
         entry = registry.get_run(request.run_id)
         if entry is None:
@@ -54,19 +73,46 @@ async def apply_intervention_endpoint(request: InterventionRequest) -> Intervent
         result = model.apply_intervention(request.type, request.params)
 
         if not result.get("success", False):
+            # Prefer 'reason' over 'message' for failure details
             reason = result.get("reason") or result.get("message") or "Intervention failed"
             raise HTTPException(status_code=400, detail=reason)
 
+        # emotion_effect can be a nested dict, so unpack it carefully
+        _emotion_effect = result.get("emotion_effect") or {}
         return InterventionResponse(
             success=result["success"],
             message=result.get("message", ""),
             intervention_type=request.type,
             tick_applied=result.get("tick_applied", getattr(model, "tick", 0)),
+            # Pressure changes from boost_urgency / ease_pressure
             pressure_before=result.get("pressure_before"),
             pressure_after=result.get("pressure_after"),
+            share_boost_ticks=result.get("share_boost_ticks"),
+            # Stress side-effects that come along with some interventions
+            stress_before=result.get("stress_before"),
+            stress_after=result.get("stress_after"),
+            stress_delta=result.get("stress_delta"),
+            # Strategy change from nudge_strategy
+            strategy_before=result.get("strategy_before"),
+            strategy_after=result.get("strategy_after"),
+            lock_duration=result.get("lock_duration"),
+            # Group tension from inject_tension
+            tension_before=result.get("tension_before"),
+            tension_after=result.get("tension_after"),
+            # Trust changes between agents
+            trust_before=result.get("trust_before"),
+            trust_after=result.get("trust_after"),
+            trust_delta=result.get("trust_delta"),
+            # Emotion injection result
+            detected_emotion=result.get("detected_emotion"),
+            # Fall back to the nested emotion_effect duration if top-level decay_ticks is missing
+            decay_ticks=(
+                result.get("decay_ticks")
+                or (_emotion_effect.get("duration_ticks") if isinstance(_emotion_effect, dict) else None)
+            ),
         )
     except HTTPException:
-        raise
+        raise  # re-raise our own HTTP errors without wrapping them
     except Exception:
         logger.exception(
             "Unexpected intervention failure for run_id=%s type=%s params=%s",
@@ -82,6 +128,7 @@ async def apply_intervention_endpoint(request: InterventionRequest) -> Intervent
 
 @router.get("/types")
 async def list_intervention_types():
+    """List the intervention catalogue so the frontend knows what controls exist."""
     return {
         "interventions": [
             {
@@ -122,6 +169,11 @@ async def list_intervention_types():
                     "agent_a_id": "string (A1-A4)",
                     "agent_b_id": "string (A1-A4)"
                 },
+            },
+            {
+                "type": "inject_emotion",
+                "description": "Inject an emotional message that all agents perceive",
+                "params": {"text": "string"},
             },
         ]
     }

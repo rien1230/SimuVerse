@@ -6,12 +6,11 @@ Public API for user-facing emotion input:
       fallback) and returns a fully-structured result ready for injection
       into the simulation via SimModel.inject_user_emotion().
 
-I built this module in two layers. The inner layer (EmotionAnalyser) handles
-raw text classification and has three modes: rule_based (VADER + lexical cues,
-fully deterministic), ml (GoEmotions transformer), and hybrid. The outer layer
-(classify_user_emotion) is the public entry point used by the simulation and API —
-it always returns the same structured schema regardless of which backend is running,
-and degrades gracefully when the ML model isn't available.
+This module has two layers. EmotionAnalyser handles raw text classification,
+while classify_user_emotion is the stable public entry point used by the
+simulation and API.
+
+Emotion-analysis bridge between free text and simulation-ready emotion signals.
 """
 
 from __future__ import annotations
@@ -65,7 +64,7 @@ def _keyword_fallback(text: str) -> Optional[tuple]:
 
 
 # ── Interpretation builder ────────────────────────────────────────────────────
-# I deliberately grouped the 28 GoEmotions labels into four functional categories
+# Group the 28 GoEmotions labels into four functional categories
 # rather than giving every emotion its own unique simulation response. This keeps
 # the effects testable and avoids over-engineering — the distinction that matters
 # for group dynamics isn't whether the user feels "annoyance" vs "disapproval",
@@ -225,8 +224,8 @@ def classify_user_emotion(text: str, tick: int = 0) -> Dict[str, Any]:
 
 
 class EmotionAnalyser:
-    """
-    Hybrid emotion analyser for SimuVerse.
+    """Classifier wrapper used by agents for ongoing emotion interpretation."""
+    """Hybrid emotion analyser for SimuVerse.
 
     Modes:
     - rule_based: deterministic, recommended default for simulation runs
@@ -234,8 +233,13 @@ class EmotionAnalyser:
     - hybrid: rule_based primary, ml fallback if available
 
     For reproducible seeded simulations, use mode="rule_based".
+
+    The class is intentionally kept separate from classify_user_emotion() so
+    that internal simulation calls (agent STM tagging) and user-facing calls
+    (emotion injection API) can use different modes without interfering.
     """
 
+    # All 28 emotion labels from the GoEmotions dataset, in label order
     ALL_EMOTIONS = [
         "admiration", "amusement", "anger", "annoyance", "approval",
         "caring", "confusion", "curiosity", "desire", "disappointment",
@@ -245,6 +249,8 @@ class EmotionAnalyser:
         "sadness", "surprise", "neutral",
     ]
 
+    # Maps the transformer's raw output labels (LABEL_0, LABEL_1, …) to human
+    # readable emotion names so we don't have to decode them everywhere else
     LABEL_TO_NAME = {
         "LABEL_0": "admiration",
         "LABEL_1": "amusement",
@@ -276,6 +282,8 @@ class EmotionAnalyser:
         "LABEL_27": "neutral",
     }
 
+    # The emotions the transformer tends to predict reliably — used by the
+    # use_reliable_only filter to drop noisy low-confidence labels
     HIGH_CONFIDENCE_EMOTIONS = {
         "neutral", "admiration", "approval", "annoyance", "gratitude",
         "disapproval", "amusement", "joy", "anger", "sadness",
@@ -283,6 +291,8 @@ class EmotionAnalyser:
         "disappointment", "remorse", "surprise",
     }
 
+    # Collapse rare/fine-grained emotions into more common ones so the simulation
+    # only has to handle a smaller set of distinct emotional states
     EMOTION_MAPPING = {
         "grief": "sadness",
         "remorse": "sadness",
@@ -300,6 +310,10 @@ class EmotionAnalyser:
         "relief": "joy",
     }
 
+    # Per-emotion minimum score required to include that emotion in the output.
+    # Emotions that are easy to confuse (e.g. "realization", "confusion") get
+    # lower thresholds so they aren't missed; rare ones like "grief" need a higher
+    # score because a weak prediction there is probably just noise.
     EMOTION_THRESHOLDS = {
         "admiration": 0.20,
         "amusement": 0.20,
@@ -381,14 +395,29 @@ class EmotionAnalyser:
         use_reliable_only: bool = False,
         mode: str = "rule_based",
     ):
+        """Set up the analyser.
+
+        Parameters
+        ----------
+        use_gpu : bool
+            Whether to run the ML classifier on GPU. Ignored in rule_based mode.
+        use_reliable_only : bool
+            If True, run _filter_reliable_only() on results to strip noisy labels.
+        mode : str
+            "rule_based", "ml", or "hybrid". Defaults to rule_based for reproducibility.
+        """
         self.use_reliable_only = use_reliable_only
         self.mode = mode
+        # VADER is always initialised because it's used by both rule_based and
+        # as a fallback when the ML model fails
         self.rule_analyzer = SentimentIntensityAnalyzer()
 
         self.classifier: Optional[Any] = None
         if mode in {"ml", "hybrid"}:
+            # Only load the heavy transformer model when actually needed
             self.classifier = get_emotion_classifier(use_gpu=use_gpu)
 
+        # Flag so other methods can check whether ML is usable without try/except
         self.model_available = self.classifier is not None
 
     # ------------------------------------------------------------------
@@ -396,6 +425,12 @@ class EmotionAnalyser:
     # ------------------------------------------------------------------
 
     def analyse(self, text: str) -> Dict[str, float]:
+        """Run the appropriate analysis pipeline and return {emotion: score} dict.
+
+        In hybrid mode, rule_based runs first; if the only result is neutral
+        (i.e. the rules didn't pick up anything), the ML model is tried next.
+        Always returns at least {"neutral": 1.0} — never an empty dict.
+        """
         if not text or not text.strip():
             return {"neutral": 1.0}
 
@@ -405,6 +440,7 @@ class EmotionAnalyser:
             emotions = self._ml_analysis(text)
         elif self.mode == "hybrid":
             emotions = self._rule_based_analysis(text)
+            # Only escalate to ML if rule-based found nothing useful
             if emotions == {"neutral": 1.0} and self.model_available:
                 emotions = self._ml_analysis(text)
         else:
@@ -420,16 +456,24 @@ class EmotionAnalyser:
         return emotions
 
     def get_primary_emotion(self, text: str) -> Tuple[str, float]:
+        """Return just the top (emotion, score) pair from analyse()."""
         emotions = self.analyse(text)
         if emotions:
             return max(emotions.items(), key=lambda x: x[1])
         return ("neutral", 1.0)
 
     def get_top_emotions(self, text: str, n: int = 3) -> List[Tuple[str, float]]:
+        """Return the top-n (emotion, score) pairs sorted by score descending."""
         emotions = self.analyse(text)
         return sorted(emotions.items(), key=lambda x: x[1], reverse=True)[:n]
 
     def get_valence_arousal(self, text: str) -> Dict[str, float]:
+        """Convert text to a weighted-average valence/arousal coordinate.
+
+        Weights each emotion's (valence, arousal) by its score so that a text
+        expressing 80% joy and 20% nervousness doesn't produce the same result
+        as pure joy. The output is clamped to the valid ranges [-1, 1] and [0, 1].
+        """
         emotions = self.analyse(text)
 
         total_weight = 0.0
@@ -439,11 +483,13 @@ class EmotionAnalyser:
         for emotion, score in emotions.items():
             if emotion in self.VALENCE_AROUSAL_MAP:
                 v, a = self.VALENCE_AROUSAL_MAP[emotion]
+                # Accumulate weighted sum — normalised below
                 valence += v * score
                 arousal += a * score
                 total_weight += score
 
         if total_weight > 0:
+            # Normalise so scores that don't sum to 1.0 still give the right average
             valence /= total_weight
             arousal /= total_weight
         else:
@@ -459,6 +505,11 @@ class EmotionAnalyser:
         }
 
     def explain(self, text: str) -> Dict[str, Any]:
+        """Return a full diagnostic breakdown — useful for debugging classification.
+
+        In ML/hybrid mode, also includes the raw (unfiltered) transformer scores
+        so you can see what the model actually predicted before thresholds were applied.
+        """
         emotions = self.analyse(text)
         primary = self.get_primary_emotion(text)
         va = self.get_valence_arousal(text)
@@ -467,6 +518,7 @@ class EmotionAnalyser:
         if self.mode in {"ml", "hybrid"} and self.model_available:
             try:
                 ml_results = self.classifier(text)[0]
+                # Remap LABEL_N keys to human-readable names for the output
                 raw_results = {
                     self.LABEL_TO_NAME.get(r["label"], r["label"]): r["score"]
                     for r in ml_results
@@ -498,6 +550,13 @@ class EmotionAnalyser:
     # polarity to joy/anger and milder polarity to approval/disapproval.
 
     def _rule_based_analysis(self, text: str) -> Dict[str, float]:
+        """Classify text using VADER sentiment plus explicit keyword rules.
+
+        The keyword rules run first because they're more precise — if someone
+        writes "I'm so frustrated", we know it's annoyance without needing VADER.
+        VADER's compound score fills in the gaps for text that doesn't hit any
+        specific keyword but is clearly positive or negative overall.
+        """
         scores = self.rule_analyzer.polarity_scores(text)
         text_lower = text.lower()
 
@@ -507,7 +566,7 @@ class EmotionAnalyser:
         pos = scores["pos"]
         neg = scores["neg"]
 
-        # Explicit lexical cues first
+        # Explicit lexical cues first — these override VADER where they match
         if any(w in text_lower for w in ["thanks", "thank you", "appreciate"]):
             emotions["gratitude"] = max(emotions.get("gratitude", 0.0), 0.78)
 
@@ -535,13 +594,15 @@ class EmotionAnalyser:
         if any(w in text_lower for w in ["sad", "upset", "unfortunate", "disappointed"]):
             emotions["sadness"] = max(emotions.get("sadness", 0.0), 0.72)
 
+        # Punctuation as a weak signal — "?" suggests curiosity, "!" suggests surprise
         if "?" in text:
             emotions["curiosity"] = max(emotions.get("curiosity", 0.0), 0.58)
 
         if "!" in text:
             emotions["surprise"] = max(emotions.get("surprise", 0.0), 0.52)
 
-        # Sentiment-driven additions
+        # VADER compound score as a fallback for general sentiment — fills the gap
+        # when no explicit keyword matched but the text is clearly positive/negative
         if compound >= 0.65:
             emotions["joy"] = max(emotions.get("joy", 0.0), 0.75)
         elif compound >= 0.30:
@@ -551,13 +612,14 @@ class EmotionAnalyser:
         elif compound <= -0.30:
             emotions["disapproval"] = max(emotions.get("disapproval", 0.0), 0.64)
 
-        # Mild fallback from polarity balance
+        # Last resort: use raw pos/neg word ratios if compound didn't fire either
         if not emotions:
             if pos > 0.20 and neg < 0.10:
                 emotions["approval"] = 0.60
             elif neg > 0.20 and pos < 0.10:
                 emotions["disapproval"] = 0.60
             else:
+                # Nothing found at all — default to neutral
                 emotions["neutral"] = 1.0
 
         return self._apply_thresholds(emotions)
@@ -567,6 +629,11 @@ class EmotionAnalyser:
     # ------------------------------------------------------------------
 
     def _ml_analysis(self, text: str) -> Dict[str, float]:
+        """Run the GoEmotions transformer and filter by per-emotion thresholds.
+
+        Falls back to rule_based analysis if the model isn't loaded or if the
+        classifier call raises an exception (e.g. network error during init).
+        """
         if not self.model_available or not self.classifier:
             return self._fallback_analysis(text)
 
@@ -577,13 +644,16 @@ class EmotionAnalyser:
             for r in results:
                 label = r["label"]
                 score = r["score"]
+                # Convert raw LABEL_N to the human-readable name
                 emotion = self.LABEL_TO_NAME.get(label, label)
                 threshold = self.EMOTION_THRESHOLDS.get(emotion, 0.3)
 
+                # Only keep scores that clear the per-emotion threshold
                 if score >= threshold:
                     emotions[emotion] = score
 
             if not emotions:
+                # All scores were below threshold — treat as neutral
                 emotions["neutral"] = 1.0
 
             return emotions
@@ -597,21 +667,35 @@ class EmotionAnalyser:
     # ------------------------------------------------------------------
 
     def _fallback_analysis(self, text: str) -> Dict[str, float]:
+        """Use rule_based as the fallback when ML is unavailable or fails."""
         return self._rule_based_analysis(text)
 
     def _filter_reliable_only(self, emotions: Dict[str, float]) -> Dict[str, float]:
+        """Drop emotions that the model tends to misclassify.
+
+        Any emotion that's in HIGH_CONFIDENCE_EMOTIONS passes through unchanged.
+        Rare emotions that are in EMOTION_MAPPING get folded into their canonical
+        equivalent (e.g. "grief" → "sadness") taking the max score.
+        Everything else is dropped silently.
+        """
         filtered: Dict[str, float] = {}
 
         for emotion, score in emotions.items():
             if emotion in self.HIGH_CONFIDENCE_EMOTIONS:
                 filtered[emotion] = score
             elif emotion in self.EMOTION_MAPPING:
+                # Merge into the canonical emotion, keeping the higher score
                 mapped = self.EMOTION_MAPPING[emotion]
                 filtered[mapped] = max(filtered.get(mapped, 0.0), score)
 
         return filtered
 
     def _apply_thresholds(self, emotions: Dict[str, float]) -> Dict[str, float]:
+        """Remove any emotion whose score falls below its minimum threshold.
+
+        Returns {"neutral": 1.0} if nothing passes, so callers always get a
+        non-empty result.
+        """
         filtered: Dict[str, float] = {}
 
         for emotion, score in emotions.items():

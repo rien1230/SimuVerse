@@ -1,4 +1,16 @@
-"""Service layer that validates and dispatches intervention actions."""
+"""Service layer that validates and dispatches intervention actions.
+
+Interventions are live actions the user can apply to a running simulation
+to change what happens. Each type is handled by a dedicated private function
+which validates the params before calling the low-level sim function.
+
+The public entry point is apply_intervention() — it routes the request to
+the right handler using a dispatch table (_HANDLERS) and always returns a
+dict with "success" and "message" so the API layer never has to deal with
+inconsistent return shapes.
+
+Main service entry point for live interventions before they reach sim/interventions.py.
+"""
 
 from __future__ import annotations
 
@@ -47,6 +59,8 @@ def _normalise_result(result: Dict[str, Any]) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def _handle_reveal_info(model, params: Dict[str, Any]) -> Dict[str, Any]:
+    # Reveal-target restrictions live here because they are API/service rules,
+    # not core simulation rules. The sim layer still keeps the real task chain.
     agent_id = params.get("agent_id")
     item = params.get("item")
 
@@ -57,6 +71,7 @@ def _handle_reveal_info(model, params: Dict[str, Any]) -> Dict[str, Any]:
     current_blocker = iv._current_blocker_item(model)
     if scenario_type == "cafe" and item == "decision":
         tasks = getattr(getattr(model, "scenario", None), "tasks", {}) or {}
+        # block premature shortcuts — the final decision needs the three prerequisites first
         prerequisites_done = all(
             bool(tasks.get(key, False))
             for key in ("dietary_constraint", "budget_constraint", "location_constraint")
@@ -172,6 +187,7 @@ def _handle_inject_emotion(model, params: Dict[str, Any]) -> Dict[str, Any]:
 # Dispatch table
 # ---------------------------------------------------------------------------
 
+# dispatch table — add new intervention types here, not in apply_intervention
 _HANDLERS: Dict[str, Callable[..., Dict[str, Any]]] = {
     "reveal_info": _handle_reveal_info,
     "nudge_strategy": _handle_nudge_strategy,
@@ -199,6 +215,7 @@ def apply_intervention(
       - success: bool
       - message: str
     """
+    # single entry point — every intervention type routes through here
     handler = _HANDLERS.get(intervention_type)
 
     if not handler:

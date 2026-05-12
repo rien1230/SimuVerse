@@ -1,4 +1,7 @@
-"""Escape-room-specific task flow and guard rails for clue sharing."""
+"""Escape-room-specific task flow and guard rails for clue sharing.
+
+Escape-specific progression rules for clue order and confirmation flow.
+"""
 
 from __future__ import annotations
 
@@ -33,6 +36,7 @@ from app.sim.scenario_logic.escape_actions import (
 
 
 class EscapeLogic(BaseLogic):
+    # Main escape behaviour class: owns clue order, evidence checks, and escape pacing.
     scenario_type = "escape"
     ROLES = ROLE_NAMES
 
@@ -172,7 +176,9 @@ class EscapeLogic(BaseLogic):
         }
 
     # ──────────────────────────────────────────────────────────────────
-    # state init
+    # State initialisation
+    # Escape carries more per-run tracking than the other scenarios because
+    # clue confirmation and ordered progression are stricter here.
     # ──────────────────────────────────────────────────────────────────
 
     def _init_state(self, model: "SimModel") -> None:
@@ -182,6 +188,7 @@ class EscapeLogic(BaseLogic):
             for key in ESCAPE_PROGRESS_TASKS:
                 model.scenario.tasks.setdefault(key, False)
 
+        # lazy-init all per-run tracking on first call — safe to call every tick
         if not hasattr(model, "_escape_revealed"):
             model._escape_revealed = {key: False for key in ESCAPE_PROGRESS_TASKS}
 
@@ -256,7 +263,7 @@ class EscapeLogic(BaseLogic):
         if not hasattr(model, "_escape_last_recheck_tick"):
             model._escape_last_recheck_tick = -99
 
-        # Fix facts once at model init so all presets share the same clue truths
+        # fixed once per run — all agents refer to the same clue wording
         if not hasattr(model, "_escape_facts"):
             model._escape_facts = {
                 "map":  random.choice([
@@ -282,6 +289,8 @@ class EscapeLogic(BaseLogic):
                 "_door_code_short": "4-2-7-1",
             }
 
+    # ── Progress tracking helpers ───────────────────────────────────────────
+    # Helpers for ordered clue progression, asks, pressure, and evidence collection.
     def _priority_missing(self, model: "SimModel") -> List[str]:
         self._init_state(model)
         missing = [key for key in ESCAPE_PRIORITY if not model.scenario.tasks.get(key, False)]
@@ -697,6 +706,8 @@ class EscapeLogic(BaseLogic):
         )
         return True
 
+    # ── Share / confirm / resolve flow ──────────────────────────────────────
+    # These methods decide when clue evidence is strong enough to move Escape forward.
     def _maybe_wrong_target(self, agent: "SimAgent", correct_target, others: List["SimAgent"]):
         personality = getattr(agent, "personality_type", "Easygoing")
         if personality in {"Leader", "Easygoing", "Decisive"}:
@@ -1340,7 +1351,7 @@ class EscapeLogic(BaseLogic):
         blocker = missing[0]
         blocker_owner = self._owner_for(blocker)
 
-        # keep sim mostly focused on current blocker
+        # 84% chance to stay on the current blocker — stops agents drifting off-task
         force_blocker_focus = random.random() < 0.84
 
         # Memory-driven occasional recall line (rare, adds texture)
@@ -2040,6 +2051,8 @@ class EscapeLogic(BaseLogic):
 
         return None
 
+    # ── Main action selection + post-tick resolution ────────────────────────
+    # Core escape behaviour loop plus the end-of-tick state updates.
     def post_tick(
         self,
         model: "SimModel",

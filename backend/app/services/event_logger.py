@@ -1,4 +1,6 @@
-#Writes a summary of what happens in each tick/Run
+# Writes a summary of what happens in each tick to a JSONL replay file, one line per tick.
+#
+# Replay logging only. It serialises the tick diff that model.py already built.
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,12 +10,16 @@ import json
 
 
 def _find_repo_root(start_file: Path) -> Path:
-    """Walk up from the given file until we find the 'backend' parent directory."""
+    """Walk up the directory tree from this file to find the repo root.
+
+    We look for the 'backend' folder and return its parent, because the data
+    directory lives at the repo root level (next to 'backend/'), not inside it.
+    """
     for parent in start_file.resolve().parents:
         if parent.name == "backend":
-            return parent.parent
+            return parent.parent  # one level above 'backend' is the repo root
 
-    #Goes up 3 levels if "backend" folder directory is  not found
+    # Fallback: go up 3 levels relative to this file if 'backend' isn't found
     return start_file.resolve().parents[3]
 
 
@@ -33,8 +39,7 @@ class EventLogger:
 
     def __post_init__(self) -> None:
         """
-        Initialize the logger after the dataclass fields are set.
-
+        Initialise the logger after the dataclass fields are set.
         Sets up the file path for this run's replay file.
         Creates the directory if it doesn't exist.
         """
@@ -61,7 +66,6 @@ class EventLogger:
     def log(self, diff: Dict[str, Any]) -> None:
         """
         Appends one simulation tick's state diff to the replay file.
-
         Each call adds one line to the JSONL file. The diff contains:
         - Current tick number
         - Agent states

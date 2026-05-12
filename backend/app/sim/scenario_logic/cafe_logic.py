@@ -10,6 +10,10 @@ Cafe scenario logic with:
 - summary before finalise
 - deadlock-break fallback
 - softer overall stress/tension than office
+
+This file owns the Cafe-specific coordination flow.
+Its main job is to keep the cafe chain readable and ordered:
+Dietary Constraint -> Budget -> Location -> Decision
 """
 from __future__ import annotations
 
@@ -24,6 +28,10 @@ if TYPE_CHECKING:
     from app.sim.model import SimModel
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# Scenario constants + wording
+# Café-specific options, owners, and phrase pools live here.
+# ──────────────────────────────────────────────────────────────────────────
 CUISINE_OPTIONS = ["italian", "vegan"]
 BUDGET_OPTIONS = ["cheap", "fancy"]
 ALL_PREFS = CUISINE_OPTIONS + BUDGET_OPTIONS
@@ -34,6 +42,10 @@ CONSTRAINT_ITEMS = [
     "location_constraint",
 ]
 
+# These three are the "real" cafe constraints.
+# Decision is handled later as the final outcome step once the constraints are in place.
+
+# each constraint is owned by exactly one agent — only the owner can do a full share
 CONSTRAINT_OWNER = {
     "dietary_constraint": "A2",   # Food Expert
     "budget_constraint": "A3",    # Navigator
@@ -501,6 +513,7 @@ def _soften(my_pref: str, their_pref: str) -> str:
 
 
 class CafeRestaurantLogic(BaseLogic):
+    # Main café behaviour class: owns progression, asks, sharing, and final decision timing.
     scenario_type = "cafe"
 
     ROLES = {
@@ -572,6 +585,8 @@ class CafeRestaurantLogic(BaseLogic):
         for a in getattr(model, "agents", []):
             a.stress = min(a.stress, 0.68)
 
+    # ── Scenario hooks + shared state helpers ───────────────────────────────
+    # These are the core entry points model.py uses while a Café run is active.
     def scenario_modifiers(self, model: "SimModel") -> Dict[str, float]:
         # Cafe: casual social setting — warm trust, low tension, high cohesion
         return {
@@ -912,6 +927,8 @@ class CafeRestaurantLogic(BaseLogic):
             return focus_item
         return current
 
+    # ── Constraint progression ───────────────────────────────────────────────
+    # Ordered Café reveal / resolve logic before the final decision step.
     def _owner_ready_to_share(self, agent: "SimAgent", item: str) -> bool:
         model = agent.model
         self._init_state(model)
@@ -1355,6 +1372,8 @@ class CafeRestaurantLogic(BaseLogic):
         ", but we",
     )
 
+    # ── Tick outcomes + main action selection ───────────────────────────────
+    # Per-tick metric effects, post-tick resolution, and the main action chooser.
     def accumulate_run_metrics(
         self,
         model: "SimModel",
@@ -1748,7 +1767,7 @@ class CafeRestaurantLogic(BaseLogic):
         own_pref = next((p for p in ALL_PREFS if p in getattr(agent, "known_items", set())), None)
         personality = getattr(agent, "personality_type", "Easygoing")
 
-        # 1) Respond to direct asks/challenges about owned constraint
+        # 1) owner responds to a direct ask — A1 (organiser) asks get priority
         # Prefer the organiser's ask (A1) over any other recent ask
         _stm_recent = list(agent.stm)[-8:]
         _organiser_ask = next(
@@ -1848,6 +1867,7 @@ class CafeRestaurantLogic(BaseLogic):
             and not model._cafe_revealed_constraints.get(role_constraint, False)
             and role_constraint == self._choose_missing_constraint(model)
         ):
+            # Easygoing volunteers early; Overthinker almost never does without being asked
             proactive_prob = {
                 "Easygoing": 0.30,
                 "Decisive": 0.28,

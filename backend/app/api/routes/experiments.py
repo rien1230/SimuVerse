@@ -1,4 +1,10 @@
-"""API routes for creating and inspecting experiment runs."""
+"""API routes for creating and inspecting experiment runs.
+
+This file is the API layer for the Experiment Runner.
+The is delegated to:
+- services/experiment_service.py -> older experiment helpers / comparisons
+- services/experiment_runner.py  -> controlled batch experiment pipeline
+"""
 
 import logging
 from fastapi import APIRouter, HTTPException
@@ -17,6 +23,7 @@ router = APIRouter(prefix="/experiments", tags=["experiments"])
 
 
 def _normalize_scenario_ids(scenario_ids: List[str]) -> List[str]:
+    """Normalise scenario ids once so every experiment route works with canonical keys."""
     normalized: List[str] = []
     seen = set()
     for scenario_id in scenario_ids:
@@ -86,6 +93,10 @@ class InterventionExperimentRequest(BaseModel):
     episode_max_ticks: int = Field(default=120, ge=10, le=500)
 
 
+# ──────────────────────────────────────────────────────────────────────────
+# These wrap the older experiment_service comparison helpers.
+# ──────────────────────────────────────────────────────────────────────────
+
 @router.post("/run")
 async def run_experiment_endpoint(request: ExperimentRequest):
     """
@@ -114,7 +125,6 @@ async def compare_nlp_endpoint(request: NLPCompareRequest):
     """
     Key academic experiment: same scenario, NLP on vs NLP off.
     Returns side-by-side metrics, deltas, nlp_better flags, and a plain-English summary.
-    Directly answers: does the NLP pipeline affect agent behaviour?
     """
     scenario_id = resolve_scenario_id(request.scenario_id)
     if scenario_id not in SCENARIOS:
@@ -130,7 +140,7 @@ async def compare_nlp_endpoint(request: NLPCompareRequest):
 async def multi_scenario_endpoint(request: MultiScenarioRequest):
     """
     Run multiple scenarios and compare results across environments.
-    Useful for cross-scenario analysis in the dissertation.
+    For cross-scenario analysis in experiment page and testing.
     """
     scenario_ids = _normalize_scenario_ids(request.scenario_ids)
     invalid = [sid for sid in scenario_ids if sid not in SCENARIOS]
@@ -214,16 +224,6 @@ async def robustness_endpoint(request: RobustnessRequest):
 async def compare_intervention_endpoint(request: InterventionExperimentRequest):
     """
     Compare baseline runs against runs with a specific intervention applied.
-    Directly answers: does this intervention improve coordination?
-
-    Example body:
-    {
-        "scenario_id": "office_proposal",
-        "intervention_type": "nudge_strategy",
-        "intervention_params": {"agent_id": "A3", "strategy": "cooperative"},
-        "intervention_tick": 5,
-        "n_runs": 20
-    }
     """
     scenario_id = resolve_scenario_id(request.scenario_id)
     if scenario_id not in SCENARIOS:
@@ -256,6 +256,8 @@ async def list_scenarios():
 
 
 # ── Batch experiment runner ────────────────────────────────────────────────────
+# These endpoints use services/experiment_runner.py, which is the more direct
+# "run real simulations in batches and aggregate them" pipeline.
 
 class ExperimentBatchRequest(BaseModel):
     # Which experiment to run

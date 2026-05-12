@@ -5,6 +5,18 @@ controlled seeds, team styles, and scenarios, then aggregates results.
 No dummy data.  Every run uses the actual simulation engine.
 The aggregation and interpretation functions derive all findings
 from measured metrics, never from hardcoded thresholds or labels.
+
+Three experiment modes are supported:
+  - team_comparison: same scenario, different team styles
+  - scenario_comparison: same team style, different scenarios
+  - seed_reproducibility: same setup, different seeds (consistency check)
+
+This file is the backend home of the Experiment Runner feature.
+The flow is:
+1. run real simulations with controlled inputs
+2. collect per-run metrics
+3. aggregate those metrics by group
+4. turn the grouped results into findings the frontend can display
 """
 
 from __future__ import annotations
@@ -20,6 +32,8 @@ logger = logging.getLogger(__name__)
 
 # ── Scenario alias normalisation ───────────────────────────────────────────────
 
+# Maps short user-facing names to the canonical scenario IDs used by SimModel.
+# This lets the API accept "office" or "escape" without the full internal ID.
 _SCENARIO_ALIASES: Dict[str, str] = {
     "office":       "office_proposal",
     "office_room":  "office_proposal",
@@ -28,8 +42,10 @@ _SCENARIO_ALIASES: Dict[str, str] = {
     "escape_room":  "escape_puzzle",
 }
 
+# All valid team style strings — used for validation and default lists
 VALID_TEAM_STYLES: Tuple[str, ...] = ("smooth", "tension", "creative", "pressure", "balanced")
 
+# Human-readable labels for scenario comparison charts
 _SCENARIO_DISPLAY: Dict[str, str] = {
     "escape":          "Escape Room",
     "escape_puzzle":   "Escape Room",
@@ -43,31 +59,43 @@ _SCENARIO_DISPLAY: Dict[str, str] = {
 def _normalise_scenario(scenario: str) -> str:
     """Resolve short names (office, cafe, escape) to canonical scenario IDs."""
     key = scenario.lower().strip()
+    # Return the mapped canonical ID if found, otherwise pass the value through unchanged
     return _SCENARIO_ALIASES.get(key, key)
 
 
 def _avg_trust_from_agents(model: SimModel) -> float:
-    """Compute mean trust across all agent pairs at the current model state."""
+    """Compute mean trust across all agent pairs at the current model state.
+
+    Trust is stored per-agent as a dict of {other_agent_id: trust_value},
+    so we flatten all values across all agents and average them.
+    """
     total, count = 0.0, 0
     for agent in model.agents:
         for v in agent.trust.values():
             total += v
             count += 1
+    # Default to 0.5 (neutral trust) if no pairs exist yet
     return total / count if count else 0.5
 
 
 def _is_task_resolved(value: Any) -> bool:
-    """Support both boolean and dict-based task state formats."""
+    """Check if a task is complete, supporting both bool and dict task formats.
+
+    Some scenarios store tasks as plain True/False, others use a dict with
+    a "status" key or individual boolean flags. This handles all cases.
+    """
     if value is True:
         return True
     if value is False or value is None:
         return False
 
     if isinstance(value, dict):
+        # Check the "status" string field first
         status = str(value.get("status", "")).lower()
         if status in {"done", "resolved", "complete", "completed"}:
             return True
 
+        # Also check individual boolean flags as a fallback
         return bool(
             value.get("done") is True
             or value.get("resolved") is True
@@ -79,6 +107,8 @@ def _is_task_resolved(value: Any) -> bool:
 
 
 # ── Single run ─────────────────────────────────────────────────────────────────
+# Everything above this point is helper/normalisation code.
+# The functions below are the real experiment pipeline.
 
 def run_single_seeded_experiment(
     scenario: str,
@@ -101,6 +131,7 @@ def run_single_seeded_experiment(
     -------
     A dict with every measured metric for this run.
     """
+    # This uses the real simulation engine, not fake or cached data.
     scenario_id = _normalise_scenario(scenario)
 
     model = SimModel(
@@ -120,18 +151,24 @@ def run_single_seeded_experiment(
 
     # ── Extract metrics from metric_history ───────────────────────────────
     mh = getattr(model, "metric_history", [])
+    # Peak stress is the worst moment across the whole run, not just the final tick
     peak_stress  = round(max((h["avg_stress"] for h in mh), default=0.0), 3)
     final_stress = round(mh[-1]["avg_stress"] if mh else 0.0, 3)
+    # Fall back to the pre-run snapshot if metric_history is empty
     final_trust  = round(mh[-1]["avg_trust"]  if mh else start_trust, 3)
 
     # ── Count cooperation / challenge events from full history ────────────
     cooperation_count = 0
     challenge_count   = 0
+    total_event_count = 0          # all agent events (neutral + social + conflict)
     for tick_data in getattr(model, "history", []):
         for ev in tick_data.get("events", []):
+            total_event_count += 1
             t = ev.get("type", "")
+            # Sharing and agreement are positive coordination signals
             if t in ("share_info", "agree", "confirm"):
                 cooperation_count += 1
+            # Refusals and pushback indicate friction in the team
             if t in ("refuse", "challenge", "push_back"):
                 challenge_count += 1
 
@@ -160,6 +197,7 @@ def run_single_seeded_experiment(
         "blockers_resolved":  blockers_resolved,
         "cooperation_count":  cooperation_count,
         "challenge_count":    challenge_count,
+        "total_event_count":  total_event_count,
         "intervention_count": 0,   # batch runs carry no user interventions
         "ticks":              model.tick,
     }
@@ -171,7 +209,11 @@ def _safe_run(
     seed: int,
     max_steps: int,
 ) -> Dict[str, Any]:
-    """Run one experiment, returning a structured error dict on failure."""
+    """Run one experiment, returning a structured error dict on failure.
+
+    Wrapping individual runs this way means one bad seed won't crash the whole batch.
+    The error dict includes zero-value fields so aggregation still works on partial results.
+    """
     try:
         return run_single_seeded_experiment(scenario, team_style, seed, max_steps)
     except Exception as exc:
@@ -185,13 +227,19 @@ def _safe_run(
             "start_trust": 0.0, "final_trust": 0.0, "trust_delta": 0.0,
             "peak_stress": 0.0, "final_stress": 0.0,
             "blocker_count": 0, "blockers_resolved": 0,
-            "cooperation_count": 0, "challenge_count": 0, "intervention_count": 0,
+            "cooperation_count": 0, "challenge_count": 0, "total_event_count": 0, "intervention_count": 0,
         }
 
 
 # ── Aggregation ────────────────────────────────────────────────────────────────
+# Batch runs come back as flat per-run dicts first.
+# This section groups them into the summaries shown in the experiments UI.
 
 def _mean(runs: List[Dict[str, Any]], key: str) -> float:
+    """Compute the mean of a numeric field across a list of run dicts.
+
+    Skips runs where the field is missing or non-numeric (e.g. error runs).
+    """
     vals = [r[key] for r in runs if isinstance(r.get(key), (int, float))]
     return round(sum(vals) / len(vals), 3) if vals else 0.0
 
@@ -204,6 +252,8 @@ def aggregate_experiment_results(
     Group runs by `group_by` and compute per-group summary statistics.
 
     Returns a dict keyed by group label (e.g. "smooth", "tension", …).
+    The group_by field changes depending on experiment type (team_style,
+    scenario_label, or seed_label).
     """
     groups: Dict[str, list] = defaultdict(list)
     for run in runs:
@@ -213,6 +263,7 @@ def aggregate_experiment_results(
     for label, group_runs in groups.items():
         n         = len(group_runs)
         completed = [r for r in group_runs if r.get("completed")]
+        # Only include steps from runs that actually completed
         comp_steps = [
             r["completion_steps"] for r in completed
             if r.get("completion_steps") is not None
@@ -239,6 +290,7 @@ def aggregate_experiment_results(
             "avg_trust_delta":           _mean(group_runs, "trust_delta"),
             "avg_challenge_count":       _mean(group_runs, "challenge_count"),
             "avg_cooperation_count":     _mean(group_runs, "cooperation_count"),
+            "avg_total_event_count":     _mean(group_runs, "total_event_count"),
             "avg_blockers_resolved_rate": round(sum(blocker_rates) / len(blocker_rates), 3)
                                           if blocker_rates else 0.0,
         }
@@ -247,6 +299,7 @@ def aggregate_experiment_results(
 
 
 # ── Comparison ─────────────────────────────────────────────────────────────────
+# This section turns grouped numeric summaries into higher-level findings.
 
 def compare_team_styles(
     aggregated: Dict[str, Dict[str, Any]],
@@ -350,7 +403,12 @@ def _build_interpretation(
     aggregated: Dict[str, Dict[str, Any]],
     findings: List[Dict[str, Any]],
 ) -> str:
-    """Generate a plain-English paragraph from actual aggregated numbers."""
+    """Generate a plain-English paragraph from actual aggregated numbers.
+
+    This builds the "interpretation" string that gets shown in the UI results panel.
+    Everything is derived from real numbers — no hardcoded conclusions.
+    """
+    # Sort groups by stress and challenge so we can identify the extremes
     stress_order    = sorted(aggregated.items(), key=lambda x: x[1]["avg_peak_stress"])
     challenge_order = sorted(aggregated.items(), key=lambda x: x[1]["avg_challenge_count"])
 
@@ -401,6 +459,10 @@ def _compare_seed_consistency(aggregated: Dict[str, Dict]) -> Dict[str, Any]:
     """
     For seed reproducibility experiments — describe how consistent results are
     across seeds rather than picking a 'winner'.
+
+    Instead of finding the 'best' group, this measures how much the results
+    vary across seeds. Low variance means the simulation is deterministic and
+    reproducible; high variance means random initialisation has a big impact.
     """
     if not aggregated:
         return {"findings": [], "interpretation": "No data to compare."}
@@ -412,11 +474,13 @@ def _compare_seed_consistency(aggregated: Dict[str, Dict]) -> Dict[str, Any]:
     peak_stresses    = [aggregated[l]["avg_peak_stress"]  for l in labels]
     trust_deltas     = [aggregated[l]["avg_trust_delta"]  for l in labels]
 
+    # Range (max - min) across seeds tells us how much variance exists per metric
     cr_range = round(max(completion_rates) - min(completion_rates), 3)
     ps_range = round(max(peak_stresses)    - min(peak_stresses),    3)
     td_range = round(max(trust_deltas)     - min(trust_deltas),     3)
     avg_cr   = round(sum(completion_rates) / n, 3)
 
+    # Simple consistency classification based on how tight the ranges are
     if cr_range == 0 and ps_range < 0.05:
         consistency = "highly consistent"
     elif cr_range <= 0.2 and ps_range < 0.15:
@@ -480,6 +544,7 @@ def run_experiment_batch(config: Dict[str, Any]) -> Dict[str, Any]:
     # ── Team Style Comparison ──────────────────────────────────────────────────
     if experiment_type == "team_comparison":
         scenario    = config.get("scenario", "office")
+        # Default to the first 4 styles if none are specified
         team_styles = config.get("team_styles", list(VALID_TEAM_STYLES[:4]))
         group_by    = "team_style"
         total       = len(team_styles) * len(seeds)
@@ -487,6 +552,7 @@ def run_experiment_batch(config: Dict[str, Any]) -> Dict[str, Any]:
             "Batch [team_comparison]: scenario=%s, styles=%s, seeds=%s → %d runs",
             scenario, team_styles, seeds, total,
         )
+        # Run each team style across every seed for fair comparison
         for team_style in team_styles:
             for seed in seeds:
                 runs.append(_safe_run(scenario, team_style, seed, max_steps))
@@ -495,7 +561,7 @@ def run_experiment_batch(config: Dict[str, Any]) -> Dict[str, Any]:
     elif experiment_type == "scenario_comparison":
         scenarios  = config.get("scenarios", ["escape", "office", "cafe"])
         team_style = config.get("team_style", "smooth")
-        group_by   = "scenario_label"
+        group_by   = "scenario_label"  # group by display name, not internal ID
         total      = len(scenarios) * len(seeds)
         logger.info(
             "Batch [scenario_comparison]: scenarios=%s, team=%s, seeds=%s → %d runs",
@@ -504,6 +570,7 @@ def run_experiment_batch(config: Dict[str, Any]) -> Dict[str, Any]:
         for scenario in scenarios:
             for seed in seeds:
                 result = _safe_run(scenario, team_style, seed, max_steps)
+                # Attach a human-readable label so the chart shows "Escape Room" etc.
                 result["scenario_label"] = _SCENARIO_DISPLAY.get(
                     scenario.lower(), scenario.replace("_", " ").title()
                 )
@@ -513,7 +580,7 @@ def run_experiment_batch(config: Dict[str, Any]) -> Dict[str, Any]:
     elif experiment_type == "seed_reproducibility":
         scenario   = config.get("scenario", "escape")
         team_style = config.get("team_style", "smooth")
-        group_by   = "seed_label"
+        group_by   = "seed_label"  # each seed is its own group here
         total      = len(seeds)
         logger.info(
             "Batch [seed_reproducibility]: scenario=%s, team=%s, seeds=%s → %d runs",
@@ -521,6 +588,7 @@ def run_experiment_batch(config: Dict[str, Any]) -> Dict[str, Any]:
         )
         for seed in seeds:
             result = _safe_run(scenario, team_style, seed, max_steps)
+            # Label each run by its seed value so the comparison is readable
             result["seed_label"] = f"Seed {seed}"
             runs.append(result)
 
@@ -529,6 +597,8 @@ def run_experiment_batch(config: Dict[str, Any]) -> Dict[str, Any]:
 
     aggregated = aggregate_experiment_results(runs, group_by=group_by)
 
+    # Seed reproducibility uses a different comparison function since there's no
+    # 'winner' to identify — we just want to measure consistency across seeds
     comparison = (
         _compare_seed_consistency(aggregated)
         if experiment_type == "seed_reproducibility"

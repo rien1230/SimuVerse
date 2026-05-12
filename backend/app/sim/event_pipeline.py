@@ -1,4 +1,15 @@
-"""Final event cleanup before a tick is shown in the UI or saved to replay."""
+"""
+Final event cleanup before a tick is shown in the UI or saved to replay.
+
+The pipeline runs in this order every tick:
+    1. dedupe_same_actor_events  — remove duplicate events from the same agent
+    2. filter_events             — drop stale/conflicting events based on active interventions
+    3. dedupe_by_phrase_and_text — remove near-duplicate phrasing across the whole event list
+    4. polish_dialogue           — fix capitalisation, spacing, and pronoun casing
+
+This file exists so the final event list is cleaned up in one predictable place
+before history, replay, and the frontend all consume it.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +19,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 if TYPE_CHECKING:
     from app.sim.model import SimModel
 
+# These regex patterns are used by _polish_dialogue (defined in model.py).
+# They're kept here so the module is self-documenting about what text fixes get applied.
 _LOWERCASE_I_PATTERN = re.compile(r"(?<![A-Za-z'])i(?![A-Za-z'])")
 # Do NOT capitalise after an ellipsis (e.g. "Umm... okay" must stay lowercase)
 _AFTER_PUNCT_LOWER = re.compile(r"(?<!\.)([.!?]\s+)([a-z])")
@@ -17,7 +30,12 @@ _COLLAPSE_SPACES = re.compile(r"\s{2,}")
 
 
 def _polish_dialogue(text: str) -> str:
-    """Final cleanup pass for any rendered dialogue text."""
+    """
+    Thin wrapper that delegates to the polishing logic in model.py.
+
+    Keeping it here means other parts of the pipeline can call it without
+    importing SimModel directly (avoiding circular import issues).
+    """
     from app.sim.model import _polish_dialogue as _model_polish
     return _model_polish(text)
 
@@ -27,6 +45,12 @@ def normalize_events(
     collected_events: List[Dict[str, Any]],
     existing_events: Optional[List[Dict[str, Any]]] = None,
 ) -> List[Dict[str, Any]]:
+    """
+    Run the full cleanup pipeline on a batch of tick events.
+
+    existing_events is the list of events already committed from previous ticks —
+    it's used by the phrase deduper so agents don't repeat themselves across ticks.
+    """
     from app.sim.model import _polish_dialogue
 
     # Keep this order stable: trim duplicates first, then remove contradictions,
@@ -37,6 +61,7 @@ def normalize_events(
         normalized,
         existing_events=existing_events,
     )
+    # polish runs last — only applied to events that survived all filters
     for ev in normalized:
         raw = ev.get("text")
         if isinstance(raw, str) and raw:
@@ -48,12 +73,27 @@ def filter_events(
     model: "SimModel",
     events: List[Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
+    """
+    Drop events that would contradict or clutter active interventions.
+
+    There are three main cases we handle:
+    1. Stale ask_info events — if an intervention already triggered a share for
+       the same (actor, target, item) pair, the old ask is now redundant.
+    2. Forced meeting interference — during a forced meeting between two agents,
+       we drop events that try to redirect either of them to a third party.
+    3. Focus window quiet period — when an intervention forces a specific topic,
+       we suppress unrelated chatter so it doesn't drown out the forced event.
+    """
+    # Track which agents are sharing info this tick — used later to suppress hesitation lines
     share_actors = {
         event["actor"] for event in events if event.get("type") == "share_info"
     }
+
+    # Pull intervention state off the model (defaulting safely if not set)
     focus_item = getattr(model, "_intervention_focus_item", None)
     focus_until = getattr(model, "_intervention_focus_until", -1)
     quiet_until = getattr(model, "_intervention_quiet_until", -1)
+    # True only if we're still inside the focus + quiet window for this intervention
     focus_quiet_active = bool(
         focus_item
         and getattr(model, "tick", 0) <= focus_until
@@ -64,6 +104,9 @@ def filter_events(
     forced_pair_active = bool(
         forced_agents and getattr(model, "tick", 0) <= forced_until
     )
+
+    # Build a set of (actor, target, item) tuples for any user-triggered shares/agrees
+    # so we can detect when an old ask_info is now redundant
     intervention_surfaces = {
         (
             str(event.get("actor", "")),
@@ -74,6 +117,9 @@ def filter_events(
         if str(event.get("reason", "")).startswith("user_")
         and event.get("type") in {"share_info", "agree", "suggest"}
     }
+
+    # Phrases that indicate an agent is stalling rather than actually sharing info.
+    # We filter these out when the agent ends up sharing anyway in the same tick.
     hesitation = {
         "not ready",
         "still thinking",
@@ -100,8 +146,7 @@ def filter_events(
             and (target, actor, item) in intervention_surfaces
             and not reason.startswith("user_")
         ):
-            # If a user-triggered share/agree is already queued for this pair,
-            # skip the stale ask so the next tick doesn't argue with itself.
+            # intervention already handled this pair — the ask is now redundant
             continue
 
         if (
@@ -112,6 +157,7 @@ def filter_events(
                 or (target and target not in (forced_agents or set()) and not reason.startswith("user_"))
             )
         ):
+            # Don't let ownership guards or redirects to third parties break up a forced meeting
             continue
 
         if (
@@ -125,6 +171,8 @@ def filter_events(
             if not item and event_type in {"say", "agree", "challenge", "suggest", "compliment"}:
                 continue
 
+        # If an agent is actively sharing info this tick, drop their hesitation lines —
+        # they've already decided to share, so the reluctance reads as contradictory
         if actor in share_actors and event_type == "say":
             if any(phrase in text for phrase in hesitation):
                 continue

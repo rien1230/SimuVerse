@@ -1,4 +1,11 @@
-"""API routes for one-off simulation helpers used by the frontend."""
+"""API routes for one-off simulation helpers used by the frontend.
+
+This file is for helper endpoints that do not need a long-lived live run.
+So if I need:
+- full one-shot simulation execution
+- emotion classification preview
+Use this route file instead of runs.py for one-shot simulation results.
+"""
 
 import logging
 
@@ -16,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class ClassifyEmotionRequest(BaseModel):
+    """Request body for the emotion classifier — just the raw text to analyse."""
     text: str
 
 
@@ -26,6 +34,7 @@ async def classify_emotion(req: ClassifyEmotionRequest) -> Dict[str, Any]:
     Used by the frontend emotion-preview feature so users can see what emotion
     will be detected before launching or applying a mood injection.
     """
+    # Return a neutral fallback immediately rather than hitting the NLP model with empty input
     if not req.text or not req.text.strip():
         return {
             "top_emotion": "neutral",
@@ -38,7 +47,9 @@ async def classify_emotion(req: ClassifyEmotionRequest) -> Dict[str, Any]:
             "top_labels": [],
         }
     try:
+        # Import here to avoid loading the NLP model at startup — it's heavy
         from app.sim.emotions_analyser import classify_user_emotion
+        # The NLP model is CPU-bound, so run it in a thread to avoid blocking the event loop
         result = await anyio.to_thread.run_sync(
             lambda: classify_user_emotion(req.text.strip(), tick=0)
         )
@@ -48,10 +59,11 @@ async def classify_emotion(req: ClassifyEmotionRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="Could not classify the emotion.")
 
 class SimStartRequest(BaseModel):
+    """Request body for the /simulation/start endpoint — runs a full scenario in one shot."""
     scenario_id: str = "office_proposal"
     seed: int = 42
     episode_max_ticks: int = 30
-    skip_emotions: bool = False
+    skip_emotions: bool = False   # set True to run without NLP for faster baseline comparisons
     team_type: Optional[str] = None
     save_history: bool = True
     # Optional user emotion input — classified and injected at emotion_tick
@@ -60,7 +72,15 @@ class SimStartRequest(BaseModel):
 
 
 def _run_simulation_sync(req: SimStartRequest) -> Dict[str, Any]:
-    """Run a full simulation synchronously — called off the event loop via anyio."""
+    """Run a full simulation synchronously — called off the event loop via anyio.
+
+    This is the 'fire and forget' path: it loops until the scenario ends or hits
+    the tick limit, then returns a summary. The WebSocket path in runs.py handles
+    interactive step-by-step control instead.
+    """
+    # This path is deliberately separate from the live RunManager path.
+    # It is useful for quick one-shot runs, exports, and helper tooling.
+    # Resolve aliases like "escape" → "escape_puzzle" before validating
     scenario_id = resolve_scenario_id(req.scenario_id)
     if scenario_id not in SCENARIOS:
         raise ValueError(f"Unknown scenario: {req.scenario_id}")
@@ -83,12 +103,12 @@ def _run_simulation_sync(req: SimStartRequest) -> Dict[str, Any]:
 
     while not model.ended and model.tick < req.episode_max_ticks:
         model.step()
-        # Mid-run injection: fire once when the model reaches the requested tick
+        # Mid-run injection: fire exactly once when the model reaches the target tick
         if (
             req.emotion_text
             and req.emotion_tick > 0
             and model.tick == req.emotion_tick
-            and emotion_log_entry is None
+            and emotion_log_entry is None  # ensure we only inject once
         ):
             emotion_log_entry = model.inject_user_emotion(req.emotion_text, tick=model.tick)
 
@@ -105,6 +125,7 @@ def _run_simulation_sync(req: SimStartRequest) -> Dict[str, Any]:
                 "save_history": True,
             },
         )
+    # Generate a plain-English summary of what happened during the run
     interpretation = generate_run_interpretation(model)
     return {
         "run_id":          run_id,
@@ -117,6 +138,10 @@ def _run_simulation_sync(req: SimStartRequest) -> Dict[str, Any]:
 
 @router.post("/start")
 async def start_simulation(req: SimStartRequest):
+    """Run a complete simulation and return the outcome summary.
+
+    The heavy simulation loop runs in a thread so it doesn't block FastAPI's async event loop.
+    """
     try:
         return await anyio.to_thread.run_sync(_run_simulation_sync, req)
     except ValueError as e:

@@ -11,6 +11,9 @@ Low-risk support code for the escape-room scenario:
 
 Imported by escape_logic.py and escape_actions.py.  Nothing here has
 side-effects or depends on simulation state at import time.
+
+This file is the support-data layer for Escape: labels, phrase pools, helper
+text functions, and clue-order constants.
 """
 
 from __future__ import annotations
@@ -23,7 +26,8 @@ if TYPE_CHECKING:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# labels
+# Labels
+# Shared wording helpers for Escape item names.
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _lbl(item: str) -> str:
@@ -59,7 +63,8 @@ def _spoken(item: str) -> str:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# ownership + progress model
+# Ownership + progress model
+# Canonical clue owners and progression order for Escape.
 # ──────────────────────────────────────────────────────────────────────────────
 
 ESCAPE_CLUE_OWNER = {
@@ -84,11 +89,13 @@ ESCAPE_PROGRESS_TASKS = {
     "unlock": False,  # final two-tick door-open sequence
 }
 
+# clues must be resolved in this exact order — agents can't skip ahead
 ESCAPE_PRIORITY = ["map", "lock", "key", "door"]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# traits
+# Trait accessors
+# Small helpers so Escape logic can read agent traits more cleanly.
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _logic(agent) -> float:
@@ -112,7 +119,8 @@ def _trust_trait(agent) -> float:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# dialogue pools
+# Dialogue pools
+# Escape-specific phrase banks used by escape_logic.py.
 # ──────────────────────────────────────────────────────────────────────────────
 
 SHARE_TEXTS = {
@@ -235,6 +243,9 @@ DOUBT_TEXTS = {
         "One more look at {item}?",
     ],
 }
+
+# The rest of this file stays in the same support role: dialogue pools,
+# wrap-up phrasing, and tiny text helpers used by escape_logic.py.
 
 RUSH_TEXTS = {
     "Leader": [
@@ -504,7 +515,8 @@ DOOR_OPEN_TEXTS = {
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# helpers
+# Small text helpers
+# Pure formatting helpers used during Escape dialogue generation.
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _pick(pool_map: Dict[str, List[str]], personality: str, fallback: List[str], **fmt) -> str:

@@ -8,6 +8,8 @@ on state management, decision logic, and event handling.
 
 The agent.py methods that previously implemented these are now thin one-liner
 wrappers that delegate here, so call-sites inside agent.py are unchanged.
+
+This file keeps the phrasing / wording layer separate from the decision logic.
 """
 
 from __future__ import annotations
@@ -24,22 +26,27 @@ from app.sim.dialogue_banks import pick_line
 
 
 def _lbl(item: str) -> str:
+    """Get a readable display label for an item key (e.g. 'tech_specs' → 'Tech Specs')."""
     return ITEM_LABELS.get(item, item.replace("_", " ").title())
 
 
 # ── Phrase-cooldown helpers ──────────────────────────────────────────────────
+# These reduce repetition so agents do not keep reusing the same line.
 
 def recently_said(agent: "SimAgent", text: str) -> bool:
+    """Check if this exact text is still in the agent's short-term utterance memory."""
     return text in agent.recent_utterances
 
 
 def phrase_on_cooldown(agent: "SimAgent", phrase_key: str) -> bool:
+    """Check whether a phrase key is still within its cooldown window (model-level tracking)."""
     cooldowns = getattr(agent.model, "phrase_cooldowns", {})
     tick_now = getattr(agent.model, "tick", 0)
     return cooldowns.get(phrase_key, 0) > tick_now
 
 
 def register_phrase(agent: "SimAgent", phrase_key: str, cooldown_ticks: int = 4) -> None:
+    """Mark a phrase key as used so it won't be picked again for cooldown_ticks ticks."""
     if not hasattr(agent.model, "phrase_cooldowns"):
         agent.model.phrase_cooldowns = {}
     tick_now = getattr(agent.model, "tick", 0)
@@ -47,23 +54,33 @@ def register_phrase(agent: "SimAgent", phrase_key: str, cooldown_ticks: int = 4)
 
 
 def unique_say(agent: "SimAgent", pool: list, phrase_key: str, cooldown: int = 4) -> str:
+    """
+    Pick a phrase from the pool that hasn't been said recently (model-wide).
+    Registers it so the same phrase won't come up again for a while.
+    Falls back to any phrase in the pool if all have been used recently.
+    """
     if not hasattr(agent.model, "phrase_cooldowns"):
         agent.model.phrase_cooldowns = {}
     recent = list(getattr(agent.model, "_recent_phrases", []))
     fresh = [p for p in pool if p not in recent]
-    chosen = random.choice(fresh) if fresh else random.choice(pool)
+    chosen = random.choice(fresh) if fresh else random.choice(pool)  # fall back when all used
     recent.append(chosen)
-    recent = recent[-8:]
+    recent = recent[-8:]  # keep only the last 8 phrases in the rolling window
     agent.model._recent_phrases = recent
     register_phrase(agent, phrase_key, cooldown)
     return chosen
 
 
 def phrase_used_recently(agent: "SimAgent", phrase_key: str, lookback: int = 3) -> bool:
+    """Alias for phrase_on_cooldown — kept for call-site compatibility."""
     return phrase_on_cooldown(agent, phrase_key)
 
 
 def pick_fresh(agent: "SimAgent", options: list) -> str:
+    """
+    Pick an option the agent hasn't said recently, then add it to their utterance memory.
+    Prevents the same line from repeating back-to-back in conversation.
+    """
     fresh = [o for o in options if o not in agent.recent_utterances]
     chosen = random.choice(fresh) if fresh else random.choice(options)
     agent.recent_utterances.append(chosen)
@@ -71,8 +88,12 @@ def pick_fresh(agent: "SimAgent", options: list) -> str:
 
 
 # ── Text generators ──────────────────────────────────────────────────────────
+# Each generate_* function first tries to delegate to the scenario logic class
+# (which has scenario-specific phrasing), then falls back to env-aware generic pools.
+# All text passes through _polish_dialogue() in model.py before reaching the UI.
 
 def generate_help_text(agent: "SimAgent", target_id: str, item: str) -> str:
+    """Generate a line where the agent offers to help with a specific item."""
     logic = getattr(agent.model, "behaviour", None)
     if logic and hasattr(logic, "generate_help_text"):
         return logic.generate_help_text(agent, target_id, item)
@@ -80,6 +101,11 @@ def generate_help_text(agent: "SimAgent", target_id: str, item: str) -> str:
 
 
 def generate_compliment_text(agent: "SimAgent", target_id: str) -> str:
+    """
+    Generate a positive acknowledgement directed at another agent.
+    Used after they've shared useful information or made progress.
+    Rotates through phrases so the same compliment doesn't repeat immediately.
+    """
     options = [
         f"That helped a lot, {agent._r(target_id)}.",
         f"Good — that makes things a lot clearer, {agent._r(target_id)}.",
@@ -93,6 +119,7 @@ def generate_compliment_text(agent: "SimAgent", target_id: str) -> str:
 
 
 def generate_ignore_text(agent: "SimAgent", target_id: str) -> str:
+    """Generate a dismissive non-response — agent is busy or uninterested."""
     logic = getattr(agent.model, "behaviour", None)
     if logic and hasattr(logic, "generate_ignore_text"):
         return logic.generate_ignore_text(agent, target_id)
@@ -100,6 +127,7 @@ def generate_ignore_text(agent: "SimAgent", target_id: str) -> str:
 
 
 def generate_insult_text(agent: "SimAgent", target_id: str) -> str:
+    """Generate a hostile or dismissive line — only used when tension is high."""
     logic = getattr(agent.model, "behaviour", None)
     if logic and hasattr(logic, "generate_insult_text"):
         return logic.generate_insult_text(agent, target_id)
@@ -107,6 +135,11 @@ def generate_insult_text(agent: "SimAgent", target_id: str) -> str:
 
 
 def generate_say_text(agent: "SimAgent", target_id: str) -> str:
+    """
+    Generate a generic 'say' line — used for coordination or filler when there's
+    nothing specific to share. Tries the scenario logic first, then the structured
+    dialogue bank, then the env-appropriate pool.
+    """
     logic = getattr(agent.model, "behaviour", None)
     if logic and hasattr(logic, "generate_say_text"):
         return logic.generate_say_text(agent, target_id)
@@ -121,11 +154,15 @@ def generate_say_text(agent: "SimAgent", target_id: str) -> str:
 
 
 def generate_ask_text(agent: "SimAgent", item: str, target_id: str) -> str:
+    """
+    Generate a question asking for a specific item from another agent.
+    Uses the scenario logic if available, otherwise falls back to env-appropriate templates.
+    """
     logic = getattr(agent.model, "behaviour", None)
     if logic and hasattr(logic, "generate_ask_text"):
         return logic.generate_ask_text(agent, item, target_id)
 
-    # Env-aware fallback
+    # Env-aware fallback using {item} placeholder substitution
     pool = get_env_dialogue(agent.model, "ask")
     if pool:
         template = random.choice(pool)
@@ -141,6 +178,11 @@ def generate_ask_text(agent: "SimAgent", item: str, target_id: str) -> str:
 
 
 def generate_info_text(agent: "SimAgent", item: str) -> str:
+    """
+    Get the actual factual content for an item the agent knows.
+    First checks scenario-specific templates (e.g. specific clue text),
+    then falls back to the behaviour logic, then a generic placeholder.
+    """
     templates = ITEM_INFO_TEMPLATES.get(getattr(agent.model.scenario, "id", ""), {})
     options = templates.get(item)
     if options:
@@ -152,16 +194,21 @@ def generate_info_text(agent: "SimAgent", item: str) -> str:
         if btext:
             return btext
 
+    # Last resort — vague but better than nothing
     return "it's important context for the next step — worth knowing."
 
 
 def generate_share_text(agent: "SimAgent", item: str, target_id: str) -> str:
+    """
+    Generate the full text for sharing an item's information with another agent.
+    Combines the factual info text with scenario-appropriate phrasing.
+    """
     logic = getattr(agent.model, "behaviour", None)
     if logic and hasattr(logic, "generate_share_text"):
         return logic.generate_share_text(agent, item, target_id)
 
     info = generate_info_text(agent, item)
-    # Env-aware fallback
+    # Env-aware fallback — uses {info} placeholder substitution
     pool = get_env_dialogue(agent.model, "share")
     if pool and info:
         template = random.choice(pool)
@@ -174,6 +221,11 @@ def generate_share_text(agent: "SimAgent", item: str, target_id: str) -> str:
 
 
 def generate_refuse_text(agent: "SimAgent", item: str, target_id: str) -> str:
+    """
+    Generate a refusal — the agent has the info but won't share it right now.
+    Tone varies heavily by scenario: escape refusals are terse, cafe ones are gentle,
+    office ones are professional. Personality also affects the wording.
+    """
     # Try structured bank first (env + personality + tone aware)
     banked = pick_line(agent, "refuse", item=_lbl(item))
     if banked:
@@ -182,7 +234,7 @@ def generate_refuse_text(agent: "SimAgent", item: str, target_id: str) -> str:
     scenario_type = getattr(behaviour, "scenario_type", "office")
 
     if scenario_type == "escape":
-        # Short, urgent — even refusals are terse
+        # Short, urgent — even refusals are terse in an escape room
         if agent.strategy == "confrontational":
             options = [
                 "No. Not yet.",
@@ -249,6 +301,11 @@ def generate_refuse_text(agent: "SimAgent", item: str, target_id: str) -> str:
 
 
 def generate_agree_text(agent: "SimAgent", target_id: str, pref: str) -> str:
+    """
+    Generate an agreement line — agent is signing off on a preference or decision.
+    Phrasing depends heavily on scenario and strategy: escape is short and decisive,
+    cafe is casual, office is professional.
+    """
     # Try structured bank first (env + personality + tone aware)
     banked = pick_line(agent, "agree", item=pref or "")
     if banked:
@@ -326,6 +383,11 @@ def generate_agree_text(agent: "SimAgent", target_id: str, pref: str) -> str:
 
 
 def generate_challenge_text(agent: "SimAgent", target_id: str, pref: str) -> str:
+    """
+    Generate a pushback or challenge — agent disagrees with someone's preference or claim.
+    Confrontational agents are blunter; defensive agents are more cautious.
+    Escape challenges are direct and urgent; cafe challenges are light; office is controlled.
+    """
     # Try structured bank first (env + personality + tone aware)
     banked = pick_line(agent, "challenge", item=pref or "")
     if banked:
