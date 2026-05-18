@@ -28,16 +28,47 @@ The system supports automatic runs, manual step-by-step execution, live user int
 
 
 ### Live Simulation Dashboard — Watch mode with agent interactions and Why This Happened panel
-![Dashboard](screenshots/dashboard.png)
+
+<img width="468" height="266" alt="image" src="https://github.com/user-attachments/assets/7e5e18b7-1147-4b35-9be5-9e07185dfe84" />
+
 
 ### Live Interactive Mode — Agent states, simulation log, and intervention controls
-![Interventions](screenshots/interventions.png)
+
+<img width="468" height="266" alt="image" src="https://github.com/user-attachments/assets/67f40efc-73e3-441d-9773-95fa03b4e795" />
+
+<img width="437" height="246" alt="image" src="https://github.com/user-attachments/assets/ebf3258a-d6b7-4431-bdfe-cdfe2b05f643" />
+
+<img width="437" height="248" alt="image" src="https://github.com/user-attachments/assets/7bda9dbc-8e5a-4325-88d2-315bc23084d8" />
+
+<img width="437" height="247" alt="image" src="https://github.com/user-attachments/assets/c44d9e8e-0e45-4f28-837d-90b13fb5d44a" />
+
+
 
 ### Run Summary — Metrics, progress timeline, and team analysis
-![Run Summary](screenshots/run_summary.png)
+
+<img width="468" height="264" alt="image" src="https://github.com/user-attachments/assets/1087cfa4-46ec-461d-bcb3-109dc8274947" />
+
+<img width="468" height="266" alt="image" src="https://github.com/user-attachments/assets/d83648f9-1347-4835-b987-c8b741cf0ebe" />
+
+<img width="277" height="409" alt="image" src="https://github.com/user-attachments/assets/b721b0a1-c15f-45bc-80d7-cfcb9a56c7b4" />
+
+
 
 ### Experiment Runner — Controlled batch comparisons across team styles and scenarios
-![Experiments](screenshots/experiments.png)
+
+<img width="437" height="284" alt="image" src="https://github.com/user-attachments/assets/0c7158ef-7e40-43f7-ba30-0474d246ec09" />
+
+<img width="437" height="284" alt="image" src="https://github.com/user-attachments/assets/77742cc3-12be-46ac-853f-223740bb59f6" />
+
+<img width="437" height="129" alt="image" src="https://github.com/user-attachments/assets/6084abf2-db9e-4043-9e08-3250ce7761b2" />
+
+<img width="396" height="258" alt="image" src="https://github.com/user-attachments/assets/897a1c61-0df0-4f84-940c-daa837f74582" />
+
+<img width="396" height="233" alt="image" src="https://github.com/user-attachments/assets/ec6b8ed3-fe7c-46c8-9bf9-c27589d2b96d" />
+
+<img width="396" height="258" alt="image" src="https://github.com/user-attachments/assets/24d114df-196a-4426-acf1-e7e5f344a8b6" />
+
+
 
 ---
 
