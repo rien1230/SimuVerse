@@ -1,6 +1,6 @@
 # SimuVerse
 
-SimuVerse is a multi-agent social simulation platform built for research and teaching. Four AI agents interact inside a shared scenario — exchanging information, building trust, managing stress, and working toward a shared goal. You can watch the simulation play out automatically, step through it manually, or intervene in real time to steer agent behaviour.
+SimuVerse is a multi-agent social simulation platform built for research and teaching. Four AI agents interact inside a shared scenario. Exchanging information, building trust, managing stress, and working toward a shared goal. You can watch the simulation play out automatically, step through it manually, or intervene in real time to steer agent behaviour.
 
 ## What it does
 
