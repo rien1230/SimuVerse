@@ -1,16 +1,82 @@
 # SimuVerse
 
-SimuVerse is a multi-agent social simulation platform built for research and teaching. Four AI agents interact inside a shared scenario. Exchanging information, building trust, managing stress, and working toward a shared goal. You can watch the simulation play out automatically, step through it manually, or intervene in real time to steer agent behaviour.
+SimuVerse is a real-time multi-agent social simulation platform built to explore how personality, trust, memory, stress, and emotion influence team behaviour. Four AI agents interact inside a shared scenario, exchange information, respond to social pressure, and work toward a common goal.
 
-## What it does
+The system supports automatic runs, manual step-by-step execution, live user interventions, deterministic replay, and controlled batch experiments. It was developed as a final-year software engineering project with a focus on explainability, reproducibility, and interactive simulation.
 
-Agents have distinct personalities, memory, trust relationships, and stress levels that shift as they communicate. Each run is seeded and fully reproducible. Three scenario types are available:
+---
 
-- **Office** — a project team must share information to complete a proposal
-- **Café** — a group decides on a restaurant by pooling what each member knows
-- **Escape Room** — agents must combine clues to solve a puzzle chain
+## Key Features
 
-You can apply interventions mid-run (boost urgency, inject a mood, force a meeting, reveal information) and watch how the team dynamics respond. Every run is saved to history and can be replayed or exported.
+- Real-time multi-agent simulation with personality, trust, stress, memory, and emotion dynamics
+- FastAPI backend with REST endpoints and WebSocket streaming for live simulation updates
+- Three configurable scenarios: Office, Café, and Escape Room
+- Four team styles: Smooth, Tension, Creative, and Pressure
+- Live user interventions including mood injection, forced meetings, urgency changes, and information reveal
+- Seeded deterministic runs for reproducible experiments and replay
+- Run history, JSON export, and step-by-step replay
+- Batch experiment runner for comparing team styles, scenarios, and seed consistency
+- Optional HuggingFace GoEmotions classifier with VADER fallback
+
+---
+
+## Screenshots
+
+### Setup — Choose your scenario, team style, and mode
+
+<img width="437" height="248" alt="image" src="https://github.com/user-attachments/assets/752f1577-bc31-4f4f-85e9-9b3fa23ae348" />
+
+
+### Live Simulation Dashboard — Watch mode with agent interactions and Why This Happened panel
+![Dashboard](screenshots/dashboard.png)
+
+### Live Interactive Mode — Agent states, simulation log, and intervention controls
+![Interventions](screenshots/interventions.png)
+
+### Run Summary — Metrics, progress timeline, and team analysis
+![Run Summary](screenshots/run_summary.png)
+
+### Experiment Runner — Controlled batch comparisons across team styles and scenarios
+![Experiments](screenshots/experiments.png)
+
+---
+
+## System Architecture
+
+SimuVerse is structured as a full-stack simulation system:
+
+```
+Frontend UI
+HTML / CSS / JavaScript
+        ↓
+FastAPI Backend
+REST API + WebSocket streaming
+        ↓
+Simulation Engine
+Agent state, scenario logic, interventions, metrics
+        ↓
+Run History & Replay
+JSON event logs, seeded runs, exports
+```
+
+The backend manages simulation state, agent decisions, interventions, metrics, and replay data. The frontend provides the live workspace, dashboard, setup flow, history view, and experiment comparison interface.
+
+---
+
+## Evaluation
+
+SimuVerse was evaluated through controlled batch experiments comparing different team configurations under the same scenario and seed conditions.
+
+The evaluation measured:
+
+- Task progress and completion behaviour
+- Average trust and stress levels across agents
+- Dialogue patterns and blocker resolution
+- Intervention effects on team dynamics
+
+Controlled experiments showed statistically significant behavioural differences between team configurations (p = 0.0018), suggesting that team style and personality configuration meaningfully affected simulation outcomes.
+
+The experiment runner also supports reproducibility checks by rerunning identical scenario, team, and seed combinations to verify consistent behaviour.
 
 ---
 
@@ -54,7 +120,7 @@ pip install -r requirements.txt
 
 ---
 
-## Running locally
+## Running Locally
 
 You need **two terminals open at the same time**.
 
@@ -79,9 +145,9 @@ http://localhost:5001
 
 ---
 
-## How to use it
+## How to Use It
 
-### 1. Setup page
+### 1. Setup Page
 Go to **Setup** from the home screen. Choose:
 - **Scenario** — Office, Café, or Escape Room
 - **Team style** — affects how agents behave (Smooth, Tension, Creative, or Pressure)
@@ -112,22 +178,22 @@ All completed runs are saved automatically. Go to **History** to:
 
 ### 5. Experiments
 The **Experiments** page lets you run controlled batch simulations for comparison and analysis. You can:
-- **Team comparison** — run the same scenario with different team styles and compare how trust, stress, friction, and progress differ across conditions
-- **Scenario comparison** — fix the team and run different scenarios side by side to compare outcomes across environments
-- **Seed reproducibility** — rerun the same conditions with identical starting seeds to test consistency
-- Use repeatable run IDs (seeds) so every condition starts from the same point, ensuring a fair comparison
+- **Team comparison** — run the same scenario with different team styles and compare trust, stress, friction, and progress
+- **Scenario comparison** — fix the team and run different scenarios side by side
+- **Seed reproducibility** — rerun the same conditions with identical seeds to test consistency
 - View an automated results summary with metric breakdowns across all runs
-
-This is useful for evaluating how team dynamics and agent behaviour change under different conditions in a reproducible, controlled way.
 
 ### 6. Exporting
 At the end of a run click **Export Data** to download the full run as a JSON file — includes all agent states, metrics, events, and interventions.
 
 ---
 
-## Tech stack
+## Tech Stack
 
-- **Backend:** Python, FastAPI, WebSockets
-- **Frontend:** Vanilla HTML/CSS/JavaScript
-- **Simulation:** Custom agent-based model with personality, memory, trust, and stress
-- **NLP:** VADER sentiment analysis (optional HuggingFace emotion classifier)
+| Layer | Technology |
+|---|---|
+| Backend | Python, FastAPI, WebSockets |
+| Frontend | Vanilla HTML, CSS, JavaScript |
+| Simulation | Custom agent-based model (Mesa) |
+| NLP | VADER sentiment analysis + optional HuggingFace GoEmotions |
+| Data | JSON event logs, seeded reproducible runs |
