@@ -62,8 +62,6 @@ The system supports automatic runs, manual step-by-step execution, live user int
 
 <img width="437" height="129" alt="image" src="https://github.com/user-attachments/assets/6084abf2-db9e-4043-9e08-3250ce7761b2" />
 
-<img width="396" height="258" alt="image" src="https://github.com/user-attachments/assets/897a1c61-0df0-4f84-940c-daa837f74582" />
-
 <img width="396" height="233" alt="image" src="https://github.com/user-attachments/assets/ec6b8ed3-fe7c-46c8-9bf9-c27589d2b96d" />
 
 <img width="396" height="258" alt="image" src="https://github.com/user-attachments/assets/24d114df-196a-4426-acf1-e7e5f344a8b6" />
